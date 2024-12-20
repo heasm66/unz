@@ -1,5 +1,5 @@
 ```
-UnZ 0.12 (2024-02-24) by Henrik Åsman, (c) 2021-2024  
+UnZ 0.11 (2024-02-18) by Henrik Åsman, (c) 2021-2024  
 Usage: unz [option] [file]  
 Unpack Z-machine file format information.  
   

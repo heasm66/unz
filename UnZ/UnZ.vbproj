@@ -3,12 +3,16 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>UnZ</RootNamespace>
-    <TargetFramework>net8.0</TargetFramework>
-    <AssemblyVersion>0.12</AssemblyVersion>
-    <FileVersion>0.12</FileVersion>
-    <Version>0.12</Version>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyVersion>0.13</AssemblyVersion>
+    <FileVersion>0.13</FileVersion>
+    <Version>0.13</Version>
     <OptionStrict>On</OptionStrict>
     <Copyright>2021-2024 Henrik Åsman</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
   </PropertyGroup>
 
   <ItemGroup>

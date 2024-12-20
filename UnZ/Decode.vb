@@ -47,6 +47,7 @@ Public Class Decode
     Private showAbbrevsInsertion As Boolean = True
     Private inlineStrings As List(Of InlineString)
     Public arraysStart As New HashSet(Of Integer)
+    Public usedGlobals As New HashSet(Of Integer)
 
     Public Enum EnumOpcodeClass
         EXTENDED_OPERAND
@@ -144,6 +145,8 @@ Public Class Decode
         propertyMax = propertyNumberMax
         showAbbrevsInsertion = showAbbrevsInsertionPoints
         inlineStrings = inlineStringsList
+
+        If PC > byteGame.Count Then Return -1
 
         localsCount = byteGame(PC)
 
@@ -1023,10 +1026,14 @@ Public Class Decode
             Else
                 If syntax = 1 Then sStoreText = "g" Else sStoreText = "G"
                 Dim value As Integer = pOpcode.StoreVal - 16
+
+                ' Collect statistics on globals
                 If value > highest_global Then highest_global = value
+                If Not usedGlobals.Contains(value) Then usedGlobals.Add(value)
+
                 sStoreText &= value.ToString
-            End If
-            If syntax < 2 Then pOpcode.OperandText = pOpcode.OperandText & " -> " & sStoreText Else pOpcode.OperandText = pOpcode.OperandText & " >" & sStoreText
+                End If
+                If syntax < 2 Then pOpcode.OperandText = pOpcode.OperandText & " -> " & sStoreText Else pOpcode.OperandText = pOpcode.OperandText & " >" & sStoreText
         End If
         If pOpcode.Extra = EnumExtra.E_BOTH Or pOpcode.Extra = EnumExtra.E_BRANCH Then
             Dim sBranchText As String = ""
@@ -1067,6 +1074,7 @@ Public Class Decode
         If pVariable < 256 Then
             Dim value As Integer = pVariable - 16
             If value > highest_global Then highest_global = value
+            If Not usedGlobals.Contains(value) Then usedGlobals.Add(value)
             If syntax = 0 Then Return "G" & value.ToString("X2")
             If syntax = 1 Then Return "g" & value.ToString
             If syntax = 2 Then Return "G" & value.ToString

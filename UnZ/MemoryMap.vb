@@ -45,6 +45,7 @@ Public Enum MemoryMapType
     MM_UNIDENTIFIED_DATA
     MM_PADDING
     MM_WORD_FLAGS_TABLE
+    MM_UNICODE_TABLE
 End Enum
 
 Public Class MemoryMapEntry

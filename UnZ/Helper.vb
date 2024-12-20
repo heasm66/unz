@@ -20,6 +20,9 @@
 'OUT OF Or IN CONNECTION WITH THE SOFTWARE Or THE USE Or OTHER DEALINGS IN THE
 'SOFTWARE.
 
+Imports System.Globalization
+Imports System.Reflection
+
 Public Enum EnumCompilerSource
     ZILCH
     ZILF
@@ -32,9 +35,12 @@ End Enum
 Public Enum EnumGrammarVer
     VERSION_1 = 1
     VERSION_2 = 2
+    VERSION_3 = 3
     UNKNOWN = 0
 End Enum
 Public Class Helper
+    Public Shared unicodeTranslationTableAddr As Integer = 0
+
     Public Shared Function GetAdressFromWord(byteGame() As Byte, index As Integer) As Integer
         Return byteGame(index) * 256 + byteGame(index + 1)
     End Function
@@ -86,6 +92,8 @@ Public Class Helper
         Dim iAbbrevTable As Integer = -1
         Dim iZSCIIEscape As Integer = -1
         Dim iZSCIIEscapeCount As Integer = -1
+        Dim Zversion As Integer = byteGame(0)
+        Dim shiftLock As Integer = 0
 
         Do
             iWord = byteGame(piStringAddress + iCounter) * 256 + byteGame(piStringAddress + iCounter + 1)
@@ -101,39 +109,83 @@ Public Class Helper
                     End If
                     iAbbrevTable = -1
                 ElseIf iZSCIIEscapeCount <> -1 Then
+                    ' Insert ZSCII?
                     iZSCIIEscapeCount += 1
                     If iZSCIIEscapeCount = 1 Then
                         iZSCIIEscape = iZChar
                     ElseIf iZSCIIEscapeCount = 2 Then
                         iZSCIIEscapeCount = -1
-                        iAlpabeth = 0
                         iZSCIIEscape = 32 * iZSCIIEscape + iZChar
-                        If iZSCIIEscape <= &H80 Then
-                            sRet &= "                                 !~#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_'abcdefghijklmnopqrstuvwxyz{!}~ ".Substring(iZSCIIEscape, 1)
+                        If iZSCIIEscape = 0 Then
+                            ' NULL
+                        ElseIf iZSCIIEscape = 9 Then
+                            ' Tab for v6, converted to space
+                            sRet &= " "
+                        ElseIf iZSCIIEscape = 11 Then
+                            ' Sentence space for v6, converted to space
+                            sRet &= " "
+                        ElseIf iZSCIIEscape = 13 Then
+                            sRet &= "^"
+                        ElseIf iZSCIIEscape >= 32 And iZSCIIEscape <= 126 Then
+                            ' Standard ASCII, double-quote conerts to tilde
+                            sRet &= " !~#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~".Substring(iZSCIIEscape - 32, 1)
+                        ElseIf iZSCIIEscape >= 155 And iZSCIIEscape <= 251 Then
+                            ' Extra chars, unicode
+                            If Not unicodeTranslationTableAddr > 0 Then
+                                ' Standard table
+                                sRet &= "äöüÄÖÜß»«ëïÿËÏáéíóúýÁÉÍÓÚÝàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛåÅøØãñõÃÑÕæÆçÇþðÞÐ£œŒ¡¿????????????????????????????".Substring(iZSCIIEscape - 155, 1)
+                            Else
+                                ' Use unicode translation table
+                                Dim unicodeTableLen As Integer = byteGame(unicodeTranslationTableAddr)
+                                If ((iZSCIIEscape - 155) + 1) > unicodeTableLen Then
+                                    sRet &= "?"
+                                Else
+                                    Dim unicodeVal As Integer = Helper.GetAdressFromWord(byteGame, unicodeTranslationTableAddr + (iZSCIIEscape - 155) * 2 + 1)
+                                    sRet &= Strings.ChrW(unicodeVal)
+                                End If
+                            End If
+                        Else
+                            sRet &= "?"
                         End If
                     End If
+                ElseIf Zversion = 1 And iZChar = 1 Then
+                    sRet &= "^"
+                    iAlpabeth = shiftLock
+                ElseIf Zversion = 2 And iZChar = 1 Then
+                    iAbbrevTable = iZChar
+                    iAlpabeth = shiftLock
+                ElseIf Zversion < 3 And iZChar = 2 Then
+                    iAlpabeth += 1
+                    If iAlpabeth > 2 Then iAlpabeth = 0
+                ElseIf Zversion < 3 And iZChar = 3 Then
+                    iAlpabeth -= 1
+                    If iAlpabeth < 0 Then iAlpabeth = 2
+                ElseIf Zversion < 3 And iZChar = 4 Then
+                    iAlpabeth += 1
+                    If iAlpabeth > 2 Then iAlpabeth = 0
+                    shiftLock = iAlpabeth
+                ElseIf Zversion < 3 And iZChar = 5 Then
+                    iAlpabeth -= 1
+                    If iAlpabeth < 0 Then iAlpabeth = 2
+                    shiftLock = iAlpabeth
                 ElseIf iZChar = 4 Then
                     iAlpabeth = 1
                 ElseIf iZChar = 5 Then
                     iAlpabeth = 2
                 ElseIf iZChar = 0 Then
                     sRet &= " "
+                    iAlpabeth = shiftLock
                 ElseIf iZChar < 6 Then
                     ' Insert abbreviation
                     iAbbrevTable = iZChar
+                    iAlpabeth = shiftLock
                 ElseIf iZChar = 6 And iAlpabeth = 2 Then
-                    ' ZSCII Escape
+                    ' Start ZSCII sequence
                     iZSCIIEscapeCount += 1
+                    iAlpabeth = shiftLock
                 Else
-                    Select Case iAlpabeth
-                        Case 0
-                            sRet &= pAlphabet(0).Substring(iZChar, 1)
-                        Case 1
-                            sRet &= pAlphabet(1).Substring(iZChar, 1)
-                        Case 2
-                            sRet &= pAlphabet(2).Substring(iZChar, 1)
-                    End Select
-                    iAlpabeth = 0
+                    sRet &= pAlphabet(iAlpabeth).Substring(iZChar, 1)
+                    iAlpabeth = shiftLock
                 End If
             Next
             iCounter += 2
@@ -141,6 +193,28 @@ Public Class Helper
 
         Return sRet
     End Function
+
+    Public Shared Function GetBuildDate(ByVal assembly As Assembly) As DateTime
+        Const BuildVersionMetadataPrefix As String = "+build"
+        Dim attribute = assembly.GetCustomAttribute(Of AssemblyInformationalVersionAttribute)()
+        Dim result As DateTime = Nothing
+
+        If attribute?.InformationalVersion IsNot Nothing Then
+            Dim value = attribute.InformationalVersion
+            Dim index = value.IndexOf(BuildVersionMetadataPrefix)
+
+            If index > 0 Then
+                value = value((index + BuildVersionMetadataPrefix.Length))
+
+                If DateTime.TryParseExact(value, "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, result) Then
+                    Return result
+                End If
+            End If
+        End If
+
+        Return Now()
+    End Function
+
 End Class
 
 Public Class StringData
