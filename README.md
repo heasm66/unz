@@ -1,3 +1,6 @@
+## UnZ
+
+Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
 UnZ 0.13 (2024-12-20 11:03:51) by Henrik Åsman, (c) 2021-2024
 Usage: unz [option] [file]
