@@ -46,6 +46,10 @@ Public Enum MemoryMapType
     MM_PADDING
     MM_WORD_FLAGS_TABLE
     MM_UNICODE_TABLE
+    MM_MAIN_HEAP
+    MM_AUX_LT_HEAP
+    MM_PREDICATE_DATA
+    MM_SCRATCH_AREA
 End Enum
 
 Public Class MemoryMapEntry

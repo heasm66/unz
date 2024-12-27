@@ -137,12 +137,13 @@ Public Class PropertyAnalyser
                     Dim iPropSize As Integer
                     Dim iPropStart As Integer = iTmpProp + 1
                     If pZVersion <= 3 Then
-                        iPropNum = (pStoryData(iTmpProp) And 31)
+                        iPropNum = (pStoryData(iTmpProp) And &H1F)
                         iPropSize = 1 + (pStoryData(iTmpProp) And 224) \ 32
                     Else
-                        iPropNum = (pStoryData(iTmpProp) And 63)
-                        If (pStoryData(iTmpProp) And 128) = 128 Then
-                            iPropSize = (pStoryData(iTmpProp + 1) And 63)
+                        iPropNum = (pStoryData(iTmpProp) And &H3F)
+                        If (pStoryData(iTmpProp) And &H80) = &H80 Then
+                            iPropSize = (pStoryData(iTmpProp + 1) And &H3F)
+                            If iPropSize = 0 Then iPropSize = &H40
                             iPropStart += 1
                         Else
                             If (pStoryData(iTmpProp) And 64) = 64 Then iPropSize = 2 Else iPropSize = 1

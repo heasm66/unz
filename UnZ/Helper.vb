@@ -392,3 +392,13 @@ Public Class DictionaryEntries
         Return Nothing
     End Function
 End Class
+
+Public Class ObjectData
+    Public Id As Integer = -1
+    Public Description As String = ""
+    Public ParentId As Integer = 0
+    Public NextId As Integer = 0
+    Public ChildId As Integer = 0
+    Public Property4Strings As New List(Of String)
+    Public Property8Strings As New List(Of String)
+End Class
