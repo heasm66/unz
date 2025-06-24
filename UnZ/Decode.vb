@@ -1,6 +1,6 @@
 ﻿'MIT License
 
-'Copyright(c) 2021-2024 Henrik Åsman
+'Copyright(c) 2021-2025 Henrik Åsman
 
 'Permission Is hereby granted, free Of charge, to any person obtaining a copy
 'of this software And associated documentation files (the "Software"), to deal
@@ -112,6 +112,7 @@ Public Class Decode
     Private Class Opcode
         Public Address As Integer
         Public Code As Integer
+        Public ExtModeByte As Integer
         Public OpcodeClass As EnumOpcodeClass
         Public OperandType(7) As EnumOperand
         Public OperandLen(7) As Integer
@@ -267,10 +268,11 @@ Public Class Decode
             .OpcodeClass = EnumOpcodeClass.ZERO_OPERAND
         }
 
-        If ZVersion > 4 And oOpcode.Code = 190 Then
+        If ZVersion > 4 And oOpcode.Code = 190 Then ' This is the EXTOP opcode
             oOpcode.OpcodeClass = EnumOpcodeClass.EXTENDED_OPERAND
             iPC += 1
             oOpcode.Code = byteGame(iPC)
+            oOpcode.ExtModeByte = byteGame(iPC + 1)
         Else
             If oOpcode.Code < 128 Then
                 oOpcode.OpcodeClass = EnumOpcodeClass.TWO_OPERAND
@@ -549,6 +551,27 @@ Public Class Decode
         pOpcode.OperandType(3) = pPar4
         pOpcode.Extra = pExtra
         pOpcode.Type = pType
+
+        ' zork0-beta-r242-s880830.z6 and zork0-r242-s880901.z6 contains code that uses 3 parameters for WINGET.
+        ' Source code:
+        '
+        '   <CONSTANT WTBL <LTABLE 0>>
+        '       <ROUTINE WINPROP(WIN PROP)
+        '       <WINGET .WIN ,WTBL .PROP>
+        '       <GET ,WTBL 1>>
+        '
+        ' Compiles to 02 BE 13 8B 01 70 8B 02 CF 1F 70 8B 01 00 B8 00 at address 0x1cc28.
+        '
+        ' This is outside the standards of the z-machine and probably only was legel during development
+        ' of z6 in an unreleased compiler.
+        ' For completeness unz can disassemble it even though probably no interpreter can run it.
+        If pOpcode.OpcodeClass = EnumOpcodeClass.EXTENDED_OPERAND And pOpcode.Code = &H13 And pOpcode.ExtModeByte = &H8B Then
+            pOpcode.OperandType(0) = EnumOperand.P_NUMBER
+            pOpcode.OperandType(1) = EnumOperand.P_LOW_ADDR
+            pOpcode.OperandType(2) = EnumOperand.P_NUMBER
+            pOpcode.Extra = EnumExtra.E_NONE
+            pOpcode.Text = "*** ILLEGAL SET OF PARAMETERS FOR THIS OPCODE, ONLY USED IN ZORK0 DURING DEVELOPMENT ***"
+        End If
 
         If pType = EnumType.T_ILLEGAL Then
             Dim oReturn As New DecodeResult With {.status = EnumStatus.BAD_OPCODE}

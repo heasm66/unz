@@ -1,6 +1,6 @@
 'MIT License
 
-'Copyright(c) 2021-2024 Henrik 흒man
+'Copyright(c) 2021-2025 Henrik 흒man
 
 'Permission Is hereby granted, free Of charge, to any person obtaining a copy
 'of this software And associated documentation files (the "Software"), to deal
@@ -27,6 +27,9 @@ Imports System.Reflection
 Imports System.Reflection.Metadata
 Imports System.Runtime.InteropServices.JavaScript.JSType
 Imports Microsoft
+
+' Set this to false before release
+#Const _IN_DEVELOPMENT = True
 
 ' ZILCH, grammar version 1
 '   All Infocom except Mini-Zork 1, Sherlock, Abyss, Zork Zero, Shogun & Arthur
@@ -130,7 +133,7 @@ Module Program
             Dim sFilename As String = ""
 
             ' Get date of build
-            buildDateTimeLocal = Helper.GetBuildDate(Assembly.GetExecutingAssembly()).ToLocalTime()
+            buildDateTimeLocal = Helper.GetBuildDateUtc(Assembly.GetExecutingAssembly()).ToLocalTime()
 
             ' Use UTF8 for output
             Console.OutputEncoding = System.Text.Encoding.UTF8
@@ -248,6 +251,9 @@ Module Program
             'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Leather Godesses of Phobos\Clues\LGOP_InvisiClues.z5"
             'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Trinity\Clues\Trinity_InvisiClues.z5"
 
+            ' Special
+            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\zork0-r242-s880901.z6"
+
             ' ***** Unpack parameters *****
             ' A bit of a poor mans GetOpt. Should probable be replaced by a NuGet-libary...
             Dim unpackedArgs As New List(Of String)
@@ -274,6 +280,30 @@ Module Program
             Next
             If unpackedArgs.Count = 0 And sFilename = "" Then unpackedArgs.Add("-h")
 
+            ' Get date in format "1st January 2025"
+            Dim buildTimestamp As String = Helper.GetBuildDateUtc(Assembly.GetExecutingAssembly()).ToLocalTime.ToString("dxx xMM yyyy")
+            buildTimestamp = buildTimestamp.Replace("x01", "January")
+            buildTimestamp = buildTimestamp.Replace("x02", "February")
+            buildTimestamp = buildTimestamp.Replace("x03", "March")
+            buildTimestamp = buildTimestamp.Replace("x04", "April")
+            buildTimestamp = buildTimestamp.Replace("x05", "May")
+            buildTimestamp = buildTimestamp.Replace("x06", "June")
+            buildTimestamp = buildTimestamp.Replace("x07", "July")
+            buildTimestamp = buildTimestamp.Replace("x08", "August")
+            buildTimestamp = buildTimestamp.Replace("x09", "September")
+            buildTimestamp = buildTimestamp.Replace("x10", "October")
+            buildTimestamp = buildTimestamp.Replace("x11", "November")
+            buildTimestamp = buildTimestamp.Replace("x12", "December")
+            Select Case buildTimestamp.Substring(0, 2)
+                Case "1x", "21", "31" : buildTimestamp = buildTimestamp.Replace("xx", "st")
+                Case "2x", "22" : buildTimestamp = buildTimestamp.Replace("xx", "nd")
+                Case "3x", "23" : buildTimestamp = buildTimestamp.Replace("xx", "rd")
+                Case Else : buildTimestamp = buildTimestamp.Replace("xx", "th")
+            End Select
+#If _IN_DEVELOPMENT = True Then
+            buildTimestamp += ", in development"
+#End If
+
             ' Parse arguments
             Dim allSections As Boolean = True
             For i As Integer = 0 To unpackedArgs.Count - 1
@@ -290,7 +320,7 @@ Module Program
                         showGrammar = True
                         allSections = False
                     Case "-h", "--help", "\?"
-                        Console.Error.WriteLine("UnZ 0.13 ({0}) by Henrik 흒man, (c) 2021-2024", buildDateTimeLocal.ToString("yyyy-MM-dd HH:mm:ss"))
+                        Console.Error.WriteLine("UnZ 0.14 ({0}) by Henrik 흒man, (c) 2021-2025", buildTimestamp)
                         Console.Error.WriteLine("Usage: unz [option] [file]")
                         Console.Error.WriteLine("Unpack Z-machine file format information.")
                         Console.Error.WriteLine()

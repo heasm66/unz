@@ -1,6 +1,6 @@
 ﻿'MIT License
 
-'Copyright(c) 2021-2024 Henrik Åsman
+'Copyright(c) 2021-2025 Henrik Åsman
 
 'Permission Is hereby granted, free Of charge, to any person obtaining a copy
 'of this software And associated documentation files (the "Software"), to deal

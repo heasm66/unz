@@ -1,6 +1,6 @@
 ﻿'MIT License
 
-'Copyright(c) 2021-2024 Henrik Åsman
+'Copyright(c) 2021-2025 Henrik Åsman
 
 'Permission Is hereby granted, free Of charge, to any person obtaining a copy
 'of this software And associated documentation files (the "Software"), to deal
@@ -20,7 +20,10 @@
 'OUT OF Or IN CONNECTION WITH THE SOFTWARE Or THE USE Or OTHER DEALINGS IN THE
 'SOFTWARE.
 
+Imports System.Formats
 Imports System.Globalization
+Imports System.IO
+Imports System.Net.Http
 Imports System.Reflection
 
 Public Enum EnumCompilerSource
@@ -194,17 +197,17 @@ Public Class Helper
         Return sRet
     End Function
 
-    Public Shared Function GetBuildDate(ByVal assembly As Assembly) As DateTime
+    Public Shared Function GetBuildDateUtc(ByVal assembly As Assembly) As DateTime
         Const BuildVersionMetadataPrefix As String = "+build"
         Dim attribute = assembly.GetCustomAttribute(Of AssemblyInformationalVersionAttribute)()
         Dim result As DateTime = Nothing
 
         If attribute?.InformationalVersion IsNot Nothing Then
-            Dim value = attribute.InformationalVersion
-            Dim index = value.IndexOf(BuildVersionMetadataPrefix)
+            Dim value As String = attribute.InformationalVersion
+            Dim index As Integer = value.IndexOf(BuildVersionMetadataPrefix)
 
             If index > 0 Then
-                value = value((index + BuildVersionMetadataPrefix.Length))
+                value = value.Substring(index + BuildVersionMetadataPrefix.Length)
 
                 If DateTime.TryParseExact(value, "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, result) Then
                     Return result
@@ -214,7 +217,6 @@ Public Class Helper
 
         Return Now()
     End Function
-
 End Class
 
 Public Class StringData
