@@ -2830,6 +2830,7 @@ Module Program
         If sSerial = "??????" Then Return EnumCompilerSource.ZILCH 'moonmist-beta-r65-sXXXXXX.z3, spellbreaker-r63-sXXXXXX.z3, zork1-r5-sXXXXXX.z1 & zork1-r15-sXXXXXX.z2
         If sSerial = "UG3AU5" Then Return EnumCompilerSource.ZILCH 'zork1-r15-sUG3AU5.z2 & zork2-r7-sUG3AU5.z2
         If sSerial = "AS000C" Then Return EnumCompilerSource.ZILCH 'zork1-r2-sAS000C.z1
+        If sSerial = "......" Then Return EnumCompilerSource.ZILCH 'zork1-r5-sXXXXXX.z1, zork1-r20-sXXXXXX.z3
 
         ' Default to Inbform5
         Return EnumCompilerSource.INFORM5
