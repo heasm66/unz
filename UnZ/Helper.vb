@@ -42,7 +42,7 @@ Public Enum EnumGrammarVer
     UNKNOWN = 0
 End Enum
 Public Class Helper
-    Public Shared unicodeTranslationTableAddr As Integer = 0
+    Public Shared Property UnicodeTranslationTableAddr As Integer = 0
 
     Public Shared Function GetAdressFromWord(byteGame() As Byte, index As Integer) As Integer
         Return byteGame(index) * 256 + byteGame(index + 1)
@@ -134,16 +134,16 @@ Public Class Helper
                             sRet &= " !~#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~".Substring(iZSCIIEscape - 32, 1)
                         ElseIf iZSCIIEscape >= 155 And iZSCIIEscape <= 251 Then
                             ' Extra chars, unicode
-                            If Not unicodeTranslationTableAddr > 0 Then
+                            If Not UnicodeTranslationTableAddr > 0 Then
                                 ' Standard table
                                 sRet &= "äöüÄÖÜß»«ëïÿËÏáéíóúýÁÉÍÓÚÝàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛåÅøØãñõÃÑÕæÆçÇþðÞÐ£œŒ¡¿????????????????????????????".Substring(iZSCIIEscape - 155, 1)
                             Else
                                 ' Use unicode translation table
-                                Dim unicodeTableLen As Integer = byteGame(unicodeTranslationTableAddr)
+                                Dim unicodeTableLen As Integer = byteGame(UnicodeTranslationTableAddr)
                                 If ((iZSCIIEscape - 155) + 1) > unicodeTableLen Then
                                     sRet &= "?"
                                 Else
-                                    Dim unicodeVal As Integer = Helper.GetAdressFromWord(byteGame, unicodeTranslationTableAddr + (iZSCIIEscape - 155) * 2 + 1)
+                                    Dim unicodeVal As Integer = Helper.GetAdressFromWord(byteGame, UnicodeTranslationTableAddr + (iZSCIIEscape - 155) * 2 + 1)
                                     sRet &= Strings.ChrW(unicodeVal)
                                 End If
                             End If

@@ -531,7 +531,7 @@ Module Program
                     Dim unicodeAddr As Integer = Helper.GetAdressFromWord(byteStory, iAddrHeaderExtStart + 6)
                     If unicodeAddr > 0 Then
                         Dim unicodeLen As Integer = byteStory(unicodeAddr)
-                        Helper.unicodeTranslationTableAddr = unicodeAddr
+                        Helper.UnicodeTranslationTableAddr = unicodeAddr
                         memoryMap.Add(New MemoryMapEntry("Unicode translation table", unicodeAddr, unicodeAddr + unicodeLen * 2, MemoryMapType.MM_UNICODE_TABLE))
                     End If
 
@@ -1169,8 +1169,7 @@ Module Program
                 Dim iAddrProperties As Integer = 0
                 Dim iAddrObjectProperties As Integer = 65536
                 Do
-                    Dim objectData As New ObjectData
-                    objectData.Id = iObject + 1
+                    Dim objectData As New ObjectData With {.Id = iObject + 1}
                     If iZVersion <= 3 Then
                         objectData.ParentId = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 4)
                         objectData.NextId = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 5)
@@ -2832,7 +2831,7 @@ Module Program
         If sSerial = "AS000C" Then Return EnumCompilerSource.ZILCH 'zork1-r2-sAS000C.z1
         If sSerial = "......" Then Return EnumCompilerSource.ZILCH 'zork1-r5-sXXXXXX.z1, zork1-r20-sXXXXXX.z3
 
-        ' Default to Inbform5
+        ' Default to Inform5
         Return EnumCompilerSource.INFORM5
     End Function
 
@@ -3130,17 +3129,17 @@ Module Program
 
         ' Return result
         If foundGV3 Then
-            Dim oRet As New GrammarScanResult
-            oRet.addrGrammarTableStart = startGrammarTable
-            oRet.addrGrammarTableEnd = startGrammarTable + pNumberOfVerbs * 2
-            oRet.addrGrammarTableEnd -= 1
-            oRet.NumberOfActions = maxActionNumber + 1
-            oRet.addrGrammarDataStart = startGrammarTableData
-            oRet.addrGrammarDataEnd = endGrammarTableData - 1
-            oRet.grammarVer = EnumGrammarVer.VERSION_3
-            oRet.NumberOfVerbs = pNumberOfVerbs
-            oRet.NumberOfParsingRoutines = maxParsingRoutineNumber + 1
-            oRet.NumberOfPrepositions = maxAdjectiveNumber + 1
+            Dim oRet As New GrammarScanResult With {
+                .addrGrammarTableStart = startGrammarTable,
+                .addrGrammarTableEnd = startGrammarTable + pNumberOfVerbs * 2 - 1,
+                .NumberOfActions = maxActionNumber + 1,
+                .addrGrammarDataStart = startGrammarTableData,
+                .addrGrammarDataEnd = endGrammarTableData - 1,
+                .grammarVer = EnumGrammarVer.VERSION_3,
+                .NumberOfVerbs = pNumberOfVerbs,
+                .NumberOfParsingRoutines = maxParsingRoutineNumber + 1,
+                .NumberOfPrepositions = maxAdjectiveNumber + 1
+            }
             Return oRet
         Else
             Return Nothing

@@ -147,7 +147,7 @@ Public Class Decode
         showAbbrevsInsertion = showAbbrevsInsertionPoints
         inlineStrings = inlineStringsList
 
-        If PC > byteGame.Count Then Return -1
+        If PC > byteGame.Length Then Return -1
 
         localsCount = byteGame(PC)
 
@@ -1052,7 +1052,7 @@ Public Class Decode
 
                 ' Collect statistics on globals
                 If value > highest_global Then highest_global = value
-                If Not usedGlobals.Contains(value) Then usedGlobals.Add(value)
+                usedGlobals.Add(value)
 
                 sStoreText &= value.ToString
                 End If
@@ -1097,7 +1097,7 @@ Public Class Decode
         If pVariable < 256 Then
             Dim value As Integer = pVariable - 16
             If value > highest_global Then highest_global = value
-            If Not usedGlobals.Contains(value) Then usedGlobals.Add(value)
+            usedGlobals.Add(value)
             If syntax = 0 Then Return "G" & value.ToString("X2")
             If syntax = 1 Then Return "g" & value.ToString
             If syntax = 2 Then Return "G" & value.ToString
