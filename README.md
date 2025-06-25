@@ -2,7 +2,7 @@
 
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
-UnZ 0.14 (24th June 2025, in development) by Henrik Åsman, (c) 2021-2025
+UnZ 0.14 (25th June 2025, in development) by Henrik Åsman, (c) 2021-2025
 Usage: unz [option] [file]
 Unpack Z-machine file format information.
 
@@ -36,10 +36,11 @@ Changelog:
 
     0.14 2025-XX-XX
     ---------------
-      * Bugfixes
+      * Bugfixes and refactoring
       * Fix GetBuildDate
       * Fix to illegal parameter use of WINGET in Zork0_242
       * Identify zork1-r5-sXXXXXX.z1 and zork1-r20-sXXXXXX.z3 as Zilch
+      * Handle Inform5-files with no prepositions (Scott Adams)
       
     0.13 2024-12-27
     ---------------

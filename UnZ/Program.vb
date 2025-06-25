@@ -253,6 +253,7 @@ Module Program
 
             ' Special
             'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\zork0-r242-s880901.z6"
+            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Scott Adams\02 Pirate Adventure.z5"
 
             ' ***** Unpack parameters *****
             ' A bit of a poor mans GetOpt. Should probable be replaced by a NuGet-libary...
@@ -1002,7 +1003,11 @@ Module Program
                 Else
                     If {EnumCompilerSource.INFORM5, EnumCompilerSource.INFORM6}.Contains(compilerSource) And grammarVer = 1 Then
                         ' Preposition (adjective) table is only relevant for Inform, grammar ver 1. In ver 2 it's two 00-bytes after action-table
-                        iAddrAdjectiveTable = ScanForInformV1AdjectiveTable(DictEntriesList)
+                        If DictEntriesList.PrepositionCountUnique = 0 Then
+                            iAddrAdjectiveTable = iAddrDictionary - 2 ' If there are no prepositions, there are two 00-bytes before dictionary
+                        Else
+                            iAddrAdjectiveTable = ScanForInformV1AdjectiveTable(DictEntriesList)
+                        End If
                         If iAddrAdjectiveTable > 0 Then
                             ' Word preceding table contains number of prepositions
                             memoryMap.Add(New MemoryMapEntry("Preposition/Adjective table", iAddrAdjectiveTable, iAddrAdjectiveTable + 2 + 4 * DictEntriesList.PrepositionCountUnique - 1, MemoryMapType.MM_PREPOSITION_TABLE))
