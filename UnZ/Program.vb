@@ -699,8 +699,9 @@ Module Program
                 grammarVer = resultGrammarScan.grammarVer
                 compactSyntaxes = resultGrammarScan.CompactSyntaxes
                 If Not grammarVer = EnumGrammarVer.UNKNOWN Then
-                    iVerbActionCount = resultGrammarScan.NumberOfActions
                     iVerbCount = resultGrammarScan.NumberOfVerbs
+                    If iVerbCount = 0 Then resultGrammarScan.NumberOfActions = 0
+                    iVerbActionCount = resultGrammarScan.NumberOfActions
                     If Not createGametext Then
                         Console.WriteLine("Unique verbs count:                        {0}", iVerbCount)
                         Console.Write("Grammar table version:                     {0}", CInt(grammarVer))
@@ -992,7 +993,7 @@ Module Program
             Dim iAddrActionTable As Integer = 0
             Dim iAddrPreActionTable As Integer = 0
             Dim iAddrAdjectiveTable As Integer = 0
-            If iVerbActionCount > 0 Then
+            If iVerbActionCount > 0 And iVerbCount > 0 Then
                 If compilerSource = EnumCompilerSource.INFORM6 And grammarVer = 3 Then
                     iAddrActionTable = iAddrGrammarDataEnd + 1
                     iAddrPreActionTable = iAddrActionTable + 2 * iVerbActionCount

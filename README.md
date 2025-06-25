@@ -41,6 +41,7 @@ Changelog:
       * Fix to illegal parameter use of WINGET in Zork0_242
       * Identify zork1-r5-sXXXXXX.z1 and zork1-r20-sXXXXXX.z3 as Zilch
       * Handle Inform5-files with no prepositions (Scott Adams)
+      * Handle Zilch/Zilf where there are no ACTIONS (ziptest)
       
     0.13 2024-12-27
     ---------------
