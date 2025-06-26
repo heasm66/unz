@@ -2,7 +2,7 @@
 
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
-UnZ 0.14 (26th June 2025, in development) by Henrik Åsman, (c) 2021-2025
+UnZ 0.14 (26th June 2025) by Henrik Åsman, (c) 2021-2025
 Usage: unz [option] [file]
 Unpack Z-machine file format information.
 
@@ -34,7 +34,7 @@ UnZ homepage: https://github.com/heasm66/UnZ
 
 Changelog:
 
-    0.14 2025-XX-XX
+    0.14 2025-06-26
     ---------------
       * Bugfixes and refactoring
       * Fix GetBuildDate

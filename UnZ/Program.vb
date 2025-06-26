@@ -29,7 +29,7 @@ Imports System.Runtime.InteropServices.JavaScript.JSType
 Imports Microsoft
 
 ' Set this to false before release
-#Const _IN_DEVELOPMENT = True
+#Const _IN_DEVELOPMENT = False
 
 ' ZILCH, grammar version 1
 '   All Infocom except Mini-Zork 1, Sherlock, Abyss, Zork Zero, Shogun & Arthur
