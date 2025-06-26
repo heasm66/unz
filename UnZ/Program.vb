@@ -254,6 +254,8 @@ Module Program
             ' Special
             'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\zork0-r242-s880901.z6"
             'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Scott Adams\02 Pirate Adventure.z5"
+            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Bureaucracy\Bureaucracy.dat"
+            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Projects\zil\Zork_770614\bin\zork_285.z5"
 
             ' ***** Unpack parameters *****
             ' A bit of a poor mans GetOpt. Should probable be replaced by a NuGet-libary...
@@ -896,8 +898,9 @@ Module Program
                     End If
                     iStart = Helper.GetNextValidPackedAddress(byteStory, iNext)
                 Else
-                    ' Routines below initial pc are considered false hits if they are not continous with routines starting at initial pc 
-                    If iStart < iAddrInitialPC Then
+                    ' Routines below initial pc are considered false hits if they are small (under 512 bytes) and not continous
+                    ' with routines starting at initial pc 
+                    If iStart < iAddrInitialPC And validRoutinesList.Count > 0 AndAlso iStart - validRoutinesList(0).entryPoint < 512 Then
                         oDecode = New Decode
                         validRoutinesList = New List(Of RoutineData)
                     End If
