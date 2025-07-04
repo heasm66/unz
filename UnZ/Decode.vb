@@ -20,7 +20,11 @@
 'OUT OF Or IN CONNECTION WITH THE SOFTWARE Or THE USE Or OTHER DEALINGS IN THE
 'SOFTWARE.
 
+Imports System.Drawing
 Imports System.Net
+Imports System.Net.Mime.MediaTypeNames
+Imports System.Runtime.InteropServices
+Imports System.Runtime.Intrinsics.Arm
 
 Public Class Decode
     Public startAddress As Integer = 0
@@ -37,6 +41,7 @@ Public Class Decode
     Private high_pc As Integer
     Private sAbbreviations() As String
     Private bSilent As Boolean = False
+    Private bShowZCodeVerbose As Boolean = False
     Private syntax As Integer = 0
     Private validStringList As List(Of StringData) = Nothing
     Private validRoutineList As List(Of RoutineData) = Nothing
@@ -99,6 +104,7 @@ Public Class Decode
     End Enum
 
     Public Enum EnumAddressMode
+        NONE
         LONG_IMMEDIATE
         IMMEDIATE
         VARIABLE
@@ -118,18 +124,748 @@ Public Class Decode
         Public OperandLen(7) As Integer
         Public OperandVal(7) As Integer
         Public OperandAddrMode(7) As EnumAddressMode
+        Public OperandString(7) As String
         Public Extra As EnumExtra
         Public StoreVal As Integer = 0
-        Public BranchTest As Boolean = True
-        Public BranchAddr As Integer = 0
+        Public StoreString As String
+        Public BranchTest As Boolean = True             ' Branch if true/false
+        Public BranchAddr As Integer = 0                ' Absolut address of branch, 0=false, 1=true
         Public Type As EnumType
         Public Text As String = ""
         Public OperandText As String = ""
+        Public OpcodeText As String = ""
+        Public OpcodeBytes(20) As Byte
+
+        Public Sub PrintVerbose()
+            Dim currentByte As Integer = 0
+            Dim byteValue As Integer
+            Dim wordValue As Integer
+            Dim numberOfOperands As Integer = 0
+
+            Console.WriteLine("  *--------------------------------------------------")
+
+            ' Opcode
+            Dim opcodeAsBinary As String = Convert.ToString(Code Or 256, 2).Substring(1)
+            Console.WriteLine("  |Opcode:")
+            Select Case OpcodeClass
+                Case EnumOpcodeClass.ZERO_OPERAND       ' Bit 7-4 = 1011
+                    Console.WriteLine("  | Byte {0,2:##}    0OP:{1}", currentByte + 1, Code)
+                    Console.WriteLine("  |  {0}  0x{1:X2} {2}", opcodeAsBinary, Code, Code)
+                    Console.WriteLine("  |  10        short-form (long-form in ZAP)")
+                    Console.WriteLine("  |    11      no operands")
+                    Console.WriteLine("  |      {0}  {1}", opcodeAsBinary.Substring(4, 4), OpcodeText)
+                Case EnumOpcodeClass.ONE_OPERAND        ' Bit 7-6 = 10
+                    numberOfOperands = 1
+                    Console.WriteLine("  | Byte {0,2:##}    1OP:{1}", currentByte + 1, Code And &H9F)
+                    Console.WriteLine("  |  {0}  0x{1:X2} {2}", opcodeAsBinary, Code, Code)
+                    Console.WriteLine("  |  10        short-form (long-form in ZAP)")
+                    Console.WriteLine("  |    {0}      {1}", opcodeAsBinary.Substring(2, 2), OperandDescription((Code >> 4) And &H3))
+                    'End Select
+                    Console.WriteLine("  |      {0}  {1}", opcodeAsBinary.Substring(4, 4), OpcodeText)
+                Case EnumOpcodeClass.TWO_OPERAND        ' Bit 7   = 0
+                    numberOfOperands = 2
+                    Console.WriteLine("  | Byte {0,2:##}    2OP:{1}", currentByte + 1, Code And &H1F)
+                    Console.WriteLine("  |  {0}  0x{1:X2} {2}", opcodeAsBinary, Code, Code)
+                    Console.WriteLine("  |  0         long-form (short-form in ZAP)")
+                    Select Case Code And &H60
+                        Case &H0
+                            Console.WriteLine("  |   0        constant (immediate)")
+                            Console.WriteLine("  |    0       constant (immediate)")
+                        Case &H20
+                            Console.WriteLine("  |   0        constant (immediate)")
+                            Console.WriteLine("  |    1       variable")
+                        Case &H40
+                            Console.WriteLine("  |   1        variable")
+                            Console.WriteLine("  |    0       constant (immediate)")
+                        Case &H60
+                            Console.WriteLine("  |   1        variable")
+                            Console.WriteLine("  |    1       variable")
+                    End Select
+                    Console.WriteLine("  |     {0}  {1}", opcodeAsBinary.Substring(3, 5), OpcodeText)
+                Case EnumOpcodeClass.VARIABLE_OPERAND   ' Bit 7-6 = 11
+                    numberOfOperands = 4
+                    Console.WriteLine("  | Byte {0,2:##}    VAR:{1} (EXT:{2})", currentByte + 1, Code, Code)
+                    Console.WriteLine("  |  {0}  0x{1:X2} {2}", opcodeAsBinary, Code, Code)
+                    Console.WriteLine("  |  11        variable-operand (extended)")
+                    If Code < 224 Then
+                        Console.WriteLine("  |    0       VAR-variant of 2OP:{0}", Code - 192)
+                    Else
+                        Console.WriteLine("  |    1       VAR")
+                    End If
+                    Console.WriteLine("  |     {0}  {1}", opcodeAsBinary.Substring(3, 5), OpcodeText)
+                Case EnumOpcodeClass.EXTENDED_OPERAND   ' 0OP opcode 190
+                    numberOfOperands = 4
+                    Console.WriteLine("  | Byte {0,2:##}    0OP:190 extended-form (EXTOP)")
+                    Console.WriteLine("  |  10111110  0xBE 190")
+                    currentByte += 1
+                    Console.WriteLine("  | Byte {0,2:##}    EXT:{1} (EXT:{2})", currentByte + 1, Code, Code + 256)
+                    Console.WriteLine("  |  {0}  0x{1:X2} {2}", opcodeAsBinary, Code, Code)
+            End Select
+            currentByte += 1
+
+            ' Operand types
+            byteValue = OpcodeBytes(currentByte)
+            Dim operandTypesAsBinary As String = Convert.ToString(byteValue Or 256, 2).Substring(1)
+            If OpcodeClass = EnumOpcodeClass.VARIABLE_OPERAND Or OpcodeClass = EnumOpcodeClass.EXTENDED_OPERAND Then
+                If byteValue = &HFF Then numberOfOperands = 0
+                Console.WriteLine("  |")
+                Console.WriteLine("  |Operand types:")
+                Console.WriteLine("  | Byte {0,2:##}    Operand types 1-4", currentByte + 1)
+                Console.WriteLine("  |  {0}  0x{1:X2} {2}", operandTypesAsBinary, byteValue, byteValue)
+                Console.WriteLine("  |  {0}        {1}", operandTypesAsBinary.Substring(0, 2), OperandDescription((byteValue >> 6) And &H3))
+                Console.WriteLine("  |    {0}      {1}", operandTypesAsBinary.Substring(2, 2), OperandDescription((byteValue >> 4) And &H3))
+                Console.WriteLine("  |      {0}    {1}", operandTypesAsBinary.Substring(4, 2), OperandDescription((byteValue >> 2) And &H3))
+                Console.WriteLine("  |        {0}  {1}", operandTypesAsBinary.Substring(6, 2), OperandDescription(byteValue And &H3))
+                currentByte += 1
+                If (Code And &H3F) = &H2C Or (Code And &H3F) = &H3A Then
+                    ' These two opcodes are special and have an extra byte for operand types
+                    If byteValue = &HFF Then numberOfOperands = 0 Else numberOfOperands = 8
+                    byteValue = OpcodeBytes(currentByte)
+                    operandTypesAsBinary = Convert.ToString(byteValue Or 256, 2).Substring(1)
+                    Console.WriteLine("  | Byte {0,2:##}    Operand types 5-8", currentByte + 1)
+                    Console.WriteLine("  |  {0}  0x{1:X2} {2}", operandTypesAsBinary, byteValue, byteValue)
+                    Console.WriteLine("  |  {0}        {1}", operandTypesAsBinary.Substring(0, 2), OperandDescription((byteValue >> 6) And &H3))
+                    Console.WriteLine("  |    {0}      {1}", operandTypesAsBinary.Substring(2, 2), OperandDescription((byteValue >> 4) And &H3))
+                    Console.WriteLine("  |      {0}    {1}", operandTypesAsBinary.Substring(4, 2), OperandDescription((byteValue >> 2) And &H3))
+                    Console.WriteLine("  |        {0}  {1}", operandTypesAsBinary.Substring(6, 2), OperandDescription(byteValue And &H3))
+                    currentByte += 1
+                End If
+            End If
+
+            ' Operands
+            If numberOfOperands > 0 Then
+                Console.WriteLine("  |")
+                Console.WriteLine("  |Operands:")
+                For i As Integer = 0 To numberOfOperands - 1
+                    byteValue = OpcodeBytes(currentByte)
+                    Select Case OperandAddrMode(i)
+                        Case EnumAddressMode.IMMEDIATE
+                            If OperandType(i) = EnumOperand.P_VAR Then
+                                Console.WriteLine("  | Byte {0,2:##}    0x{1:X2} {2} ({3})", currentByte + 1, byteValue, byteValue, VariableDescription(byteValue))
+                            ElseIf (byteValue And &H8000) > 0 Then
+                                Console.WriteLine("  | Byte {0,2:##}    0x{1:X2} {2} / {3}", currentByte + 1, byteValue, byteValue, -1 * (&H100 - byteValue))
+                            Else
+                                Console.WriteLine("  | Byte {0,2:##}    0x{1:X2} {2}", currentByte + 1, byteValue, byteValue)
+                            End If
+                            currentByte += 1
+                        Case EnumAddressMode.VARIABLE
+                            Dim varText As String = VariableDescription(byteValue)
+                            If OperandType(i) = EnumOperand.P_INDIRECT Then varText = "[" & varText & "]"
+                            Console.WriteLine("  | Byte {0,2:##}    0x{1:X2} {2} ({3})", currentByte + 1, byteValue, byteValue, varText)
+                            currentByte += 1
+                        Case EnumAddressMode.LONG_IMMEDIATE
+                            wordValue = OpcodeBytes(currentByte) * 256 + OpcodeBytes(currentByte + 1)
+                            If OperandType(i) = EnumOperand.P_LABEL Then
+                                ' JUMP, always two-complemented word
+                                If (wordValue And &H8000) > 0 Then
+                                    Console.WriteLine("  | Byte {0,2:##}-{1,2:##} 0x{2:X4} {3}  [{4} (0x{5:X4}) - {6} - 2 = {7} (0x{8:X4})]", currentByte + 1,
+                                                                                                                                      currentByte + 2,
+                                                                                                                                      wordValue,
+                                                                                                                                      -1 * (&H10000 - wordValue),
+                                                                                                                                      Address + currentByte + 2,
+                                                                                                                                      Address + currentByte + 2,
+                                                                                                                                      &H10000 - wordValue,
+                                                                                                                                      Address + currentByte + 2 - (&H10000 - wordValue) - 2,
+                                                                                                                                     Address + currentByte + 2 - (&H10000 - wordValue) - 2)
+                                Else
+                                    Console.WriteLine("  | Byte {0,2:##}-{1,2:##} 0x{2:X4} {3}  [{4} (0x{5:X4}) + {6} - 2 = {7} (0x{8:X4})]", currentByte + 1,
+                                                                                                                                      currentByte + 2,
+                                                                                                                                      wordValue,
+                                                                                                                                      wordValue,
+                                                                                                                                      Address + currentByte + 2,
+                                                                                                                                      Address + currentByte + 2,
+                                                                                                                                      wordValue,
+                                                                                                                                      Address + currentByte + 2 + wordValue - 2,
+                                                                                                                                      Address + currentByte + 2 + wordValue - 2)
+                                End If
+                            Else
+                                If (wordValue And &H8000) > 0 Then
+                                    Console.WriteLine("  | Byte {0,2:##}-{1,2:##} 0x{2:X4} {3} / {4}", currentByte + 1, currentByte + 2, wordValue, wordValue, -1 * (&H10000 - wordValue))
+                                Else
+                                    Console.WriteLine("  | Byte {0,2:##}-{1,2:##} 0x{2:X4} {3}", currentByte + 1, currentByte + 2, wordValue, wordValue)
+                                End If
+                            End If
+                            currentByte += 2
+                    End Select
+
+                Next
+            End If
+
+            ' Store
+            If Extra = EnumExtra.E_STORE Or Extra = EnumExtra.E_BOTH Then
+                byteValue = OpcodeBytes(currentByte)
+                Console.WriteLine("  |")
+                Console.WriteLine("  |Store:")
+                Console.WriteLine("  | Byte {0,2:##}    0x{1:X2} {2} ({3})", currentByte + 1, byteValue, byteValue, VariableDescription(byteValue))
+                currentByte += 1
+            End If
+
+            ' Branch
+            If Extra = EnumExtra.E_BRANCH Or Extra = EnumExtra.E_BOTH Then
+                Console.WriteLine("  |")
+                Console.WriteLine("  |Branch:")
+                byteValue = OpcodeBytes(currentByte)
+                wordValue = OpcodeBytes(currentByte) * 256 + OpcodeBytes(currentByte + 1)
+                Dim predicateAsBinary As String = Convert.ToString(byteValue Or 256, 2).Substring(1)
+                If (byteValue And &H40) = &H40 Then
+                    ' 6-bit branch, always forward
+                    Console.WriteLine("  | Byte {0,2:##}    0x{1:X2} {2}", currentByte + 1, byteValue, byteValue)
+                    Console.WriteLine("  |  {0}  ", operandTypesAsBinary)
+                    If (byteValue And &H80) = &H80 Then
+                        Console.WriteLine("  |  1         branch if true")
+                    Else
+                        Console.WriteLine("  |  0         branch if false")
+                    End If
+                    Console.WriteLine("  |   1        6-bit branch, always forward, except when 0 (rfalse) or 1 (rtrue)")
+                    If (byteValue And &H3F) = 0 Then
+                        Console.WriteLine("  |    {0}  0x{1:X2} {2}  (rfalse)", predicateAsBinary.Substring(2, 6), byteValue And &H3F, byteValue And &H3F)
+                    ElseIf (byteValue And &H3F) = 1 Then
+                        Console.WriteLine("  |    {0}  0x{1:X2} {2}  (rtrue)", predicateAsBinary.Substring(2, 6), byteValue And &H3F, byteValue And &H3F)
+                    Else
+                        Console.WriteLine("  |    {0}  0x{1:X2} {2}  [{3} (0x{4:X4}) + {5} - 2 = {6} (0x{7:X4})]", predicateAsBinary.Substring(2, 6),
+                                                                                                               byteValue And &H3F,
+                                                                                                               byteValue And &H3F,
+                                                                                                               Address + currentByte + 1,
+                                                                                                               Address + currentByte + 1,
+                                                                                                               byteValue And &H3F,
+                                                                                                               Address + currentByte + 1 + (byteValue And &H3F) - 2,
+                                                                                                               Address + currentByte + 1 + (byteValue And &H3F) - 2)
+                    End If
+                    currentByte += 1
+                Else
+                    ' 14-bit branch, two-complemented
+                    Console.WriteLine("  | Byte {0,2:##}    0x{1:X2} {2}", currentByte + 1, byteValue, byteValue)
+                    Console.WriteLine("  |  {0}  ", operandTypesAsBinary)
+                    If (byteValue And &H80) = &H80 Then
+                        Console.WriteLine("  |  1         branch if true")
+                    Else
+                        Console.WriteLine("  |  0         branch if false")
+                    End If
+                    Console.WriteLine("  |   0        14-bit branch, two-complemented")
+                    Console.WriteLine("  |    {0}  high 6 bits", predicateAsBinary.Substring(2, 6))
+                    currentByte += 1
+                    byteValue = OpcodeBytes(currentByte)
+                    predicateAsBinary = Convert.ToString(byteValue Or 256, 2).Substring(1)
+                    Console.WriteLine("  | Byte {0,2:##}    0x{1:X2} {2}, low 8 bits", currentByte + 1, byteValue, byteValue)
+                    If (wordValue And &H2000) = &H2000 Then
+                        Dim value As Integer = &H4000 - (wordValue And &H3FFF)
+                        Console.WriteLine("  |  {0}  0x{1:X4} {2}  [{3} (0x{4:X4}) - {5} - 2 = {6} (0x{7:X4})]", predicateAsBinary,
+                                                                                                                 -1 * value,
+                                                                                                                 -1 * value,
+                                                                                                                 Address + currentByte + 1,
+                                                                                                                 Address + currentByte + 1,
+                                                                                                                 value,
+                                                                                                                 Address + currentByte + 1 - value - 2,
+                                                                                                                 Address + currentByte + 1 - value - 2)
+
+                    Else
+                        Console.WriteLine("  |  {0}  0x{1:X4} {2}  [{3} (0x{4:X4}) + {5} - 2 = {6} (0x{7:X4})]", predicateAsBinary,
+                                                                                                                 wordValue And &H3FFF,
+                                                                                                                 wordValue And &H3FFF,
+                                                                                                                 Address + currentByte + 1,
+                                                                                                                 Address + currentByte + 1,
+                                                                                                                 wordValue And &H3FFF,
+                                                                                                                 Address + currentByte + 1 + (wordValue And &H3FFF) - 2,
+                                                                                                                 Address + currentByte + 1 + (wordValue And &H3FFF) - 2)
+                    End If
+                    currentByte += 1
+                End If
+            End If
+
+            ' Text
+            If Extra = EnumExtra.E_TEXT Then
+                Console.WriteLine("  |")
+                Console.WriteLine("  |Text:")
+                Console.WriteLine("  | Byte {0,2:##}-   string encoded in ZSCII", currentByte + 1)
+            End If
+
+            ' Pseudo
+            Dim pseudoCodeString As String = PseudoCode()
+            Console.WriteLine("  |")
+            Console.WriteLine("  |Pseudo-code:")
+            Console.WriteLine("  |  {0}", pseudoCodeString)
+
+            Console.WriteLine("  *--------------------------------------------------")
+        End Sub
+
+        Public Function PseudoCode() As String
+            Dim pseudoCodeString As String = "not implemented"
+            Dim stackPeek As Boolean = False
+            If Extra = EnumExtra.E_BRANCH Or Extra = EnumExtra.E_BOTH Then
+                'check_arg_count, ASSIGNED?	if (check_arg_count > arg1) jump xxxx/rfalse/rtrue
+                'dec_chk, DLESS?			var = var - 1; if (var </>= int) jump xxxx/rfalse/rtrue
+                'get_child, FIRST?			VAL = child(obj); if (VAL ==/~= nothing) jump xxxx/rfalse/rtrue
+                'get_sibling, NEXT?			VAL = sibling(obj); if (VAL ==/~= nothing) jump xxxx/rfalse/rtrue
+                'inc_chk", "IGRTR?"			var = var + 1; if (var >/<= int) jump xxxx/rfalse/rtrue
+                'je, EQUAL?					if (arg1 ==/~= arg2 [or arg3]...) jump xxxx/rfalse/rtrue
+                'jg, GRTR?					if (arg1 >/<= arg2) jump xxxx/rfalse/rtrue
+                'jin, IN?					if (arg1 in/notin arg2) jump xxxx/rfalse/rtrue
+                'jl, LESS?				    if (arg1 </>= arg2) jump xxxx/rfalse/rtrue
+                'jz, ZERO?					if (arg ==/~= 0) jump xxxx/rfalse/rtrue
+                'make_menu, MENU			if (make_menu(arg1, arg2) == true/false) jump xxxx/rfalse/rtrue
+                'picture_data, PICINF		if (picture_data(arg1, arg2) == true/false) jump xxxx/rfalse/rtrue
+                'piracy, ORIGINAL?			if (orginal == true/false) jump xxxx/rfalse/rtrue
+                'push_stack, XPUSH			if (push_stack(arg1) == true/false) jump xxxx/rfalse/rtrue
+                'restore, RESTORE			if (restore == true/false) jump xxxx/rfalse/rtrue
+                'save, SAVE					if (save == true/false) jump xxxx/rfalse/rtrue
+                'scan_table, INTBL?			VAL = scan_table(arg1, arg2, arg3[, arg4]); if (VAL ==/~= nothing) jump xxxx/rfalse/rtrue
+                'test, BTST			        if ((arg1 & arg2) ==/~= arg2) jump xxxx/rfalse/rtrue
+                'test_attr, FSET?			if (arg1 has/hasnt arg2) jump xxxx/rfalse/rtrue 
+                'verify, VERIFY				if (verify == true/false) jump xxxx/rfalse/rtrue
+                Dim pseudoComp As String
+                Select Case OpcodeText
+                    Case "@check_arg_count / ASSIGNED?"
+                        If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
+                        pseudoCodeString = String.Concat("if (check_arg_count() ", pseudoComp, " ", OperandString(0), ") ", PseudoBranchText, ";")
+                    Case "@dec_chk / DLESS?"
+                        If BranchTest Then pseudoComp = "<" Else pseudoComp = ">="
+                        pseudoCodeString = String.Concat(OperandString(0), " = ", OperandString(0), " - 1; if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                    Case "@get_child / FIRST?"
+                        stackPeek = True
+                        If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
+                        pseudoCodeString = String.Concat(StoreString, " = child(", OperandString(0), ")#; if (", StoreString, " ", pseudoComp, " nothing) ", PseudoBranchText, ";")
+                    Case "@get_sibling / NEXT?"
+                        stackPeek = True
+                        If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
+                        pseudoCodeString = String.Concat(StoreString, " = sibling(", OperandString(0), ")#; if (", StoreString, " ", pseudoComp, " nothing) ", PseudoBranchText, ";")
+                    Case "@inc_chk / IGRTR?"
+                        stackPeek = True
+                        If BranchTest Then pseudoComp = "<" Else pseudoComp = ">="
+                        pseudoCodeString = String.Concat(OperandString(0), " = ", OperandString(0), " + 1; if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                    Case "@je / EQUAL?"
+                        If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
+                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " ", PseudoConcatOperands(1), ") ", PseudoBranchText, ";")
+                    Case "@jg / GRTR?"
+                        If BranchTest Then pseudoComp = ">" Else pseudoComp = "<="
+                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                    Case "@jin / IN?"
+                        If BranchTest Then pseudoComp = "in" Else pseudoComp = "notin"
+                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                    Case "@jl / LESS?"
+                        If BranchTest Then pseudoComp = "<" Else pseudoComp = ">="
+                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                    Case "@jz / ZERO?"
+                        If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
+                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " 0) ", PseudoBranchText, ";")
+                    Case "@make_menu / MENU"
+                        If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
+                        pseudoCodeString = String.Concat("if (make_menu(", OperandString(0), ", ", OperandString(1), ") ", pseudoComp, ") ", PseudoBranchText, ";")
+                    Case "@picture_data / PICINF"
+                        If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
+                        pseudoCodeString = String.Concat("if (picture_data(", OperandString(0), ", ", OperandString(1), ") ", pseudoComp, ") ", PseudoBranchText, ";")
+                    Case "@piracy / ORIGINAL?"
+                        If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
+                        pseudoCodeString = String.Concat("if (original() == ", pseudoComp, ") ", PseudoBranchText, ";")
+                    Case "@push_stack / XPUSH"
+                        If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
+                        pseudoCodeString = String.Concat("if (push_stack(", OperandString(0), ") == ", pseudoComp, ") ", PseudoBranchText, ";")
+                    Case "@restore / RESTORE"
+                        If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
+                        pseudoCodeString = String.Concat("if (restore() == ", pseudoComp, ") ", PseudoBranchText, ";")
+                    Case "@save / SAVE"
+                        If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
+                        pseudoCodeString = String.Concat("if (save() == ", pseudoComp, ") ", PseudoBranchText, ";")
+                    Case "@scan_table / INTBL?"
+                        stackPeek = True
+                        If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
+                        pseudoCodeString = String.Concat(StoreString, " = scan_table(", PseudoConcatOperands(1), ")#; if (", StoreString, " ", pseudoComp, " nothing) ", PseudoBranchText, ";")
+                    Case "@test / BTST"
+                        If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
+                        pseudoCodeString = String.Concat("if ((", OperandString(0), " & ", OperandString(1), ") ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                    Case "@test_attr / FSET?"
+                        If BranchTest Then pseudoComp = "has" Else pseudoComp = "hasnt"
+                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                    Case "@verify / VERIFY"
+                        If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
+                        pseudoCodeString = String.Concat("if (verify() == ", pseudoComp, ") ", PseudoBranchText, ";")
+                End Select
+            ElseIf Extra = EnumExtra.E_STORE Then
+                'add, ADD
+                'And, BAND
+                'art_shift, ASHIFT
+                'buffer_screen, *BUFFER_SCREEN*
+                'Call, CALL
+                'call_1s, CALL1
+                'call_2s, CALL2
+                'call_vs, CALL
+                'call_vs2, XCALL
+                'Catch, CATCH
+                'check_unicode, CHECKU
+                'div, DIV
+                'get_parent, LOC
+                'get_prop, GETP
+                'get_prop_addr, GETPT
+                'get_prop_len, PTSIZE
+                'get_wind_prop, WINGET
+                'get_next_prop, NEXTP
+                'load, VALUE
+                'loadb, GETB
+                'loadw, GET
+                'log_shift, SHIFT
+                'Mod, MOD
+                'mul, MUL
+                'Not, BCOM
+                'Or, BOR
+                'pull, POP
+                'Random, RANDOM
+                'read, READ
+                'read_char, INPUT
+                'restore, RESTORE
+                'restore_undo, IRESTORE
+                'save, SAVE
+                'save_undo, ISAVE
+                'set_font, FONT
+                'Sub, SUB
+                Select Case OpcodeText
+                    Case "@add / ADD"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " + ", OperandString(1), "#;")
+                    Case "@and / BAND"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " & ", OperandString(1), "#;")
+                    Case "@art_shift / ASHIFT"
+                        Dim direction As String = "<<"
+                        If OperandString(1).Substring(1, 1) = "-" Then
+                            direction = ">>"
+                            OperandString(1) = OperandString(1).Substring(1)
+                        End If
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " ", direction, " ", OperandString(1), "#;")
+                    Case "@buffer_screen / *BUFFER_SCREEN*"
+                        pseudoCodeString = String.Concat(StoreString, " = buffer_screen(", OperandString(0), ")#;")
+                    Case "@call / CALL", "@call_1s / CALL1", "@call_2s / CALL2", "@call_vs / CALL", "@call_vs2 / XCALL"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), "(", PseudoConcatOperands(1), ")#;")
+                    Case "@catch / CÁTCH"
+                        pseudoCodeString = String.Concat(StoreString, " = catch();")
+                    Case "@check_unicode / CHECKU"
+                        pseudoCodeString = String.Concat(StoreString, " = check_unicode(", OperandString(0), ")#;")
+                    Case "@div / DIV"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " / ", OperandString(1), "#;")
+                    Case "@get_parent / LOC"
+                        pseudoCodeString = String.Concat(StoreString, " = parent(", OperandString(0), ")#;")
+                    Case "@get_prop / GETP"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), ".", OperandString(1), "#;")
+                    Case "@get_prop_addr / GETPT"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), ".&", OperandString(1), "#;")
+                    Case "@get_prop_len / PTSIZE"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), ".#", OperandString(1), "#;")
+                    Case "@get_wind_prop / WINGET"
+                        pseudoCodeString = String.Concat(StoreString, " = get_wind_prop(", OperandString(0), ", ", OperandString(1), ")#;")
+                    Case "@get_next_prop / NEXTP"
+                        pseudoCodeString = String.Concat(StoreString, " = get_next_prop(", OperandString(0), ", ", OperandString(1), ")#;")
+                    Case "@load / VALUE"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), "#;")
+                    Case "@loadb / GETB"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), "->", OperandString(1), "#;")
+                    Case "@loadw / GET"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), "-->", OperandString(1), "#;")
+                    Case "@log_shift / SHIFT"
+                        Dim direction As String = "<<"
+                        If OperandString(1).Substring(1, 1) = "-" Then
+                            direction = ">>>"
+                            OperandString(1) = OperandString(1).Substring(1)
+                        End If
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " ", direction, " ", OperandString(1), "#;")
+                    Case "@mod / MOD"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " % ", OperandString(1), "#;")
+                    Case "@mul / MUL"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " * ", OperandString(1), "#;")
+                    Case "@not / BCOM"
+                        pseudoCodeString = String.Concat(StoreString, " = ~", OperandString(0), "#;")
+                    Case "@or / BOR"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " | ", OperandString(1), "#;")
+                    Case "@pull / POP"
+                        If OperandAddrMode(0) = EnumAddressMode.NONE Then
+                            pseudoCodeString = String.Concat(StoreString, " = stack.pop()#;")
+                        Else
+                            pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), ".pop()#;")
+                        End If
+                    Case "@random / RANDOM"
+                        pseudoCodeString = String.Concat(StoreString, " = random(", OperandString(0), ")#;")
+                    Case "@read / READ"
+                        pseudoCodeString = String.Concat(StoreString, " = read(", PseudoConcatOperands(0), ")#;")
+                    Case "@read_char / INPUT"
+                        pseudoCodeString = String.Concat(StoreString, " = read_char(", PseudoConcatOperands(0), ")#;")
+                    Case "@restore / RESTORE"
+                        Dim sTmp As String = ""
+                        If Not OperandAddrMode(1) = EnumAddressMode.NONE Then sTmp = PseudoConcatOperands(0)
+                        pseudoCodeString = String.Concat(StoreString, " = restore(", sTmp, ")#;")
+                    Case "@restore_undo / IRESTORE"
+                        pseudoCodeString = String.Concat(StoreString, " = restore_undo(", OperandString(0), ")#;")
+                    Case "@save / SAVE"
+                        Dim sTmp As String = ""
+                        If Not OperandAddrMode(1) = EnumAddressMode.NONE Then sTmp = PseudoConcatOperands(0)
+                        pseudoCodeString = String.Concat(StoreString, " = save(", sTmp, ")#;")
+                    Case "@save_undo / ISAVE"
+                        pseudoCodeString = String.Concat(StoreString, " = save_undo(", OperandString(0), ")#;")
+                    Case "@set_font / FONT"
+                        pseudoCodeString = String.Concat(StoreString, " = set_font(", PseudoConcatOperands(0), ")#;")
+                    Case "@sub / SUB"
+                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " - ", OperandString(1), "#;")
+                End Select
+            ElseIf Extra = EnumExtra.E_TEXT Then
+                'print, PRINTI
+                'print_ret, PRINTR
+                Dim pseudoText As String = Text.Replace("{", "").Replace("}", "")
+                If pseudoText.Length > 40 Then pseudoText = String.Concat(pseudoText.AsSpan(0, 40), "...")
+                Select Case OpcodeText
+                    Case "@print / PRINTI"
+                        pseudoCodeString = String.Concat("print ", Chr(34), pseudoText, Chr(34), ";")
+                    Case "@print_ret / PRINTR"
+                        pseudoCodeString = String.Concat("print_ret ", Chr(34), pseudoText, Chr(34), ";")
+                End Select
+            ElseIf Extra = EnumExtra.E_NONE Then
+                ' @buffer_mode / BUFOUT
+                ' @call_1n / ICALL1
+                ' @call_2n / ICALL2
+                ' @call_vn / ICALL
+                ' @call_vn2 / IXCALL
+                ' @clear_attr / FCLEAR
+                ' @copy_table / COPYT
+                ' @dec / DEC
+                ' @draw_picture / DISPLAY
+                ' @encode_text / ZWSTR
+                ' @erase_line / ERASE
+                ' @erase_picture / DCLEAR
+                ' @erase_window / CLEAR
+                ' @get_cursor / CURGET
+                ' @inc / INC
+                ' @input_stream / DIRIN
+                ' @insert_obj / MOVE
+                ' @jump / JUMP
+                ' @mouse_window / MOUSE-LIMIT
+                ' @move_window / WINPOS
+                ' @new_line / CRLF
+                ' @nop / NOOP
+                ' @output_stream / DIROUT
+                ' @picture_table / PICSET
+                ' @pop / FSTACK
+                ' @pop_stack / FSTACK
+                ' @print_addr / PRINTB
+                ' @print_char / PRINTC
+                ' @print_form / PRINTF
+                ' @print_num / PRINTN
+                ' @print_obj / PRINTD
+                ' @print_paddr / PRINT
+                ' @print_table / PRINTT
+                ' @print_unicode / PRINTU
+                ' @pull / POP
+                ' @push / PUSH
+                ' @put_prop / PUTP
+                ' @put_wind_prop / WINPUT
+                ' @quit / QUIT
+                ' @read / READ
+                ' @read_mouse / MOUSE-INFO
+                ' @remove_obj / REMOVE
+                ' @restart / RESTART
+                ' @ret / RETURN
+                ' @ret_popped / RSTACK
+                ' @rfalse / RFALSE
+                ' @rtrue / RTRUE
+                ' @scroll_window / SCROLL
+                ' @set_attr / FSET
+                ' @set_colour / COLOR
+                ' @set_cursor / CURSET
+                ' @set_margins / MARGIN
+                ' @set_text_style / HLIGHT
+                ' @set_true_colour / *SET_TRUE_COLOUR*
+                ' @set_window / SCREEN
+                ' @show_status / USL
+                ' @sound_effect / SOUND
+                ' @split_window / SPLIT
+                ' @store / SET
+                ' @storeb / PUTB
+                ' @storew / PUT
+                ' @throw / THROW
+                ' @tokenise / LEX
+                ' @window_size / WINSIZE
+                ' @window_style / WINATTR
+                Select Case OpcodeText
+                    Case "@buffer_mode / BUFOUT"
+                        pseudoCodeString = String.Concat("buffer_mode(", OperandString(0), ");")
+                    Case "@call_1n / ICALL1", "@call_2n / ICALL2", "@call_vn / ICALL", "@call_vn2 / IXCALL"
+                        pseudoCodeString = String.Concat(OperandString(0), "(", PseudoConcatOperands(1), ");")
+                    Case "@clear_attr / FCLEAR"
+                        pseudoCodeString = String.Concat("give ", OperandString(0), " ~", OperandString(1), ";")
+                    Case "@copy_table / COPYT"
+                        pseudoCodeString = String.Concat("copy_table(", PseudoConcatOperands, ");")
+                    Case "@dec / DEC"
+                        pseudoCodeString = String.Concat(OperandString(0), "--;")
+                    Case "@draw_picture / DISPLAY"
+                        pseudoCodeString = String.Concat("draw_picture(", PseudoConcatOperands, ");")
+                    Case "@encode_text / ZWSTR"
+                        pseudoCodeString = String.Concat("encode_text(", PseudoConcatOperands, ");")
+                    Case "@erase_line / ERASE"
+                        pseudoCodeString = String.Concat("erase_line(", PseudoConcatOperands, ");")
+                    Case "@erase_picture / DCLEAR"
+                        pseudoCodeString = String.Concat("erase_picture(", PseudoConcatOperands, ");")
+                    Case "@erase_window / CLEAR"
+                        pseudoCodeString = String.Concat("erase_window(", OperandString(0), ");")
+                    Case "@get_cursor / CURGET"
+                        pseudoCodeString = String.Concat("get_cursor(", OperandString(0), ");")
+                    Case "@inc / INC"
+                        pseudoCodeString = String.Concat(OperandString(0), "++;")
+                    Case "@input_stream / DIRIN"
+                        pseudoCodeString = String.Concat("input_stream(", OperandString(0), ");")
+                    Case "@insert_obj / MOVE"
+                        pseudoCodeString = String.Concat("move ", OperandString(0), " to ", OperandString(1), ";")
+                    Case "@jump / JUMP"
+                        pseudoCodeString = String.Concat("jump ", OperandString(0), ";")
+                    Case "@mouse_window / MOUSE-LIMIT"
+                        pseudoCodeString = String.Concat("mouse_window(", OperandString(0), ");")
+                    Case "@move_window / WINPOS"
+                        pseudoCodeString = String.Concat("move_window(", PseudoConcatOperands, ");")
+                    Case "@new_line / CRLF"
+                        pseudoCodeString = "new_line;"
+                    Case "@nop / NOOP"
+                        pseudoCodeString = "nop;"
+                    Case "@output_stream / DIROUT"
+                        pseudoCodeString = String.Concat("output_stream(", PseudoConcatOperands, ");")
+                    Case "@picture_table / PICSET"
+                        pseudoCodeString = String.Concat("picture_table(", OperandString(0), ");")
+                    Case "@pop / FSTACK"
+                        pseudoCodeString = "stack.pop();"
+                    Case "@pop_stack / FSTACK"
+                        Dim sTmp As String = "stack"
+                        If Not OperandAddrMode(1) = EnumAddressMode.NONE Then sTmp = OperandString(1)
+                        pseudoCodeString = String.Concat(sTmp, ".pop(", OperandString(0), ");")
+                    Case "@print_addr / PRINTB"
+                        pseudoCodeString = String.Concat("print_addr(", OperandString(0), ");")
+                    Case "@print_char / PRINTC"
+                        pseudoCodeString = String.Concat("print_char(", OperandString(0), ");")
+                    Case "@print_form / PRINTF"
+                        pseudoCodeString = String.Concat("print_form(", OperandString(0), ");")
+                    Case "@print_num / PRINTN"
+                        pseudoCodeString = String.Concat("print_num(", OperandString(0), ");")
+                    Case "@print_obj / PRINTD"
+                        pseudoCodeString = String.Concat("print_obj(", OperandString(0), ");")
+                    Case "@print_paddr / PRINT"
+                        Dim pseudoText As String = OperandString(0)
+                        If pseudoText.Contains(Chr(34)) Then
+                            pseudoText = pseudoText.Substring(pseudoText.IndexOf(Chr(34)))
+                            pseudoText = pseudoText.Replace("{", "").Replace("}", "").Replace(Chr(34), "")
+                        End If
+                        If pseudoText.Length > 40 Then pseudoText = String.Concat(pseudoText.AsSpan(0, 40), "...")
+                        pseudoCodeString = String.Concat("print_paddr ", Chr(34), pseudoText, Chr(34), ";")
+                    Case "@print_table / PRINTT"
+                        pseudoCodeString = String.Concat("print_table(", PseudoConcatOperands, ");")
+                    Case "@print_unicode / PRINTU"
+                        pseudoCodeString = String.Concat("print_unicode(", OperandString(0), ");")
+                    Case "@pull / POP"
+                        pseudoCodeString = String.Concat(OperandString(0), " = stack.pop()#;")
+                    Case "@push / PUSH"
+                        pseudoCodeString = String.Concat("stack.push(", OperandString(0), ");")
+                    Case "@put_prop / PUTP"
+                        pseudoCodeString = String.Concat(OperandString(0), ".", OperandString(1), " = ", OperandString(2), ";")
+                    Case "@put_wind_prop / WINPUT"
+                        pseudoCodeString = String.Concat("put_wind_prop(", PseudoConcatOperands, ");")
+                    Case "@quit / QUIT"
+                        pseudoCodeString = "quit;"
+                    Case "@read / READ"
+                        pseudoCodeString = String.Concat("read(", PseudoConcatOperands, ");")
+                    Case "@read_mouse / MOUSE-INFO"
+                        pseudoCodeString = String.Concat("read_mouse(", OperandString(0), ");")
+                    Case "@remove_obj / REMOVE"
+                        pseudoCodeString = String.Concat("remove ", OperandString(0), ";")
+                    Case "@restart / RESTART"
+                        pseudoCodeString = "restart;"
+                    Case "@ret / RETURN"
+                        pseudoCodeString = String.Concat("return ", OperandString(0), ";")
+                    Case "@ret_popped / RSTACK"
+                        pseudoCodeString = "return stack.pop();"
+                    Case "@rfalse / RFALSE"
+                        pseudoCodeString = "rfalse;"
+                    Case "@rtrue / RTRUE"
+                        pseudoCodeString = "rtrue;"
+                    Case "@scroll_window / SCROLL"
+                        pseudoCodeString = String.Concat("scroll_window(", PseudoConcatOperands, ");")
+                    Case "@set_attr / FSET"
+                        pseudoCodeString = String.Concat("give ", OperandString(0), " ", OperandString(1), ";")
+                    Case "@set_colour / COLOR"
+                        pseudoCodeString = String.Concat("set_colour(", PseudoConcatOperands, ");")
+                    Case "@set_cursor / CURSET"
+                        pseudoCodeString = String.Concat("set_cursor(", PseudoConcatOperands, ");")
+                    Case "@set_margins / MARGIN"
+                        pseudoCodeString = String.Concat("set_margins(", PseudoConcatOperands, ");")
+                    Case "@set_text_style / HLIGHT"
+                        pseudoCodeString = String.Concat("set_text_style(", OperandString(0), ");")
+                    Case "@set_true_colour / *SET_TRUE_COLOUR*"
+                        pseudoCodeString = String.Concat("set_true_colour(", PseudoConcatOperands, ");")
+                    Case "@set_window / SCREEN"
+                        pseudoCodeString = String.Concat("set_window(", OperandString(0), ");")
+                    Case "@show_status / USL"
+                        pseudoCodeString = "show_status;"
+                    Case "@sound_effect / SOUND"
+                        pseudoCodeString = String.Concat("sound_effect(", PseudoConcatOperands, ");")
+                    Case "@split_window / SPLIT"
+                        pseudoCodeString = String.Concat("split_window(", OperandString(0), ");")
+                    Case "@store / SET"
+                        pseudoCodeString = String.Concat(OperandString(0), " = ", OperandString(1), "#;")
+                    Case "@storeb / PUTB"
+                        pseudoCodeString = String.Concat(OperandString(0), "->", OperandString(1), " = ", OperandString(2), ";")
+                    Case "@storew / PUT"
+                        pseudoCodeString = String.Concat(OperandString(0), "-->", OperandString(1), " = ", OperandString(2), ";")
+                    Case "@throw / THROW"
+                        pseudoCodeString = String.Concat("throw(", PseudoConcatOperands, ");")
+                    Case "@tokenise / LEX"
+                        pseudoCodeString = String.Concat("tokenise(", PseudoConcatOperands, ");")
+                    Case "@window_size / WINSIZE"
+                        pseudoCodeString = String.Concat("window_size(", PseudoConcatOperands, ");")
+                    Case "@window_style / WINATTR"
+                        pseudoCodeString = String.Concat("window_style(", PseudoConcatOperands, ");")
+                End Select
+            End If
+            pseudoCodeString = pseudoCodeString.Replace("sp = ", "stack.push(")
+            If pseudoCodeString.Contains("stack.push") Then pseudoCodeString = pseudoCodeString.Replace("#;", ");") Else pseudoCodeString = pseudoCodeString.Replace("#;", ";")
+            If stackPeek Then pseudoCodeString = pseudoCodeString.Replace("sp", "stack.peek()") Else pseudoCodeString = pseudoCodeString.Replace("sp", "stack.pop()")
+
+            Return pseudoCodeString
+        End Function
+
+        Private Shared Function OperandDescription(operandValue As Integer) As String
+            Select Case operandValue
+                Case &H0
+                    Return "large constant (long immediate)"
+                Case &H1
+                    Return "constant (immediate)"
+                Case &H2
+                    Return "variable"
+                Case Else
+                    Return "no more operands"
+            End Select
+        End Function
+
+        Private Shared Function VariableDescription(variableValue As Integer) As String
+            If variableValue = 0 Then
+                Return "SP"
+            ElseIf variableValue < 16 Then
+                Return "L" & (variableValue - 1).ToString()
+            Else
+                Return "G" & (variableValue - 16).ToString()
+            End If
+        End Function
+
+        Private Function PseudoBranchText() As String
+            Select Case BranchAddr
+                Case 0
+                    Return "rfalse"
+                Case 1
+                    Return "rtrue"
+                Case Else
+                    Return "jump 0x" & BranchAddr.ToString("X4")
+            End Select
+        End Function
+        Private Function PseudoConcatOperands(Optional startIndex As Integer = 0, Optional slutIndex As Integer = 3, Optional text As String = ", ") As String
+            Dim sTmp As String = OperandString(startIndex)
+            For i As Integer = startIndex + 1 To slutIndex
+                If Not OperandAddrMode(i) = EnumAddressMode.NONE Then sTmp &= text & OperandString(i)
+            Next
+            Return sTmp
+        End Function
+
     End Class
 
     Public Function DecodeRoutine(piAtAddress As Integer, gameData() As Byte, psAbbreviations() As String, silent As Boolean, zcodeSyntax As Integer,
                                   pValidStringList As List(Of StringData), pValidRoutineList As List(Of RoutineData), pDictEntriesList As DictionaryEntries,
-                                  pAlpabet() As String, initialPC As Integer, propertyNumberMin As Integer, propertyNumberMax As Integer, showAbbrevsInsertionPoints As Boolean, inlineStringsList As List(Of InlineString)) As Integer
+                                  pAlpabet() As String, initialPC As Integer, propertyNumberMin As Integer, propertyNumberMax As Integer,
+                                  showAbbrevsInsertionPoints As Boolean, inlineStringsList As List(Of InlineString), showZCodeVerbose As Boolean) As Integer
         startAddress = piAtAddress
         byteGame = gameData
         PC = piAtAddress
@@ -146,12 +882,13 @@ Public Class Decode
         propertyMax = propertyNumberMax
         showAbbrevsInsertion = showAbbrevsInsertionPoints
         inlineStrings = inlineStringsList
+        bShowZCodeVerbose = showZCodeVerbose
 
         If PC > byteGame.Length Then Return -1
 
         localsCount = byteGame(PC)
 
-        If localsCount > 15 Then Return -1    ' Not a valid routine start address
+        If localsCount > 15 Then Return -1    ' Not a valid routine startIndex address
 
         If Not bSilent Then
             If initialPC - 1 = PC Then
@@ -188,13 +925,13 @@ Public Class Decode
                 If localsCount = 1 Then
                     Console.WriteLine("{0:X5} {1:X2}                       1 local", PC, localsCount)
                     Console.Write(Space(31))
-                    Console.WriteLine("({0})", TextVariable(1))
+                    Console.WriteLine("({0})", TextVariable(1, syntax))
                 End If
                 If localsCount > 1 Then
                     Console.WriteLine("{0:X5} {1:X2}                       {2} locals", PC, localsCount, localsCount)
                     Console.Write(Space(31) & "(")
                     For i = 0 To localsCount - 1
-                        Console.Write("{0}", TextVariable(i + 1))
+                        Console.Write("{0}", TextVariable(i + 1, syntax))
                         If i < localsCount - 1 Then Console.Write(" ")
                     Next
                     Console.WriteLine(")")
@@ -210,7 +947,7 @@ Public Class Decode
                     For i = 0 To localsCount - 1
                         Console.Write("{0:X2} {1:X2} ", byteGame(PC + i * 2 + 1), byteGame(PC + i * 2 + 2))
                         Dim number As Integer = byteGame(PC + i * 2 + 1) * 256 + byteGame(PC + i * 2 + 2)
-                        If syntax = 1 Then text = text & TextVariable(i + 1) & "=0x" & number.ToString("x4") & " " Else text = text & TextVariable(i + 1) & "=0x" & number.ToString("X4") & " "
+                        If syntax = 1 Then text = text & TextVariable(i + 1, syntax) & "=0x" & number.ToString("x4") & " " Else text = text & TextVariable(i + 1, syntax) & "=0x" & number.ToString("X4") & " "
                         count += 1
                         If count = 4 Then
                             count = 0
@@ -329,7 +1066,7 @@ Public Class Decode
                                     Case &HB : Return DecodeOperands(oOpcode, "PRINT_UNICODE", "PRINTU", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)       'Added in standard 1.0
                                     Case &HC : Return DecodeOperands(oOpcode, "CHECK_UNICODE", "CHECKU", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)       'Added in standard 1.0
                                     Case &HD : Return DecodeOperands(oOpcode, "SET_TRUE_COLOUR", "*SET_TRUE_COLOUR*", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)     'Added in standard 1.1, not available in Zapf
-                                    Case &H1D : Return DecodeOperands(oOpcode, "BUFFER_SCREEN", "*BUFFER_SCREEN*", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)  'Added in standard 1.1, not available in Zapf
+                                    Case &H1D : Return DecodeOperands(oOpcode, "BUFFER_SCREEN", "*BUFFER_SCREEN*", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)  'Added in standard 1.1, not available in Zapf
                                     Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
                                 End Select
                         End Select
@@ -356,7 +1093,9 @@ Public Class Decode
                     Case &H11 : Return DecodeOperands(oOpcode, "GET_PROP", "GETP", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
                     Case &H12 : Return DecodeOperands(oOpcode, "GET_PROP_ADDR", "GETPT", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
                     Case &H13 : Return DecodeOperands(oOpcode, "GET_NEXT_PROP", "NEXTP", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H14 : Return DecodeOperands(oOpcode, "ADD", "ADD", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                    'TXD have LOW_ADDR for operands, why? 
+                    'Case &H14 : Return DecodeOperands(oOpcode, "ADD", "ADD", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                    Case &H14 : Return DecodeOperands(oOpcode, "ADD", "ADD", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
                     Case &H15 : Return DecodeOperands(oOpcode, "SUB", "SUB", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
                     Case &H16 : Return DecodeOperands(oOpcode, "MUL", "MUL", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
                     Case &H17 : Return DecodeOperands(oOpcode, "DIV", "DIV", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
@@ -551,6 +1290,10 @@ Public Class Decode
         pOpcode.OperandType(3) = pPar4
         pOpcode.Extra = pExtra
         pOpcode.Type = pType
+        pOpcode.OpcodeText = "@" & psOpcodeNameInf.ToLower & " / " & psOpcodeNameZil
+        For i = 0 To 20
+            pOpcode.OpcodeBytes(i) = byteGame(pOpcode.Address + i)
+        Next
 
         ' zork0-beta-r242-s880830.z6 and zork0-r242-s880901.z6 contains code that uses 3 parameters for WINGET.
         ' Source code:
@@ -581,7 +1324,7 @@ Public Class Decode
         If pOpcode.Code = &HBA Or pOpcode.Code = &HB7 Then
             ' QUIT or RESTART (should this be expanded to other RETURN_types?)
             ' These are considered as RETURN-type if the next opcode is illegal, otherwise they are PLAIN.
-            ' If the next address is a valid routine start, it is also considered as RETURN.
+            ' If the next address is a valid routine startIndex, it is also considered as RETURN.
             If Not (byteGame(pOpcode.Address + 1) < 16 And Helper.GetNextValidPackedAddress(byteGame, pOpcode.Address + 1) = pOpcode.Address + 1) Then
                 Dim bOldSilent As Boolean = bSilent
                 bSilent = True
@@ -602,7 +1345,10 @@ Public Class Decode
         If pOpcode.Text.Trim <> "" Then
             sText = sText & " " & Convert.ToChar(34) & pOpcode.Text & Convert.ToChar(34)
         End If
-        If Not bSilent Then Console.WriteLine(sText)
+        If Not bSilent Then
+            If syntax = 3 Then Console.WriteLine(pOpcode.PseudoCode) Else Console.WriteLine(sText)
+            If bShowZCodeVerbose Then pOpcode.PrintVerbose()
+        End If
 
         Dim oRet As New DecodeResult With {.status = EnumStatus.END_OF_INSTRUCTION}
         If pOpcode.Type = EnumType.T_ILLEGAL Then oRet.status = EnumStatus.BAD_OPCODE
@@ -620,7 +1366,7 @@ Public Class Decode
         If Not bSilent Then Console.Write("{0:X5} ", pOpcode.Address)
 
         If pOpcode.OpcodeClass = EnumOpcodeClass.EXTENDED_OPERAND Then
-            If Not bSilent Then Console.Write("{0:X2} ", byteGame(pOpcode.Address - 1))
+            If Not bSilent Then Console.Write("{0:X2} ", byteGame(pOpcode.Address))
             count += 1
         End If
         If Not bSilent Then Console.Write("{0:X2} ", byteGame(pOpcode.Address + count))
@@ -699,7 +1445,7 @@ Public Class Decode
             ' 11 = no more operands
             Dim iOperandBytes As Integer = 0
             If (pOpcode.Code And &H3F) = &H2C Or (pOpcode.Code And &H3F) = &H3A Then
-                ' Next two bytes specify length of data bytes
+                ' CALL_VS2 & CALL_VN2, next two bytes specify length of data bytes
                 If Not bSilent Then Console.Write("{0:X2} ", byteGame(pOpcode.Address + count))
                 If Not bSilent Then Console.Write("{0:X2} ", byteGame(pOpcode.Address + count + 1))
                 Dim iWord As Integer = Helper.GetAdressFromWord(byteGame, pOpcode.Address + count)
@@ -856,13 +1602,15 @@ Public Class Decode
             If string_address < lowest_string Then lowest_string = string_address
         End If
 
-        ' Format parameter text
+        ' Format operands/parameter text
         For i As Integer = 0 To iParameterCount - 1
             Dim operandType As EnumOperand = pOpcode.OperandType(i)
             Dim operandVal As Integer = pOpcode.OperandVal(i)
+            If i > 3 Then
+                operandType = EnumOperand.P_ANYTHING
+                pOpcode.OperandType(i) = EnumOperand.P_ANYTHING
+            End If
             If pOpcode.OperandAddrMode(i) = EnumAddressMode.VARIABLE Then operandType = EnumOperand.P_VAR
-            If i > 3 Then operandType = EnumOperand.P_ANYTHING                                         ' Operands 5 onward XCALL & IXCALL are all ANYTHING
-
             If iParameterCount > 1 And pOpcode.Type = EnumType.T_CALL And syntax < 2 And i = 1 Then pOpcode.OperandText &= " ("
 
             ' Comment from txd
@@ -872,7 +1620,10 @@ Public Class Decode
             ' INC [L05], ie. increment the variable which Is given by the contents
             ' of local variable #5. Earlier versions of "txd" translated both cases
             ' as INC L05. This bug was finally detected by Graham Nelson.
-            If pOpcode.OperandType(i) = EnumOperand.P_VAR And pOpcode.OperandAddrMode(i) = EnumAddressMode.VARIABLE Then operandType = EnumOperand.P_INDIRECT
+            If pOpcode.OperandType(i) = EnumOperand.P_VAR And pOpcode.OperandAddrMode(i) = EnumAddressMode.VARIABLE Then
+                operandType = EnumOperand.P_INDIRECT
+                pOpcode.OperandType(i) = operandType
+            End If
 
             Select Case operandType
                 Case EnumOperand.P_ANYTHING
@@ -884,6 +1635,7 @@ Public Class Decode
                         Else
                             pOpcode.OperandText = pOpcode.OperandText & " S" & oStringData.number.ToString("D4")
                         End If
+                        pOpcode.OperandString(i) = "s" & oStringData.number.ToString("D4")
                     End If
                     If oStringData IsNot Nothing And dictEntry IsNot Nothing Then
                         If syntax = 1 Then
@@ -891,6 +1643,7 @@ Public Class Decode
                         Else
                             pOpcode.OperandText &= " OR"
                         End If
+                        pOpcode.OperandString(i) &= "/"
                     End If
                     If dictEntry IsNot Nothing Then
                         If syntax = 2 Then
@@ -898,17 +1651,20 @@ Public Class Decode
                         Else
                             pOpcode.OperandText = pOpcode.OperandText & " " & Convert.ToChar(34) & dictEntry.dictWord & Convert.ToChar(34)
                         End If
+                        pOpcode.OperandString(i) &= Convert.ToChar(34) & dictEntry.dictWord & Convert.ToChar(34)
                     End If
                     If oStringData Is Nothing And dictEntry Is Nothing Then
-                        pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), True)
+                        pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), syntax, True)
+                        pOpcode.OperandString(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 1, True)
                     End If
                 Case EnumOperand.P_ATTRNUM
                     If syntax = 0 Then pOpcode.OperandText = pOpcode.OperandText & " ATTRIBUTE" & operandVal.ToString
                     If syntax = 1 Then pOpcode.OperandText = pOpcode.OperandText & " attribute" & operandVal.ToString
                     If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText & " ATTRIBUTE" & operandVal.ToString
-
+                    pOpcode.OperandString(i) = "attribute" & operandVal.ToString
                 Case EnumOperand.P_INDIRECT
-                    pOpcode.OperandText = pOpcode.OperandText & " [" & TextVariable(operandVal) & "]"
+                    pOpcode.OperandText = pOpcode.OperandText & " [" & TextVariable(operandVal, syntax) & "]"
+                    pOpcode.OperandString(i) = " [" & TextVariable(operandVal, syntax) & "]"
                 Case EnumOperand.P_LABEL
                     Dim Address As Integer = pOpcode.Address + 1
                     If operandVal > 32767 Then
@@ -919,12 +1675,15 @@ Public Class Decode
                     If syntax = 0 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & Address.ToString("X4")
                     If syntax = 1 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & Address.ToString("x4")
                     If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & Address.ToString("X4")
+                    pOpcode.OperandString(i) = "0x" & Address.ToString("x4")
                 Case EnumOperand.P_LOW_ADDR
                     Dim dictEntry As DictionaryEntry = DictEntriesList.GetEntryAtAddress(operandVal)
                     If dictEntry IsNot Nothing Then
                         pOpcode.OperandText = pOpcode.OperandText & " " & Convert.ToChar(34) & dictEntry.dictWord & Convert.ToChar(34)
+                        pOpcode.OperandString(i) = Convert.ToChar(34) & dictEntry.dictWord & Convert.ToChar(34)
                     Else
-                        pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), False)
+                        pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), syntax, False)
+                        pOpcode.OperandString(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 1, False)
                         If bSilent Then
                             ' Collect all possible startpoints for an array
                             If operandVal > 0 Then
@@ -939,16 +1698,19 @@ Public Class Decode
                     End If
                 Case EnumOperand.P_NIL
                     pOpcode.OperandText &= " Illegal_parameter"
+                    pOpcode.OperandString(i) = "Illegal_parameter"
                 Case EnumOperand.P_NUMBER
                     If syntax = 2 And (pOpcode.Code And &H3F) = &H3F Then       ' ASSIGNED?, the number points to a local variable
-                        pOpcode.OperandText = pOpcode.OperandText & " '" & TextVariable(operandVal)
+                        pOpcode.OperandText = pOpcode.OperandText & " '" & TextVariable(operandVal, syntax)
                     Else
-                        pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), True)
+                        pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), syntax, True)
                     End If
+                    pOpcode.OperandString(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 2, True)
                 Case EnumOperand.P_OBJECT
                     If syntax = 0 Then pOpcode.OperandText = pOpcode.OperandText & " OBJECT" & operandVal.ToString
                     If syntax = 1 Then pOpcode.OperandText = pOpcode.OperandText & " object" & operandVal.ToString
                     If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText & " OBJECT" & operandVal.ToString
+                    pOpcode.OperandString(i) = "object" & operandVal.ToString
                 Case EnumOperand.P_PATTR
                     Dim sDirOut As String = ""
                     Select Case operandVal
@@ -960,24 +1722,29 @@ Public Class Decode
                         Case -2 : sDirOut = "SCRIPTING_DISABLE"
                         Case -3 : sDirOut = "REDIRECT_DISABLE"
                         Case -4 : sDirOut = "RECORD_DISABLE"
-                        Case Else : sDirOut = TextNumber(operandVal, pOpcode.OperandLen(i), False)
+                        Case Else : sDirOut = TextNumber(operandVal, pOpcode.OperandLen(i), syntax, False)
                     End Select
                     If syntax = 1 Then sDirOut = sDirOut.ToLower
                     pOpcode.OperandText = pOpcode.OperandText & " " & sDirOut
+                    pOpcode.OperandString(i) = sDirOut.ToLower
                 Case EnumOperand.P_PCHAR
                     Dim character As Char = CChar(Char.ConvertFromUtf32(operandVal))
                     If Not Char.IsControl(character) Then
                         pOpcode.OperandText = pOpcode.OperandText & " '" & character & "'"
+                        pOpcode.OperandString(i) = "'" & character & "'"
                     Else
-                        pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), False)
+                        pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), syntax, False)
+                        pOpcode.OperandString(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 1, False)
                     End If
                 Case EnumOperand.P_PROPNUM
                     If operandVal < propertyMin Or operandVal > propertyMax Then
                         pOpcode.OperandText = pOpcode.OperandText & " " & "[Invalid property: 0x" & operandVal.ToString("X2") & "]"
+                        pOpcode.OperandString(i) = "[Invalid property: 0x" & operandVal.ToString("X2") & "]"
                     Else
                         If syntax = 0 Then pOpcode.OperandText = pOpcode.OperandText & " PROPERTY" & operandVal.ToString
                         If syntax = 1 Then pOpcode.OperandText = pOpcode.OperandText & " property" & operandVal.ToString
                         If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText & " P?" & operandVal.ToString
+                        pOpcode.OperandString(i) = "property" & operandVal.ToString
                     End If
                 Case EnumOperand.P_ROUTINE
                     If operandVal <> 0 Then
@@ -986,11 +1753,14 @@ Public Class Decode
                             If syntax = 0 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & oRoutineData.entryPoint.ToString("X4")
                             If syntax = 1 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & oRoutineData.entryPoint.ToString("x4")
                             If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & oRoutineData.entryPoint.ToString("X4")
+                            pOpcode.OperandString(i) = "0x" & oRoutineData.entryPoint.ToString("x4")
                         Else
                             pOpcode.OperandText = pOpcode.OperandText & " " & "[Invalid routine: 0x" & Helper.UnpackAddress(operandVal, byteGame, True).ToString("X4") & "]"
+                            pOpcode.OperandString(i) = "[Invalid routine: 0x" & Helper.UnpackAddress(operandVal, byteGame, True).ToString("X4") & "]"
                         End If
                     Else
                         pOpcode.OperandText &= " 0"
+                        pOpcode.OperandString(i) = "0"
                     End If
                 Case EnumOperand.P_STATIC
                     Dim oStringData As StringData = validStringList.Find(Function(x) x.entryPointPacked = operandVal)
@@ -1000,23 +1770,26 @@ Public Class Decode
                         Else
                             pOpcode.OperandText = pOpcode.OperandText & " S" & oStringData.number.ToString("D4") & " " & Convert.ToChar(34) & oStringData.GetText(showAbbrevsInsertion) & Convert.ToChar(34)
                         End If
+                        pOpcode.OperandString(i) = "s" & oStringData.number.ToString("D4") & " " & Convert.ToChar(34) & oStringData.GetText(showAbbrevsInsertion) & Convert.ToChar(34)
                     Else
                         pOpcode.OperandText = pOpcode.OperandText & " " & "[Invalid string: " & Helper.UnpackAddress(operandVal, byteGame, False).ToString("X5") & "]"
+                        pOpcode.OperandString(i) = "[Invalid string: " & Helper.UnpackAddress(operandVal, byteGame, False).ToString("X5") & "]"
                     End If
                 Case EnumOperand.P_VAR
                     If syntax < 2 Then
-                        pOpcode.OperandText = pOpcode.OperandText & " " & TextVariable(operandVal)
+                        pOpcode.OperandText = pOpcode.OperandText & " " & TextVariable(operandVal, syntax)
                     Else
                         If pOpcode.OperandType(i) = EnumOperand.P_VAR Then                        ' Original type was P_VAR
                             If (pOpcode.Code And &HF) = &HE And operandVal = 0 Then            ' VALUE and STACK
-                                pOpcode.OperandText = pOpcode.OperandText & " " & TextVariable(operandVal)
+                                pOpcode.OperandText = pOpcode.OperandText & " " & TextVariable(operandVal, syntax)
                             Else
-                                pOpcode.OperandText = pOpcode.OperandText & " '" & TextVariable(operandVal)
+                                pOpcode.OperandText = pOpcode.OperandText & " '" & TextVariable(operandVal, syntax)
                             End If
                         Else
-                            pOpcode.OperandText = pOpcode.OperandText & " " & TextVariable(operandVal)
+                            pOpcode.OperandText = pOpcode.OperandText & " " & TextVariable(operandVal, syntax)
                         End If
                     End If
+                    pOpcode.OperandString(i) = TextVariable(operandVal, 1)
                 Case EnumOperand.P_VATTR
                     Dim sFontStyle As String = ""
                     Select Case operandVal
@@ -1025,10 +1798,11 @@ Public Class Decode
                         Case 2 : sFontStyle = "BOLDFACE"
                         Case 4 : sFontStyle = "EMPHASIS"
                         Case 8 : sFontStyle = "FIXED_FONT"
-                        Case Else : sFontStyle = TextNumber(operandVal, pOpcode.OperandLen(i), False)
+                        Case Else : sFontStyle = TextNumber(operandVal, pOpcode.OperandLen(i), syntax, False)
                     End Select
                     If syntax = 1 Then sFontStyle = sFontStyle.ToLower
                     pOpcode.OperandText = pOpcode.OperandText & " " & sFontStyle
+                    pOpcode.OperandString(i) = sFontStyle.ToLower
             End Select
             If syntax < 2 And iParameterCount > 1 And pOpcode.Type = EnumType.T_CALL And i < iParameterCount - 1 And i > 0 Then pOpcode.OperandText &= ","
             If syntax = 2 And iParameterCount > 0 And i < iParameterCount - 1 Then pOpcode.OperandText &= ","
@@ -1038,25 +1812,17 @@ Public Class Decode
         End If
         If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText.Replace(", ", ",")
         If pOpcode.Extra = EnumExtra.E_BOTH Or pOpcode.Extra = EnumExtra.E_STORE Then
-            Dim sStoreText As String = ""
-            If pOpcode.StoreVal = 0 Then
-                If syntax = 0 Then sStoreText = "-(SP)"
-                If syntax = 1 Then sStoreText = "sp"
-                If syntax = 2 Then sStoreText = "STACK"
-            ElseIf pOpcode.StoreVal < 16 Then
-                If syntax = 1 Then sStoreText = "local" Else sStoreText = "L"
-                sStoreText &= (pOpcode.StoreVal - 1).ToString
-            Else
-                If syntax = 1 Then sStoreText = "g" Else sStoreText = "G"
-                Dim value As Integer = pOpcode.StoreVal - 16
+            Dim sStoreText As String
+            sStoreText = TextVariable(pOpcode.StoreVal, syntax)
+            If pOpcode.StoreVal = 0 And syntax = 0 Then sStoreText = "-(SP)"
+            pOpcode.StoreString = sStoreText
 
-                ' Collect statistics on globals
-                If value > highest_global Then highest_global = value
-                usedGlobals.Add(value)
+            ' Collect statistics on globals
+            Dim value As Integer = pOpcode.StoreVal - 16
+            If value > highest_global Then highest_global = value
+            usedGlobals.Add(value)
 
-                sStoreText &= value.ToString
-                End If
-                If syntax < 2 Then pOpcode.OperandText = pOpcode.OperandText & " -> " & sStoreText Else pOpcode.OperandText = pOpcode.OperandText & " >" & sStoreText
+            If syntax < 2 Then pOpcode.OperandText = pOpcode.OperandText & " -> " & sStoreText Else pOpcode.OperandText = pOpcode.OperandText & " >" & sStoreText
         End If
         If pOpcode.Extra = EnumExtra.E_BOTH Or pOpcode.Extra = EnumExtra.E_BRANCH Then
             Dim sBranchText As String = ""
@@ -1082,30 +1848,33 @@ Public Class Decode
         Return count
     End Function
 
-    Private Function TextVariable(pVariable As Integer) As String
+    Private Function TextVariable(pVariable As Integer, toSyntax As Integer) As String
         If pVariable = 0 Then
-            If syntax = 0 Then Return "(SP)+"
-            If syntax = 1 Then Return "sp"
-            If syntax = 2 Then Return "STACK"
+            If toSyntax = 0 Then Return "(SP)+"
+            If toSyntax = 1 Then Return "sp"
+            If toSyntax = 2 Then Return "STACK"
+            If toSyntax = 3 Then Return "sp"
         End If
         If pVariable < 16 Then
-            If syntax = 0 Then Return "L" & (pVariable - 1).ToString("X2")
-            If syntax = 1 Then Return "local" & (pVariable - 1).ToString
-            If syntax = 2 Then Return "L" & (pVariable - 1).ToString
+            If toSyntax = 0 Then Return "L" & (pVariable - 1).ToString("X2")
+            If toSyntax = 1 Then Return "local" & (pVariable - 1).ToString
+            If toSyntax = 2 Then Return "L" & (pVariable - 1).ToString
+            If toSyntax = 3 Then Return "local" & (pVariable - 1).ToString
         Else
         End If
         If pVariable < 256 Then
             Dim value As Integer = pVariable - 16
             If value > highest_global Then highest_global = value
             usedGlobals.Add(value)
-            If syntax = 0 Then Return "G" & value.ToString("X2")
-            If syntax = 1 Then Return "g" & value.ToString
-            If syntax = 2 Then Return "G" & value.ToString
+            If toSyntax = 0 Then Return "G" & value.ToString("X2")
+            If toSyntax = 1 Then Return "g" & value.ToString
+            If toSyntax = 2 Then Return "G" & value.ToString
+            If toSyntax = 3 Then Return "g" & value.ToString
         End If
         Return "[Invalid variable: 0x" & pVariable.ToString("X2") & "]"
     End Function
 
-    Private Function TextNumber(pNumber As Integer, pLength As Integer, toSigned As Boolean) As String
+    Private Function TextNumber(pNumber As Integer, pLength As Integer, toSyntax As Integer, toSigned As Boolean) As String
         If pLength = 1 Or (toSigned And syntax = 2) Then
             Dim signedInt As Integer
             If pNumber < 32768 Then
@@ -1113,15 +1882,15 @@ Public Class Decode
             Else
                 signedInt = -1 * (65536 - pNumber)
             End If
-            If syntax = 0 Then Return "0x" & pNumber.ToString("X2")
-            If syntax = 1 Then Return "0x" & pNumber.ToString("x2")
-            If syntax = 2 Then
+            If toSyntax = 0 Then Return "0x" & pNumber.ToString("X2")
+            If toSyntax = 1 Then Return "0x" & pNumber.ToString("x2")
+            If toSyntax = 2 Then
                 If toSigned Then Return signedInt.ToString Else Return pNumber.ToString
             End If
         Else
-            If syntax = 0 Then Return "0x" & pNumber.ToString("X4")
-            If syntax = 1 Then Return "0x" & pNumber.ToString("x4")
-            If syntax = 2 Then Return pNumber.ToString
+            If toSyntax = 0 Then Return "0x" & pNumber.ToString("X4")
+            If toSyntax = 1 Then Return "0x" & pNumber.ToString("x4")
+            If toSyntax = 2 Then Return pNumber.ToString
         End If
         Return pNumber.ToString
     End Function

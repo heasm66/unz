@@ -4,9 +4,9 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>UnZ</RootNamespace>
     <TargetFramework>net9.0</TargetFramework>
-    <AssemblyVersion>0.14</AssemblyVersion>
-    <FileVersion>0.14</FileVersion>
-    <Version>0.14</Version>
+    <AssemblyVersion>0.15</AssemblyVersion>
+    <FileVersion>0.15</FileVersion>
+    <Version>0.15</Version>
     <OptionStrict>On</OptionStrict>
     <Copyright>2021-2025 Henrik Åsman</Copyright>
   </PropertyGroup>

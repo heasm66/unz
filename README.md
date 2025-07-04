@@ -2,8 +2,8 @@
 
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
-UnZ 0.14 (26th June 2025) by Henrik Åsman, (c) 2021-2025
-Usage: unz [option] [file]
+UnZ 0.15 (4th July 2025) by Henrik Åsman, (c) 2021-2025
+Usage: unz [option]... [file]
 Unpack Z-machine file format information.
 
  -a                 Show the abbreviation sections.
@@ -22,17 +22,30 @@ Unpack Z-machine file format information.
  --syntax 0/txd     Use TXD default syntax for the z-code decompilation. (default)
           1/inform  Use Inform syntax for the z-code decompilation. (txd -a)
           2/ZAP     Use ZAP syntax for the z-code decompilation.
+          3/pseudo  Use pseudo-code (Informish) syntax for the z-code decompilation.
  -u                 Show the unidentified sections.
  -v                 Show the variable section.
  -x                 Show miscellaneous other sections.
  -z                 Show the z-code section.
  -z <hexaddress>    Show the single decompiled z-code routine at <hexaddress>
+ --zverbose         Show detailed breakdown of z-code
 
 Report bugs/suggestions to: heasm66@gmail.com
-UnZ homepage: https://github.com/heasm66/UnZ
+UnZ homepage: https://github.com/heasm66/unz
+
+Report bugs/suggestions to: heasm66@gmail.com
+UnZ homepage: https://github.com/heasm66/unz
 
 
 Changelog:
+    0.15 2025-07-04
+    ---------------
+      * Bug: Hexdump of EXTOP showed wrong byte-value
+      * Bug: XCALL & IXCALL showed wrong type for operand 5-
+      * Bug: @buffer_screen should have E_STORE
+      * Bug: Store-var should be hex for syntax 0
+      * Verbose description of opcodes (--zverbose)
+      * Pseudo-code, Inform-ish syntax (syntax 3)
 
     0.14 2025-06-26
     ---------------

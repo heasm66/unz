@@ -93,6 +93,7 @@ Module Program
     Private showGrammar As Boolean = False
     Private showDictionary As Boolean = False
     Private showZCode As Boolean = False
+    Private showZCodeVerbose As Boolean = False
     Private showStrings As Boolean = False
     Private showMemoryMap As Boolean = False
     Private showHex As Boolean = False
@@ -105,13 +106,14 @@ Module Program
     Private showAbbrevsInsertion As Boolean = True
     Private ReadOnly objectNames As New List(Of String)
     Private ReadOnly inlineStrings As New List(Of InlineString)
-    Private buildDateTimeLocal As DateTime
+    Private buildDateTimeLocal As Date
     Private showInvisiClues As Boolean = False
 
     Private Enum SyntaxType As Integer
         TXD = 0
         Inform6 = 1
         ZAP = 2
+        Pseudo = 3
     End Enum
 
     Private Class GrammarScanResult
@@ -264,7 +266,7 @@ Module Program
                 If args(i).StartsWith("-"c) And Not args(i).StartsWith("--") Then
                     Dim argsOk As Boolean = True
                     For j As Integer = 1 To args(i).Length - 1
-                        If Not "adfgimosuvxz".Contains(args(i).Substring(j, 1)) Then
+                        If Not "abdfgimosuvxz".Contains(args(i).Substring(j, 1)) Then
                             argsOk = False
                         End If
                     Next
@@ -323,8 +325,8 @@ Module Program
                         showGrammar = True
                         allSections = False
                     Case "-h", "--help", "\?"
-                        Console.Error.WriteLine("UnZ 0.14 ({0}) by Henrik Åsman, (c) 2021-2025", buildTimestamp)
-                        Console.Error.WriteLine("Usage: unz [option] [file]")
+                        Console.Error.WriteLine("UnZ 0.15 ({0}) by Henrik Åsman, (c) 2021-2025", buildTimestamp)
+                        Console.Error.WriteLine("Usage: unz [option]... [file]")
                         Console.Error.WriteLine("Unpack Z-machine file format information.")
                         Console.Error.WriteLine()
                         Console.Error.WriteLine(" -a                 Show the abbreviation sections.")
@@ -343,14 +345,16 @@ Module Program
                         Console.Error.WriteLine(" --syntax 0/txd     Use TXD default syntax for the z-code decompilation. (default)")
                         Console.Error.WriteLine("          1/inform  Use Inform syntax for the z-code decompilation. (txd -a)")
                         Console.Error.WriteLine("          2/ZAP     Use ZAP syntax for the z-code decompilation.")
+                        Console.Error.WriteLine("          3/pseudo  Use pseudo-code (Informish) syntax for the z-code decompilation.")
                         Console.Error.WriteLine(" -u                 Show the unidentified sections.")
                         Console.Error.WriteLine(" -v                 Show the variable section.")
                         Console.Error.WriteLine(" -x                 Show miscellaneous other sections.")
                         Console.Error.WriteLine(" -z                 Show the z-code section.")
                         Console.Error.WriteLine(" -z <hexaddress>    Show the single decompiled z-code routine at <hexaddress>")
+                        Console.Error.WriteLine(" --zverbose         Show detailed breakdown of z-code")
                         Console.Error.WriteLine()
                         Console.Error.WriteLine("Report bugs/suggestions to: heasm66@gmail.com")
-                        Console.Error.WriteLine("UnZ homepage: https://github.com/heasm66/UnZ")
+                        Console.Error.WriteLine("UnZ homepage: https://github.com/heasm66/unz")
                         Exit Sub
                     Case "--hide"
                         showAbbrevsInsertion = False
@@ -385,6 +389,9 @@ Module Program
                                 showOnlyAddress = 0
                             End If
                         End If
+                    Case "--zverbose"
+                        showZCode = True
+                        showZCodeVerbose = True
                     Case "--syntax"
                         If unpackedArgs.Count > i + 1 Then
                             If unpackedArgs(i + 1) = "0" Or unpackedArgs(i + 1).Equals("TXD", StringComparison.CurrentCultureIgnoreCase) Then
@@ -395,6 +402,9 @@ Module Program
                                 i += 1
                             ElseIf unpackedArgs(i + 1) = "2" Or unpackedArgs(i + 1).Equals("ZAP", StringComparison.CurrentCultureIgnoreCase) Then
                                 zcodeSyntax = SyntaxType.ZAP
+                                i += 1
+                            ElseIf unpackedArgs(i + 1) = "3" Or unpackedArgs(i + 1).Equals("PSEUDO", StringComparison.CurrentCultureIgnoreCase) Then
+                                zcodeSyntax = SyntaxType.Pseudo
                                 i += 1
                             End If
                         End If
@@ -876,7 +886,9 @@ Module Program
             Do
                 Dim inlineStringCountBefore = inlineStrings.Count
                 iNext = oDecode.DecodeRoutine(iStart, byteStory, sAbbreviations, True, zcodeSyntax, validStringsList,
-                                          validRoutinesList, DictEntriesList, alphabet, iAddrInitialPC, oPropertyAnalyser.propertyNumberMin, oPropertyAnalyser.propertyNumberMax, showAbbrevsInsertion, inlineStrings)
+                                          validRoutinesList, DictEntriesList, alphabet, iAddrInitialPC,
+                                          oPropertyAnalyser.propertyNumberMin, oPropertyAnalyser.propertyNumberMax,
+                                          showAbbrevsInsertion, inlineStrings, False)
                 If iNext > 0 Then
                     Dim oRoutineData As New RoutineData With {
                     .entryPoint = iStart,
@@ -2606,8 +2618,11 @@ Module Program
                     Dim iNextValidAddress As Integer = 0
                     For i As Integer = 0 To validRoutinesList.Count - 1
                         If showOnlyAddress = 0 Or validRoutinesList(i).entryPoint = showOnlyAddress Then
-                            iNextAddress = oDecode.DecodeRoutine(validRoutinesList(i).entryPoint, byteStory, sAbbreviations, False, zcodeSyntax, validStringsList,
-                                                             validRoutinesList, DictEntriesList, alphabet, iAddrInitialPC, oPropertyAnalyser.propertyNumberMin, oPropertyAnalyser.propertyNumberMax, showAbbrevsInsertion, inlineStrings)
+                            iNextAddress = oDecode.DecodeRoutine(validRoutinesList(i).entryPoint, byteStory, sAbbreviations, False,
+                                                                 zcodeSyntax, validStringsList, validRoutinesList, DictEntriesList,
+                                                                 alphabet, iAddrInitialPC, oPropertyAnalyser.propertyNumberMin,
+                                                                 oPropertyAnalyser.propertyNumberMax, showAbbrevsInsertion,
+                                                                 inlineStrings, showZCodeVerbose)
                             Console.WriteLine()
                             iNextValidAddress = Helper.GetNextValidPackedAddress(byteStory, iNextAddress)
                             If iNextAddress <> iNextValidAddress Then
