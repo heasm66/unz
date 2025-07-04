@@ -29,7 +29,7 @@ Imports System.Runtime.InteropServices.JavaScript.JSType
 Imports Microsoft
 
 ' Set this to false before release
-#Const _IN_DEVELOPMENT = False
+#Const _IN_DEVELOPMENT = True
 
 ' ZILCH, grammar version 1
 '   All Infocom except Mini-Zork 1, Sherlock, Abyss, Zork Zero, Shogun & Arthur
@@ -325,7 +325,7 @@ Module Program
                         showGrammar = True
                         allSections = False
                     Case "-h", "--help", "\?"
-                        Console.Error.WriteLine("UnZ 0.15 ({0}) by Henrik Åsman, (c) 2021-2025", buildTimestamp)
+                        Console.Error.WriteLine("UnZ 0.16 ({0}) by Henrik Åsman, (c) 2021-2025", buildTimestamp)
                         Console.Error.WriteLine("Usage: unz [option]... [file]")
                         Console.Error.WriteLine("Unpack Z-machine file format information.")
                         Console.Error.WriteLine()

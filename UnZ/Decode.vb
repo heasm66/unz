@@ -741,9 +741,10 @@ Public Class Decode
                         If pseudoText.Contains(Chr(34)) Then
                             pseudoText = pseudoText.Substring(pseudoText.IndexOf(Chr(34)))
                             pseudoText = pseudoText.Replace("{", "").Replace("}", "").Replace(Chr(34), "")
+                            If pseudoText.Length > 40 Then pseudoText = String.Concat(pseudoText.AsSpan(0, 40), "...")
+                            pseudoText = String.Concat(Chr(34), pseudoText, Chr(34))
                         End If
-                        If pseudoText.Length > 40 Then pseudoText = String.Concat(pseudoText.AsSpan(0, 40), "...")
-                        pseudoCodeString = String.Concat("print_paddr ", Chr(34), pseudoText, Chr(34), ";")
+                        pseudoCodeString = String.Concat("print_paddr ", pseudoText, ";")
                     Case "@print_table / PRINTT"
                         pseudoCodeString = String.Concat("print_table(", PseudoConcatOperands, ");")
                     Case "@print_unicode / PRINTU"
@@ -814,7 +815,8 @@ Public Class Decode
             End If
             pseudoCodeString = pseudoCodeString.Replace("sp = ", "stack.push(")
             If pseudoCodeString.Contains("stack.push") Then pseudoCodeString = pseudoCodeString.Replace("#;", ");") Else pseudoCodeString = pseudoCodeString.Replace("#;", ";")
-            If stackPeek Then pseudoCodeString = pseudoCodeString.Replace("sp", "stack.peek()") Else pseudoCodeString = pseudoCodeString.Replace("sp", "stack.pop()")
+            If stackPeek Then pseudoCodeString = pseudoCodeString.Replace("if (sp", "if (stack.peek()")
+            pseudoCodeString = pseudoCodeString.Replace("sp", "stack.pop()")
 
             Return pseudoCodeString
         End Function
