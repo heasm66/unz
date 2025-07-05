@@ -124,10 +124,10 @@ Public Class Decode
         Public OperandLen(7) As Integer
         Public OperandVal(7) As Integer
         Public OperandAddrMode(7) As EnumAddressMode
-        Public OperandString(7) As String
+        Public OperandStringPseudo(7) As String
         Public Extra As EnumExtra
         Public StoreVal As Integer = 0
-        Public StoreString As String
+        Public StoreStringPseudo As String
         Public BranchTest As Boolean = True             ' Branch if true/false
         Public BranchAddr As Integer = 0                ' Absolut address of branch, 0=false, 1=true
         Public Type As EnumType
@@ -416,49 +416,49 @@ Public Class Decode
                 Select Case OpcodeText
                     Case "@check_arg_count / ASSIGNED?"
                         If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
-                        pseudoCodeString = String.Concat("if (check_arg_count() ", pseudoComp, " ", OperandString(0), ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if (check_arg_count() ", pseudoComp, " ", OperandStringPseudo(0), ") ", PseudoBranchText, ";")
                     Case "@dec_chk / DLESS?"
                         If BranchTest Then pseudoComp = "<" Else pseudoComp = ">="
-                        pseudoCodeString = String.Concat(OperandString(0), " = ", OperandString(0), " - 1; if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat(OperandStringPseudo(0), " = ", OperandStringPseudo(0), " - 1; if (", OperandStringPseudo(0), " ", pseudoComp, " ", OperandStringPseudo(1), ") ", PseudoBranchText, ";")
                     Case "@get_child / FIRST?"
                         stackPeek = True
                         If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
-                        pseudoCodeString = String.Concat(StoreString, " = child(", OperandString(0), ")#; if (", StoreString, " ", pseudoComp, " nothing) ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = child(", OperandStringPseudo(0), ")#; if (", StoreStringPseudo, " ", pseudoComp, " nothing) ", PseudoBranchText, ";")
                     Case "@get_sibling / NEXT?"
                         stackPeek = True
                         If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
-                        pseudoCodeString = String.Concat(StoreString, " = sibling(", OperandString(0), ")#; if (", StoreString, " ", pseudoComp, " nothing) ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = sibling(", OperandStringPseudo(0), ")#; if (", StoreStringPseudo, " ", pseudoComp, " nothing) ", PseudoBranchText, ";")
                     Case "@inc_chk / IGRTR?"
                         stackPeek = True
                         If BranchTest Then pseudoComp = "<" Else pseudoComp = ">="
-                        pseudoCodeString = String.Concat(OperandString(0), " = ", OperandString(0), " + 1; if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat(OperandStringPseudo(0), " = ", OperandStringPseudo(0), " + 1; if (", OperandStringPseudo(0), " ", pseudoComp, " ", OperandStringPseudo(1), ") ", PseudoBranchText, ";")
                     Case "@je / EQUAL?"
                         If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
-                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " ", PseudoConcatOperands(1), ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if (", OperandStringPseudo(0), " ", pseudoComp, " ", PseudoConcatOperands(1, 3, " or "), ") ", PseudoBranchText, ";")
                     Case "@jg / GRTR?"
                         If BranchTest Then pseudoComp = ">" Else pseudoComp = "<="
-                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if (", OperandStringPseudo(0), " ", pseudoComp, " ", OperandStringPseudo(1), ") ", PseudoBranchText, ";")
                     Case "@jin / IN?"
                         If BranchTest Then pseudoComp = "in" Else pseudoComp = "notin"
-                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if (", OperandStringPseudo(0), " ", pseudoComp, " ", OperandStringPseudo(1), ") ", PseudoBranchText, ";")
                     Case "@jl / LESS?"
                         If BranchTest Then pseudoComp = "<" Else pseudoComp = ">="
-                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if (", OperandStringPseudo(0), " ", pseudoComp, " ", OperandStringPseudo(1), ") ", PseudoBranchText, ";")
                     Case "@jz / ZERO?"
                         If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
-                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " 0) ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if (", OperandStringPseudo(0), " ", pseudoComp, " 0) ", PseudoBranchText, ";")
                     Case "@make_menu / MENU"
                         If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
-                        pseudoCodeString = String.Concat("if (make_menu(", OperandString(0), ", ", OperandString(1), ") ", pseudoComp, ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if (make_menu(", OperandStringPseudo(0), ", ", OperandStringPseudo(1), ") ", pseudoComp, ") ", PseudoBranchText, ";")
                     Case "@picture_data / PICINF"
                         If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
-                        pseudoCodeString = String.Concat("if (picture_data(", OperandString(0), ", ", OperandString(1), ") ", pseudoComp, ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if (picture_data(", OperandStringPseudo(0), ", ", OperandStringPseudo(1), ") ", pseudoComp, ") ", PseudoBranchText, ";")
                     Case "@piracy / ORIGINAL?"
                         If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
                         pseudoCodeString = String.Concat("if (original() == ", pseudoComp, ") ", PseudoBranchText, ";")
                     Case "@push_stack / XPUSH"
                         If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
-                        pseudoCodeString = String.Concat("if (push_stack(", OperandString(0), ") == ", pseudoComp, ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if (push_stack(", OperandStringPseudo(0), ") == ", pseudoComp, ") ", PseudoBranchText, ";")
                     Case "@restore / RESTORE"
                         If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
                         pseudoCodeString = String.Concat("if (restore() == ", pseudoComp, ") ", PseudoBranchText, ";")
@@ -468,13 +468,13 @@ Public Class Decode
                     Case "@scan_table / INTBL?"
                         stackPeek = True
                         If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
-                        pseudoCodeString = String.Concat(StoreString, " = scan_table(", PseudoConcatOperands(1), ")#; if (", StoreString, " ", pseudoComp, " nothing) ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = scan_table(", PseudoConcatOperands(1), ")#; if (", StoreStringPseudo, " ", pseudoComp, " nothing) ", PseudoBranchText, ";")
                     Case "@test / BTST"
                         If BranchTest Then pseudoComp = "==" Else pseudoComp = "~="
-                        pseudoCodeString = String.Concat("if ((", OperandString(0), " & ", OperandString(1), ") ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if ((", OperandStringPseudo(0), " & ", OperandStringPseudo(1), ") ", pseudoComp, " ", OperandStringPseudo(1), ") ", PseudoBranchText, ";")
                     Case "@test_attr / FSET?"
                         If BranchTest Then pseudoComp = "has" Else pseudoComp = "hasnt"
-                        pseudoCodeString = String.Concat("if (", OperandString(0), " ", pseudoComp, " ", OperandString(1), ") ", PseudoBranchText, ";")
+                        pseudoCodeString = String.Concat("if (", OperandStringPseudo(0), " ", pseudoComp, " ", OperandStringPseudo(1), ") ", PseudoBranchText, ";")
                     Case "@verify / VERIFY"
                         If BranchTest Then pseudoComp = "true" Else pseudoComp = "false"
                         pseudoCodeString = String.Concat("if (verify() == ", pseudoComp, ") ", PseudoBranchText, ";")
@@ -518,87 +518,87 @@ Public Class Decode
                 'Sub, SUB
                 Select Case OpcodeText
                     Case "@add / ADD"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " + ", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), " + ", OperandStringPseudo(1), "#;")
                     Case "@and / BAND"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " & ", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), " & ", OperandStringPseudo(1), "#;")
                     Case "@art_shift / ASHIFT"
                         Dim direction As String = "<<"
-                        If OperandString(1).Substring(1, 1) = "-" Then
+                        If OperandStringPseudo(1).Substring(1, 1) = "-" Then
                             direction = ">>"
-                            OperandString(1) = OperandString(1).Substring(1)
+                            OperandStringPseudo(1) = OperandStringPseudo(1).Substring(1)
                         End If
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " ", direction, " ", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), " ", direction, " ", OperandStringPseudo(1), "#;")
                     Case "@buffer_screen / *BUFFER_SCREEN*"
-                        pseudoCodeString = String.Concat(StoreString, " = buffer_screen(", OperandString(0), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = buffer_screen(", OperandStringPseudo(0), ")#;")
                     Case "@call / CALL", "@call_1s / CALL1", "@call_2s / CALL2", "@call_vs / CALL", "@call_vs2 / XCALL"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), "(", PseudoConcatOperands(1), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), "(", PseudoConcatOperands(1), ")#;")
                     Case "@catch / CÁTCH"
-                        pseudoCodeString = String.Concat(StoreString, " = catch();")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = catch();")
                     Case "@check_unicode / CHECKU"
-                        pseudoCodeString = String.Concat(StoreString, " = check_unicode(", OperandString(0), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = check_unicode(", OperandStringPseudo(0), ")#;")
                     Case "@div / DIV"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " / ", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), " / ", OperandStringPseudo(1), "#;")
                     Case "@get_parent / LOC"
-                        pseudoCodeString = String.Concat(StoreString, " = parent(", OperandString(0), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = parent(", OperandStringPseudo(0), ")#;")
                     Case "@get_prop / GETP"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), ".", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), ".", OperandStringPseudo(1), "#;")
                     Case "@get_prop_addr / GETPT"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), ".&", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), ".&", OperandStringPseudo(1), "#;")
                     Case "@get_prop_len / PTSIZE"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), ".#", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), ".#", OperandStringPseudo(1), "#;")
                     Case "@get_wind_prop / WINGET"
-                        pseudoCodeString = String.Concat(StoreString, " = get_wind_prop(", OperandString(0), ", ", OperandString(1), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = get_wind_prop(", OperandStringPseudo(0), ", ", OperandStringPseudo(1), ")#;")
                     Case "@get_next_prop / NEXTP"
-                        pseudoCodeString = String.Concat(StoreString, " = get_next_prop(", OperandString(0), ", ", OperandString(1), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = get_next_prop(", OperandStringPseudo(0), ", ", OperandStringPseudo(1), ")#;")
                     Case "@load / VALUE"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), "#;")
                     Case "@loadb / GETB"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), "->", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), "->", OperandStringPseudo(1), "#;")
                     Case "@loadw / GET"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), "-->", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), "-->", OperandStringPseudo(1), "#;")
                     Case "@log_shift / SHIFT"
                         Dim direction As String = "<<"
-                        If OperandString(1).Substring(1, 1) = "-" Then
+                        If OperandStringPseudo(1).Substring(1, 1) = "-" Then
                             direction = ">>>"
-                            OperandString(1) = OperandString(1).Substring(1)
+                            OperandStringPseudo(1) = OperandStringPseudo(1).Substring(1)
                         End If
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " ", direction, " ", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), " ", direction, " ", OperandStringPseudo(1), "#;")
                     Case "@mod / MOD"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " % ", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), " % ", OperandStringPseudo(1), "#;")
                     Case "@mul / MUL"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " * ", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), " * ", OperandStringPseudo(1), "#;")
                     Case "@not / BCOM"
-                        pseudoCodeString = String.Concat(StoreString, " = ~", OperandString(0), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ~", OperandStringPseudo(0), "#;")
                     Case "@or / BOR"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " | ", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), " | ", OperandStringPseudo(1), "#;")
                     Case "@pull / POP"
                         If OperandAddrMode(0) = EnumAddressMode.NONE Then
-                            pseudoCodeString = String.Concat(StoreString, " = stack.pop()#;")
+                            pseudoCodeString = String.Concat(StoreStringPseudo, " = stack.pop()#;")
                         Else
-                            pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), ".pop()#;")
+                            pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), ".pop()#;")
                         End If
                     Case "@random / RANDOM"
-                        pseudoCodeString = String.Concat(StoreString, " = random(", OperandString(0), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = random(", OperandStringPseudo(0), ")#;")
                     Case "@read / READ"
-                        pseudoCodeString = String.Concat(StoreString, " = read(", PseudoConcatOperands(0), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = read(", PseudoConcatOperands(0), ")#;")
                     Case "@read_char / INPUT"
-                        pseudoCodeString = String.Concat(StoreString, " = read_char(", PseudoConcatOperands(0), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = read_char(", PseudoConcatOperands(0), ")#;")
                     Case "@restore / RESTORE"
                         Dim sTmp As String = ""
                         If Not OperandAddrMode(1) = EnumAddressMode.NONE Then sTmp = PseudoConcatOperands(0)
-                        pseudoCodeString = String.Concat(StoreString, " = restore(", sTmp, ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = restore(", sTmp, ")#;")
                     Case "@restore_undo / IRESTORE"
-                        pseudoCodeString = String.Concat(StoreString, " = restore_undo(", OperandString(0), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = restore_undo(", OperandStringPseudo(0), ")#;")
                     Case "@save / SAVE"
                         Dim sTmp As String = ""
                         If Not OperandAddrMode(1) = EnumAddressMode.NONE Then sTmp = PseudoConcatOperands(0)
-                        pseudoCodeString = String.Concat(StoreString, " = save(", sTmp, ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = save(", sTmp, ")#;")
                     Case "@save_undo / ISAVE"
-                        pseudoCodeString = String.Concat(StoreString, " = save_undo(", OperandString(0), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = save_undo(", OperandStringPseudo(0), ")#;")
                     Case "@set_font / FONT"
-                        pseudoCodeString = String.Concat(StoreString, " = set_font(", PseudoConcatOperands(0), ")#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = set_font(", PseudoConcatOperands(0), ")#;")
                     Case "@sub / SUB"
-                        pseudoCodeString = String.Concat(StoreString, " = ", OperandString(0), " - ", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(StoreStringPseudo, " = ", OperandStringPseudo(0), " - ", OperandStringPseudo(1), "#;")
                 End Select
             ElseIf Extra = EnumExtra.E_TEXT Then
                 'print, PRINTI
@@ -679,15 +679,15 @@ Public Class Decode
                 ' @window_style / WINATTR
                 Select Case OpcodeText
                     Case "@buffer_mode / BUFOUT"
-                        pseudoCodeString = String.Concat("buffer_mode(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("buffer_mode(", OperandStringPseudo(0), ");")
                     Case "@call_1n / ICALL1", "@call_2n / ICALL2", "@call_vn / ICALL", "@call_vn2 / IXCALL"
-                        pseudoCodeString = String.Concat(OperandString(0), "(", PseudoConcatOperands(1), ");")
+                        pseudoCodeString = String.Concat(OperandStringPseudo(0), "(", PseudoConcatOperands(1), ");")
                     Case "@clear_attr / FCLEAR"
-                        pseudoCodeString = String.Concat("give ", OperandString(0), " ~", OperandString(1), ";")
+                        pseudoCodeString = String.Concat("give ", OperandStringPseudo(0), " ~", OperandStringPseudo(1), ";")
                     Case "@copy_table / COPYT"
                         pseudoCodeString = String.Concat("copy_table(", PseudoConcatOperands, ");")
                     Case "@dec / DEC"
-                        pseudoCodeString = String.Concat(OperandString(0), "--;")
+                        pseudoCodeString = String.Concat(OperandStringPseudo(0), "--;")
                     Case "@draw_picture / DISPLAY"
                         pseudoCodeString = String.Concat("draw_picture(", PseudoConcatOperands, ");")
                     Case "@encode_text / ZWSTR"
@@ -697,19 +697,19 @@ Public Class Decode
                     Case "@erase_picture / DCLEAR"
                         pseudoCodeString = String.Concat("erase_picture(", PseudoConcatOperands, ");")
                     Case "@erase_window / CLEAR"
-                        pseudoCodeString = String.Concat("erase_window(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("erase_window(", OperandStringPseudo(0), ");")
                     Case "@get_cursor / CURGET"
-                        pseudoCodeString = String.Concat("get_cursor(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("get_cursor(", OperandStringPseudo(0), ");")
                     Case "@inc / INC"
-                        pseudoCodeString = String.Concat(OperandString(0), "++;")
+                        pseudoCodeString = String.Concat(OperandStringPseudo(0), "++;")
                     Case "@input_stream / DIRIN"
-                        pseudoCodeString = String.Concat("input_stream(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("input_stream(", OperandStringPseudo(0), ");")
                     Case "@insert_obj / MOVE"
-                        pseudoCodeString = String.Concat("move ", OperandString(0), " to ", OperandString(1), ";")
+                        pseudoCodeString = String.Concat("move ", OperandStringPseudo(0), " to ", OperandStringPseudo(1), ";")
                     Case "@jump / JUMP"
-                        pseudoCodeString = String.Concat("jump ", OperandString(0), ";")
+                        pseudoCodeString = String.Concat("jump ", OperandStringPseudo(0), ";")
                     Case "@mouse_window / MOUSE-LIMIT"
-                        pseudoCodeString = String.Concat("mouse_window(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("mouse_window(", OperandStringPseudo(0), ");")
                     Case "@move_window / WINPOS"
                         pseudoCodeString = String.Concat("move_window(", PseudoConcatOperands, ");")
                     Case "@new_line / CRLF"
@@ -719,25 +719,25 @@ Public Class Decode
                     Case "@output_stream / DIROUT"
                         pseudoCodeString = String.Concat("output_stream(", PseudoConcatOperands, ");")
                     Case "@picture_table / PICSET"
-                        pseudoCodeString = String.Concat("picture_table(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("picture_table(", OperandStringPseudo(0), ");")
                     Case "@pop / FSTACK"
                         pseudoCodeString = "stack.pop();"
                     Case "@pop_stack / FSTACK"
                         Dim sTmp As String = "stack"
-                        If Not OperandAddrMode(1) = EnumAddressMode.NONE Then sTmp = OperandString(1)
-                        pseudoCodeString = String.Concat(sTmp, ".pop(", OperandString(0), ");")
+                        If Not OperandAddrMode(1) = EnumAddressMode.NONE Then sTmp = OperandStringPseudo(1)
+                        pseudoCodeString = String.Concat(sTmp, ".pop(", OperandStringPseudo(0), ");")
                     Case "@print_addr / PRINTB"
-                        pseudoCodeString = String.Concat("print_addr(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("print_addr(", OperandStringPseudo(0), ");")
                     Case "@print_char / PRINTC"
-                        pseudoCodeString = String.Concat("print_char(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("print_char(", OperandStringPseudo(0), ");")
                     Case "@print_form / PRINTF"
-                        pseudoCodeString = String.Concat("print_form(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("print_form(", OperandStringPseudo(0), ");")
                     Case "@print_num / PRINTN"
-                        pseudoCodeString = String.Concat("print_num(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("print_num(", OperandStringPseudo(0), ");")
                     Case "@print_obj / PRINTD"
-                        pseudoCodeString = String.Concat("print_obj(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("print_obj(", OperandStringPseudo(0), ");")
                     Case "@print_paddr / PRINT"
-                        Dim pseudoText As String = OperandString(0)
+                        Dim pseudoText As String = OperandStringPseudo(0)
                         If pseudoText.Contains(Chr(34)) Then
                             pseudoText = pseudoText.Substring(pseudoText.IndexOf(Chr(34)))
                             pseudoText = pseudoText.Replace("{", "").Replace("}", "").Replace(Chr(34), "")
@@ -748,13 +748,13 @@ Public Class Decode
                     Case "@print_table / PRINTT"
                         pseudoCodeString = String.Concat("print_table(", PseudoConcatOperands, ");")
                     Case "@print_unicode / PRINTU"
-                        pseudoCodeString = String.Concat("print_unicode(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("print_unicode(", OperandStringPseudo(0), ");")
                     Case "@pull / POP"
-                        pseudoCodeString = String.Concat(OperandString(0), " = stack.pop()#;")
+                        pseudoCodeString = String.Concat(OperandStringPseudo(0), " = stack.pop()#;")
                     Case "@push / PUSH"
-                        pseudoCodeString = String.Concat("stack.push(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("stack.push(", OperandStringPseudo(0), ");")
                     Case "@put_prop / PUTP"
-                        pseudoCodeString = String.Concat(OperandString(0), ".", OperandString(1), " = ", OperandString(2), ";")
+                        pseudoCodeString = String.Concat(OperandStringPseudo(0), ".", OperandStringPseudo(1), " = ", OperandStringPseudo(2), ";")
                     Case "@put_wind_prop / WINPUT"
                         pseudoCodeString = String.Concat("put_wind_prop(", PseudoConcatOperands, ");")
                     Case "@quit / QUIT"
@@ -762,13 +762,13 @@ Public Class Decode
                     Case "@read / READ"
                         pseudoCodeString = String.Concat("read(", PseudoConcatOperands, ");")
                     Case "@read_mouse / MOUSE-INFO"
-                        pseudoCodeString = String.Concat("read_mouse(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("read_mouse(", OperandStringPseudo(0), ");")
                     Case "@remove_obj / REMOVE"
-                        pseudoCodeString = String.Concat("remove ", OperandString(0), ";")
+                        pseudoCodeString = String.Concat("remove ", OperandStringPseudo(0), ";")
                     Case "@restart / RESTART"
                         pseudoCodeString = "restart;"
                     Case "@ret / RETURN"
-                        pseudoCodeString = String.Concat("return ", OperandString(0), ";")
+                        pseudoCodeString = String.Concat("return ", OperandStringPseudo(0), ";")
                     Case "@ret_popped / RSTACK"
                         pseudoCodeString = "return stack.pop();"
                     Case "@rfalse / RFALSE"
@@ -778,7 +778,7 @@ Public Class Decode
                     Case "@scroll_window / SCROLL"
                         pseudoCodeString = String.Concat("scroll_window(", PseudoConcatOperands, ");")
                     Case "@set_attr / FSET"
-                        pseudoCodeString = String.Concat("give ", OperandString(0), " ", OperandString(1), ";")
+                        pseudoCodeString = String.Concat("give ", OperandStringPseudo(0), " ", OperandStringPseudo(1), ";")
                     Case "@set_colour / COLOR"
                         pseudoCodeString = String.Concat("set_colour(", PseudoConcatOperands, ");")
                     Case "@set_cursor / CURSET"
@@ -786,23 +786,23 @@ Public Class Decode
                     Case "@set_margins / MARGIN"
                         pseudoCodeString = String.Concat("set_margins(", PseudoConcatOperands, ");")
                     Case "@set_text_style / HLIGHT"
-                        pseudoCodeString = String.Concat("set_text_style(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("set_text_style(", OperandStringPseudo(0), ");")
                     Case "@set_true_colour / *SET_TRUE_COLOUR*"
                         pseudoCodeString = String.Concat("set_true_colour(", PseudoConcatOperands, ");")
                     Case "@set_window / SCREEN"
-                        pseudoCodeString = String.Concat("set_window(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("set_window(", OperandStringPseudo(0), ");")
                     Case "@show_status / USL"
                         pseudoCodeString = "show_status;"
                     Case "@sound_effect / SOUND"
                         pseudoCodeString = String.Concat("sound_effect(", PseudoConcatOperands, ");")
                     Case "@split_window / SPLIT"
-                        pseudoCodeString = String.Concat("split_window(", OperandString(0), ");")
+                        pseudoCodeString = String.Concat("split_window(", OperandStringPseudo(0), ");")
                     Case "@store / SET"
-                        pseudoCodeString = String.Concat(OperandString(0), " = ", OperandString(1), "#;")
+                        pseudoCodeString = String.Concat(OperandStringPseudo(0), " = ", OperandStringPseudo(1), "#;")
                     Case "@storeb / PUTB"
-                        pseudoCodeString = String.Concat(OperandString(0), "->", OperandString(1), " = ", OperandString(2), ";")
+                        pseudoCodeString = String.Concat(OperandStringPseudo(0), "->", OperandStringPseudo(1), " = ", OperandStringPseudo(2), ";")
                     Case "@storew / PUT"
-                        pseudoCodeString = String.Concat(OperandString(0), "-->", OperandString(1), " = ", OperandString(2), ";")
+                        pseudoCodeString = String.Concat(OperandStringPseudo(0), "-->", OperandStringPseudo(1), " = ", OperandStringPseudo(2), ";")
                     Case "@throw / THROW"
                         pseudoCodeString = String.Concat("throw(", PseudoConcatOperands, ");")
                     Case "@tokenise / LEX"
@@ -855,9 +855,9 @@ Public Class Decode
             End Select
         End Function
         Private Function PseudoConcatOperands(Optional startIndex As Integer = 0, Optional slutIndex As Integer = 3, Optional text As String = ", ") As String
-            Dim sTmp As String = OperandString(startIndex)
+            Dim sTmp As String = OperandStringPseudo(startIndex)
             For i As Integer = startIndex + 1 To slutIndex
-                If Not OperandAddrMode(i) = EnumAddressMode.NONE Then sTmp &= text & OperandString(i)
+                If Not OperandAddrMode(i) = EnumAddressMode.NONE Then sTmp &= text & OperandStringPseudo(i)
             Next
             Return sTmp
         End Function
@@ -1637,7 +1637,7 @@ Public Class Decode
                         Else
                             pOpcode.OperandText = pOpcode.OperandText & " S" & oStringData.number.ToString("D4")
                         End If
-                        pOpcode.OperandString(i) = "s" & oStringData.number.ToString("D4")
+                        pOpcode.OperandStringPseudo(i) = "s" & oStringData.number.ToString("D4")
                     End If
                     If oStringData IsNot Nothing And dictEntry IsNot Nothing Then
                         If syntax = 1 Then
@@ -1645,7 +1645,7 @@ Public Class Decode
                         Else
                             pOpcode.OperandText &= " OR"
                         End If
-                        pOpcode.OperandString(i) &= "/"
+                        pOpcode.OperandStringPseudo(i) &= "/"
                     End If
                     If dictEntry IsNot Nothing Then
                         If syntax = 2 Then
@@ -1653,20 +1653,20 @@ Public Class Decode
                         Else
                             pOpcode.OperandText = pOpcode.OperandText & " " & Convert.ToChar(34) & dictEntry.dictWord & Convert.ToChar(34)
                         End If
-                        pOpcode.OperandString(i) &= Convert.ToChar(34) & dictEntry.dictWord & Convert.ToChar(34)
+                        pOpcode.OperandStringPseudo(i) &= Convert.ToChar(34) & dictEntry.dictWord & Convert.ToChar(34)
                     End If
                     If oStringData Is Nothing And dictEntry Is Nothing Then
                         pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), syntax, True)
-                        pOpcode.OperandString(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 1, True)
+                        pOpcode.OperandStringPseudo(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 1, True)
                     End If
                 Case EnumOperand.P_ATTRNUM
                     If syntax = 0 Then pOpcode.OperandText = pOpcode.OperandText & " ATTRIBUTE" & operandVal.ToString
                     If syntax = 1 Then pOpcode.OperandText = pOpcode.OperandText & " attribute" & operandVal.ToString
                     If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText & " ATTRIBUTE" & operandVal.ToString
-                    pOpcode.OperandString(i) = "attribute" & operandVal.ToString
+                    pOpcode.OperandStringPseudo(i) = "attribute" & operandVal.ToString
                 Case EnumOperand.P_INDIRECT
                     pOpcode.OperandText = pOpcode.OperandText & " [" & TextVariable(operandVal, syntax) & "]"
-                    pOpcode.OperandString(i) = " [" & TextVariable(operandVal, syntax) & "]"
+                    pOpcode.OperandStringPseudo(i) = " [" & TextVariable(operandVal, 4) & "]"
                 Case EnumOperand.P_LABEL
                     Dim Address As Integer = pOpcode.Address + 1
                     If operandVal > 32767 Then
@@ -1677,15 +1677,15 @@ Public Class Decode
                     If syntax = 0 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & Address.ToString("X4")
                     If syntax = 1 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & Address.ToString("x4")
                     If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & Address.ToString("X4")
-                    pOpcode.OperandString(i) = "0x" & Address.ToString("x4")
+                    pOpcode.OperandStringPseudo(i) = "0x" & Address.ToString("x4")
                 Case EnumOperand.P_LOW_ADDR
                     Dim dictEntry As DictionaryEntry = DictEntriesList.GetEntryAtAddress(operandVal)
                     If dictEntry IsNot Nothing Then
                         pOpcode.OperandText = pOpcode.OperandText & " " & Convert.ToChar(34) & dictEntry.dictWord & Convert.ToChar(34)
-                        pOpcode.OperandString(i) = Convert.ToChar(34) & dictEntry.dictWord & Convert.ToChar(34)
+                        pOpcode.OperandStringPseudo(i) = Convert.ToChar(34) & dictEntry.dictWord & Convert.ToChar(34)
                     Else
                         pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), syntax, False)
-                        pOpcode.OperandString(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 1, False)
+                        pOpcode.OperandStringPseudo(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 1, False)
                         If bSilent Then
                             ' Collect all possible startpoints for an array
                             If operandVal > 0 Then
@@ -1700,19 +1700,19 @@ Public Class Decode
                     End If
                 Case EnumOperand.P_NIL
                     pOpcode.OperandText &= " Illegal_parameter"
-                    pOpcode.OperandString(i) = "Illegal_parameter"
+                    pOpcode.OperandStringPseudo(i) = "Illegal_parameter"
                 Case EnumOperand.P_NUMBER
                     If syntax = 2 And (pOpcode.Code And &H3F) = &H3F Then       ' ASSIGNED?, the number points to a local variable
                         pOpcode.OperandText = pOpcode.OperandText & " '" & TextVariable(operandVal, syntax)
                     Else
                         pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), syntax, True)
                     End If
-                    pOpcode.OperandString(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 2, True)
+                    pOpcode.OperandStringPseudo(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 2, True)
                 Case EnumOperand.P_OBJECT
                     If syntax = 0 Then pOpcode.OperandText = pOpcode.OperandText & " OBJECT" & operandVal.ToString
                     If syntax = 1 Then pOpcode.OperandText = pOpcode.OperandText & " object" & operandVal.ToString
                     If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText & " OBJECT" & operandVal.ToString
-                    pOpcode.OperandString(i) = "object" & operandVal.ToString
+                    pOpcode.OperandStringPseudo(i) = "object" & operandVal.ToString
                 Case EnumOperand.P_PATTR
                     Dim sDirOut As String = ""
                     Select Case operandVal
@@ -1728,25 +1728,25 @@ Public Class Decode
                     End Select
                     If syntax = 1 Then sDirOut = sDirOut.ToLower
                     pOpcode.OperandText = pOpcode.OperandText & " " & sDirOut
-                    pOpcode.OperandString(i) = sDirOut.ToLower
+                    pOpcode.OperandStringPseudo(i) = sDirOut.ToLower
                 Case EnumOperand.P_PCHAR
                     Dim character As Char = CChar(Char.ConvertFromUtf32(operandVal))
                     If Not Char.IsControl(character) Then
                         pOpcode.OperandText = pOpcode.OperandText & " '" & character & "'"
-                        pOpcode.OperandString(i) = "'" & character & "'"
+                        pOpcode.OperandStringPseudo(i) = "'" & character & "'"
                     Else
                         pOpcode.OperandText = pOpcode.OperandText & " " & TextNumber(operandVal, pOpcode.OperandLen(i), syntax, False)
-                        pOpcode.OperandString(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 1, False)
+                        pOpcode.OperandStringPseudo(i) = TextNumber(operandVal, pOpcode.OperandLen(i), 1, False)
                     End If
                 Case EnumOperand.P_PROPNUM
                     If operandVal < propertyMin Or operandVal > propertyMax Then
                         pOpcode.OperandText = pOpcode.OperandText & " " & "[Invalid property: 0x" & operandVal.ToString("X2") & "]"
-                        pOpcode.OperandString(i) = "[Invalid property: 0x" & operandVal.ToString("X2") & "]"
+                        pOpcode.OperandStringPseudo(i) = "[Invalid property: 0x" & operandVal.ToString("X2") & "]"
                     Else
                         If syntax = 0 Then pOpcode.OperandText = pOpcode.OperandText & " PROPERTY" & operandVal.ToString
                         If syntax = 1 Then pOpcode.OperandText = pOpcode.OperandText & " property" & operandVal.ToString
                         If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText & " P?" & operandVal.ToString
-                        pOpcode.OperandString(i) = "property" & operandVal.ToString
+                        pOpcode.OperandStringPseudo(i) = "property" & operandVal.ToString
                     End If
                 Case EnumOperand.P_ROUTINE
                     If operandVal <> 0 Then
@@ -1755,14 +1755,14 @@ Public Class Decode
                             If syntax = 0 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & oRoutineData.entryPoint.ToString("X4")
                             If syntax = 1 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & oRoutineData.entryPoint.ToString("x4")
                             If syntax = 2 Then pOpcode.OperandText = pOpcode.OperandText & " 0x" & oRoutineData.entryPoint.ToString("X4")
-                            pOpcode.OperandString(i) = "0x" & oRoutineData.entryPoint.ToString("x4")
+                            pOpcode.OperandStringPseudo(i) = "0x" & oRoutineData.entryPoint.ToString("x4")
                         Else
                             pOpcode.OperandText = pOpcode.OperandText & " " & "[Invalid routine: 0x" & Helper.UnpackAddress(operandVal, byteGame, True).ToString("X4") & "]"
-                            pOpcode.OperandString(i) = "[Invalid routine: 0x" & Helper.UnpackAddress(operandVal, byteGame, True).ToString("X4") & "]"
+                            pOpcode.OperandStringPseudo(i) = "[Invalid routine: 0x" & Helper.UnpackAddress(operandVal, byteGame, True).ToString("X4") & "]"
                         End If
                     Else
                         pOpcode.OperandText &= " 0"
-                        pOpcode.OperandString(i) = "0"
+                        pOpcode.OperandStringPseudo(i) = "0"
                     End If
                 Case EnumOperand.P_STATIC
                     Dim oStringData As StringData = validStringList.Find(Function(x) x.entryPointPacked = operandVal)
@@ -1772,10 +1772,10 @@ Public Class Decode
                         Else
                             pOpcode.OperandText = pOpcode.OperandText & " S" & oStringData.number.ToString("D4") & " " & Convert.ToChar(34) & oStringData.GetText(showAbbrevsInsertion) & Convert.ToChar(34)
                         End If
-                        pOpcode.OperandString(i) = "s" & oStringData.number.ToString("D4") & " " & Convert.ToChar(34) & oStringData.GetText(showAbbrevsInsertion) & Convert.ToChar(34)
+                        pOpcode.OperandStringPseudo(i) = "s" & oStringData.number.ToString("D4") & " " & Convert.ToChar(34) & oStringData.GetText(showAbbrevsInsertion) & Convert.ToChar(34)
                     Else
                         pOpcode.OperandText = pOpcode.OperandText & " " & "[Invalid string: " & Helper.UnpackAddress(operandVal, byteGame, False).ToString("X5") & "]"
-                        pOpcode.OperandString(i) = "[Invalid string: " & Helper.UnpackAddress(operandVal, byteGame, False).ToString("X5") & "]"
+                        pOpcode.OperandStringPseudo(i) = "[Invalid string: " & Helper.UnpackAddress(operandVal, byteGame, False).ToString("X5") & "]"
                     End If
                 Case EnumOperand.P_VAR
                     If syntax < 2 Then
@@ -1791,7 +1791,7 @@ Public Class Decode
                             pOpcode.OperandText = pOpcode.OperandText & " " & TextVariable(operandVal, syntax)
                         End If
                     End If
-                    pOpcode.OperandString(i) = TextVariable(operandVal, 1)
+                    pOpcode.OperandStringPseudo(i) = TextVariable(operandVal, 3)
                 Case EnumOperand.P_VATTR
                     Dim sFontStyle As String = ""
                     Select Case operandVal
@@ -1804,7 +1804,7 @@ Public Class Decode
                     End Select
                     If syntax = 1 Then sFontStyle = sFontStyle.ToLower
                     pOpcode.OperandText = pOpcode.OperandText & " " & sFontStyle
-                    pOpcode.OperandString(i) = sFontStyle.ToLower
+                    pOpcode.OperandStringPseudo(i) = sFontStyle.ToLower
             End Select
             If syntax < 2 And iParameterCount > 1 And pOpcode.Type = EnumType.T_CALL And i < iParameterCount - 1 And i > 0 Then pOpcode.OperandText &= ","
             If syntax = 2 And iParameterCount > 0 And i < iParameterCount - 1 Then pOpcode.OperandText &= ","
@@ -1817,7 +1817,7 @@ Public Class Decode
             Dim sStoreText As String
             sStoreText = TextVariable(pOpcode.StoreVal, syntax)
             If pOpcode.StoreVal = 0 And syntax = 0 Then sStoreText = "-(SP)"
-            pOpcode.StoreString = sStoreText
+            pOpcode.StoreStringPseudo = TextVariable(pOpcode.StoreVal, 3)
 
             ' Collect statistics on globals
             Dim value As Integer = pOpcode.StoreVal - 16
