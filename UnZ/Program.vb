@@ -333,7 +333,7 @@ Module Program
                         Console.Error.WriteLine(" -d                 Show the dictionary section.")
                         Console.Error.WriteLine(" -f                 Show all sections (default).")
                         Console.Error.WriteLine(" -g                 Show the grammar section.")
-                        Console.Error.WriteLine(" --gametext         Output only a'gametext.txt' format of all text in the file.")
+                        Console.Error.WriteLine(" --gametext         Output only a 'gametext.txt' format of all text in the file.")
                         Console.Error.WriteLine(" -h, --help, /?     Show this help.")
                         Console.Error.WriteLine(" --hexdump          Show raw hexdump before each section.")
                         Console.Error.WriteLine(" --hide             Don't show the abbreviation insertion points in the strings.")
