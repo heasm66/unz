@@ -2,7 +2,7 @@
 
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
-UnZ 0.16 (5th July 2025, in development) by Henrik Åsman, (c) 2021-2025
+UnZ 0.16 (10th July 2025, in development) by Henrik Åsman, (c) 2021-2025
 Usage: unz [option]... [file]
 Unpack Z-machine file format information.
 
@@ -42,6 +42,7 @@ Changelog:
     ---------------
       * Bug: stack.peek() should only be in if-statements
       * Bug: print_paddr handled variables wrong
+      * Bug: Small strings area can make z-decoding go out of bounds 
 
     0.15 2025-07-04
     ---------------

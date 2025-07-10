@@ -1294,7 +1294,9 @@ Public Class Decode
         pOpcode.Type = pType
         pOpcode.OpcodeText = "@" & psOpcodeNameInf.ToLower & " / " & psOpcodeNameZil
         For i = 0 To 20
-            pOpcode.OpcodeBytes(i) = byteGame(pOpcode.Address + i)
+            If pOpcode.Address + i < byteGame.Length Then
+                pOpcode.OpcodeBytes(i) = byteGame(pOpcode.Address + i)
+            End If
         Next
 
         ' zork0-beta-r242-s880830.z6 and zork0-r242-s880901.z6 contains code that uses 3 parameters for WINGET.
