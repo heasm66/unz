@@ -29,7 +29,7 @@ Imports System.Runtime.InteropServices.JavaScript.JSType
 Imports Microsoft
 
 ' Set this to false before release
-#Const _IN_DEVELOPMENT = True
+#Const _IN_DEVELOPMENT = False
 
 ' ZILCH, grammar version 1
 '   All Infocom except Mini-Zork 1, Sherlock, Abyss, Zork Zero, Shogun & Arthur
@@ -266,7 +266,7 @@ Module Program
                 If args(i).StartsWith("-"c) And Not args(i).StartsWith("--") Then
                     Dim argsOk As Boolean = True
                     For j As Integer = 1 To args(i).Length - 1
-                        If Not "abdfgimosuvxz".Contains(args(i).Substring(j, 1)) Then
+                        If Not "adfgimosuvxz".Contains(args(i).Substring(j, 1)) Then
                             argsOk = False
                         End If
                     Next
