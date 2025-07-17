@@ -975,6 +975,7 @@ Public Class Decode
         Dim high_routine_old As Integer = highest_routine
         Dim low_routine_old As Integer = lowest_routine
         Dim lowest_string_old As Integer = lowest_string
+        Dim highest_global_old As Integer = highest_global
 
         callsTo.Clear()
         Do
@@ -985,6 +986,10 @@ Public Class Decode
                 highest_routine = high_routine_old
                 lowest_routine = low_routine_old
                 lowest_string = lowest_string_old
+                highest_global = highest_global_old
+                For Each x As Integer In usedGlobals
+                    If x > highest_global Or x < 0 Then usedGlobals.Remove(x)
+                Next
                 callsTo.Clear()
                 Return -1
             End If
@@ -1668,7 +1673,7 @@ Public Class Decode
                     pOpcode.OperandStringPseudo(i) = "attribute" & operandVal.ToString
                 Case EnumOperand.P_INDIRECT
                     pOpcode.OperandText = pOpcode.OperandText & " [" & TextVariable(operandVal, syntax) & "]"
-                    pOpcode.OperandStringPseudo(i) = " [" & TextVariable(operandVal, 4) & "]"
+                    pOpcode.OperandStringPseudo(i) = " [" & TextVariable(operandVal, 3) & "]"
                 Case EnumOperand.P_LABEL
                     Dim Address As Integer = pOpcode.Address + 1
                     If operandVal > 32767 Then
@@ -1824,7 +1829,7 @@ Public Class Decode
             ' Collect statistics on globals
             Dim value As Integer = pOpcode.StoreVal - 16
             If value > highest_global Then highest_global = value
-            usedGlobals.Add(value)
+            If value > -1 Then usedGlobals.Add(value)
 
             If syntax < 2 Then pOpcode.OperandText = pOpcode.OperandText & " -> " & sStoreText Else pOpcode.OperandText = pOpcode.OperandText & " >" & sStoreText
         End If
