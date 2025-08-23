@@ -186,7 +186,7 @@ Module Program
 
             ' ZILF, grammar version 1
             'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\heart-of-ice-master\src\heartice.z5"
-            sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\zork1\zork1.z3"
+            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\zork1\zork1.z3"
             'sFilename = "games\zilf_ver1\craverlyheights_zil_ver_0_10.z5"
 
             ' ZILCH, grammar version 1
@@ -1176,7 +1176,7 @@ Module Program
                                 If (byteStory(iTmpProp) And 64) = 64 Then iPropSize = 2 Else iPropSize = 1
                             End If
                         End If
-                        DecodePropertyData(True, byteStory, DictEntriesList, validStringsList, validRoutinesList, iPropNum, iPropSize, iPropStart, sPropData, iObject, objectName)
+                        DecodePropertyData(True, byteStory, DictEntriesList, validStringsList, validRoutinesList, iPropNum, iPropSize, iPropStart, sPropData, iObject, objectName, PropertyType.UNINITIATED)
                         iTmpProp = iPropStart + iPropSize
                     Loop
                     iObject += 1
@@ -2027,7 +2027,7 @@ Module Program
                                 Console.Write("{0}/{1}", iPropNum, iPropSize)
                                 If iPropSize < 10 Then Console.Write(" ")
                                 Console.Write(" ")
-                                DecodePropertyData(False, byteStory, DictEntriesList, validStringsList, validRoutinesList, iPropNum, iPropSize, iPropStart, sPropData, iObject, "")
+                                DecodePropertyData(False, byteStory, DictEntriesList, validStringsList, validRoutinesList, iPropNum, iPropSize, iPropStart, sPropData, iObject, "", oPropertyAnalyser.GetPropertyType(iPropNum))
 
                                 iTmpProp = iPropStart + iPropSize
                             Loop
@@ -3459,7 +3459,7 @@ Module Program
 
     Public ZilPropDirectionList As New List(Of Integer)
 
-    Private Sub DecodePropertyData(silent As Boolean, pStoryData() As Byte, pDictEntries As DictionaryEntries, pStringsList As List(Of StringData), pRoutineList As List(Of RoutineData), pPropNum As Integer, pPropSize As Integer, pPropStart As Integer, pPropData As String, pObjectNum As Integer, pObjectName As String)
+    Private Sub DecodePropertyData(silent As Boolean, pStoryData() As Byte, pDictEntries As DictionaryEntries, pStringsList As List(Of StringData), pRoutineList As List(Of RoutineData), pPropNum As Integer, pPropSize As Integer, pPropStart As Integer, pPropData As String, pObjectNum As Integer, pObjectName As String, pPreAnalyzedType As PropertyType)
         Dim objectName As String = String.Concat((pObjectNum + 1).ToString, " (", Chr(34), pObjectName, Chr(34), ")")
         If {EnumCompilerSource.ZILCH, EnumCompilerSource.ZILF}.Contains(compilerSource) Then
             If ZilPropDirectionList.Contains(pPropNum) Then
@@ -3534,25 +3534,29 @@ Module Program
             Else
                 If pDictEntries.GetDirection(pPropNum).Count > 0 Then
                     ZilPropDirectionList.Add(pPropNum)
-                    DecodePropertyData(silent, pStoryData, pDictEntries, pStringsList, pRoutineList, pPropNum, pPropSize, pPropStart, pPropData, pObjectNum, pObjectName)
+                    DecodePropertyData(silent, pStoryData, pDictEntries, pStringsList, pRoutineList, pPropNum, pPropSize, pPropStart, pPropData, pObjectNum, pObjectName, pPreAnalyzedType)
                     Exit Sub
                 End If
-                ' Length = 2, Check is Routine, String or Word (in that order)
-                ' Length mod 2 = 0, Check if all ar words
+                ' Length = 2, Check if Routine, String or Word (in that order), PreAnalyzedType = SYNONYM goes directly to Word (dictionary)
+                ' Length mod 2 = 0, Check if all are words
                 If pPropSize = 2 Then
                     Dim oStringData As StringData = pStringsList.Find(Function(c) c.entryPointPacked = Helper.GetAdressFromWord(pStoryData, pPropStart))
                     Dim oRoutineData As RoutineData = pRoutineList.Find(Function(c) c.entryPointPacked = Helper.GetAdressFromWord(pStoryData, pPropStart))
-                    If oStringData IsNot Nothing Then
+                    If oStringData IsNot Nothing And Not pPreAnalyzedType = PropertyType.SYNONYM Then
                         If Not silent Then Console.WriteLine("(PROP#{0} {1}{2}{3})", pPropNum, Convert.ToChar(34), oStringData.GetText(showAbbrevsInsertion), Convert.ToChar(34))
                         Exit Sub
                     End If
-                    If oRoutineData IsNot Nothing Then
-                        If Not silent Then Console.WriteLine("(PROP#{0} Routine at 0x{1:X5})", pPropNum, oRoutineData.entryPoint)
-                        If silent Then oRoutineData.callsFrom.Add(String.Concat("Called from property #", pPropNum.ToString, " at object #", objectName))
+                    If oRoutineData IsNot Nothing And Not pPreAnalyzedType = PropertyType.SYNONYM Then
+                        If Not silent Then
+                            Console.WriteLine("(PROP#{0} Routine at 0x{1:X5})", pPropNum, oRoutineData.entryPoint)
+                            oRoutineData.callsFrom.Add(String.Concat("Called from property #", pPropNum.ToString, " at object #", objectName))
+                        End If
+                        ' Wait with adding routine to after PropertyAnalyzer is done (could be an ambiguity between routine/dictionary word)
+                        'If silent Then oRoutineData.callsFrom.Add(String.Concat("Called from property #", pPropNum.ToString, " at object #", objectName))
                         Exit Sub
                     End If
                 End If
-                ' Length mod 2 = 0, Check if all ar words
+                ' Length mod 2 = 0, Check if all are words
                 If (pPropSize Mod 2) = 0 Then
                     Dim bValidWords As Boolean = True
                     For i As Integer = 0 To pPropSize - 2 Step 2

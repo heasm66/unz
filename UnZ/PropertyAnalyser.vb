@@ -22,7 +22,6 @@
 
 Public Enum PropertyType
     ZIL_DIRECTION
-    ZIL_SYNONYM
     ZIL_ADJECTIVE
     ZIL_THINGS
     ZIL_PSEUDO
@@ -33,6 +32,7 @@ Public Enum PropertyType
     ZIL_VALUE
     ZIL_TABLE
     ZIL_UNKNOWN
+    SYNONYM
     UNINITIATED
     UNUSED
     AMBIGUITY
@@ -175,23 +175,24 @@ Public Class PropertyAnalyser
         stringList = pStringList
         MemoryMap = pMemoryMap
 
-        If {EnumCompilerSource.ZILCH, EnumCompilerSource.ZILF}.Contains(compilerSource) Then
-            For Each propEntry As PropertyEntry In properties
+        For Each propEntry As PropertyEntry In properties
+            If IdentifySynonym(propEntry) Then propEntry.AddPropertyType(PropertyType.SYNONYM)
+
+            If {EnumCompilerSource.ZILCH, EnumCompilerSource.ZILF}.Contains(compilerSource) Then
                 If IdentifyZILDirection(propEntry) Then propEntry.AddPropertyType(PropertyType.ZIL_DIRECTION)
                 If IdentifyZILAction(propEntry) Then propEntry.AddPropertyType(PropertyType.ZIL_ACTION)
                 If IdentifyZILAdjective(propEntry) Then propEntry.AddPropertyType(PropertyType.ZIL_ADJECTIVE)
-                If IdentifyZILSynonym(propEntry) Then propEntry.AddPropertyType(PropertyType.ZIL_SYNONYM)
                 If IdentifyZILHighString(propEntry) Then propEntry.AddPropertyType(PropertyType.ZIL_HIGH_STRING)
                 If IdentifyZILPseudo(propEntry) Then propEntry.AddPropertyType(PropertyType.ZIL_PSEUDO)
                 If IdentifyZILGlobal(propEntry) Then propEntry.AddPropertyType(PropertyType.ZIL_GLOBAL)
                 If IdentifyZILValue(propEntry) Then propEntry.AddPropertyType(PropertyType.ZIL_VALUE)
                 If IdentifyZILTable(propEntry) Then propEntry.AddPropertyType(PropertyType.ZIL_TABLE)
                 If propEntry.PropertyType = PropertyType.UNINITIATED Then propEntry.AddPropertyType(PropertyType.ZIL_UNKNOWN)
-            Next
-        ElseIf {EnumCompilerSource.INFORM5, EnumCompilerSource.INFORM6}.Contains(compilerSource) Then
-        Else
+            ElseIf {EnumCompilerSource.INFORM5, EnumCompilerSource.INFORM6}.Contains(compilerSource) Then
+            Else
 
-        End If
+            End If
+        Next
     End Sub
 
     Private Function IdentifyZILDirection(pPropEntry As PropertyEntry) As Boolean
@@ -207,8 +208,8 @@ Public Class PropertyAnalyser
         Return True
     End Function
 
-    Private Function IdentifyZILSynonym(pPropEntry As PropertyEntry) As Boolean
-        ' Length mod 2 = 0, Check if all are words
+    Private Function IdentifySynonym(pPropEntry As PropertyEntry) As Boolean
+        ' Length mod 2 = 0, returns true if all points to words in the dictionary, otherwise false
         For Each oPropData As PropertyData In pPropEntry.data
             If Not (oPropData.data.Count Mod 2) = 0 Then Return False
             For i As Integer = 0 To oPropData.data.Count - 2 Step 2
@@ -357,7 +358,7 @@ Public Class PropertyAnalyser
             Case PropertyType.ZIL_DIRECTION : Return "DIRECTION"
             Case PropertyType.ZIL_GLOBAL : Return "GLOBAL"
             Case PropertyType.ZIL_PSEUDO : Return "PSEUDO"
-            Case PropertyType.ZIL_SYNONYM : Return "SYNONYM"
+            Case PropertyType.SYNONYM : Return "SYNONYM"
             Case PropertyType.ZIL_HIGH_STRING : Return "HIGH STRING"
             Case PropertyType.ZIL_STRING : Return "STRING"
             Case PropertyType.ZIL_THINGS : Return "THINGS"

@@ -2,7 +2,7 @@
 
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
-UnZ 0.17 (10th July 2025, in development) by Henrik Åsman, (c) 2021-2025
+UnZ 0.17 (23rd August 2025, in development) by Henrik Åsman, (c) 2021-2025
 Usage: unz [option]... [file]
 Unpack Z-machine file format information.
 
@@ -38,6 +38,8 @@ Changelog:
     0.17 2025-xx-xx
     ---------------
       * Bug: highest global and used globals computed wrong
+      * Bug: improve logic dictword/packed address (ambiguity)
+             in decoding properties on objects
 
     0.16 2025-07-10
     ---------------
