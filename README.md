@@ -1,5 +1,14 @@
 ## UnZ
 
+### Build native binaries
+
+- **MacOS arm64**: `dotnet publish -c Release -r osx-arm64 --self-contained true -p:PublishAot=true`
+- **MacOS intel**: `dotnet publish -c Release -r osx-x64 --self-contained true -p:PublishAot=true`
+- **Windows x64**: `dotnet publish -c Release -r win-x64 --self-contained true -p:PublishAot=true`
+- **Windows x86**: `dotnet publish -c Release -r win-x86 --self-contained true -p:PublishAot=true`
+- **Linux x64**: `dotnet publish -c Release -r linux-x64 --self-contained true -p:PublishAot=true`
+- **Linux arm64**: `dotnet publish -c Release -r linux-arm64 --self-contained true -p:PublishAot=true`
+
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
 UnZ 0.17 (23rd August 2025, in development) by Henrik Åsman, (c) 2021-2025
@@ -98,3 +107,4 @@ Changelog:
     ---------------
       * Initial commit.
 ```
+
