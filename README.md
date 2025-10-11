@@ -37,6 +37,8 @@ UnZ homepage: https://github.com/heasm66/unz
 Changelog:
     0.17 2025-xx-xx
     ---------------
+      * Bug: Identify end of routines correctly, when QUIT
+             is last before start of high strings
       * Bug: highest global and used globals computed wrong
       * Bug: improve logic dictword/packed address (ambiguity)
              in decoding properties on objects

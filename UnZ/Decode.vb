@@ -1330,10 +1330,12 @@ Public Class Decode
             Return oReturn
         End If
 
+        Dim typeQuitRestart As Boolean = False
         If pOpcode.Code = &HBA Or pOpcode.Code = &HB7 Then
             ' QUIT or RESTART (should this be expanded to other RETURN_types?)
             ' These are considered as RETURN-type if the next opcode is illegal, otherwise they are PLAIN.
             ' If the next address is a valid routine startIndex, it is also considered as RETURN.
+            typeQuitRestart = True
             If Not (byteGame(pOpcode.Address + 1) < 16 And Helper.GetNextValidPackedAddress(byteGame, pOpcode.Address + 1) = pOpcode.Address + 1) Then
                 Dim bOldSilent As Boolean = bSilent
                 bSilent = True
@@ -1362,7 +1364,7 @@ Public Class Decode
         Dim oRet As New DecodeResult With {.status = EnumStatus.END_OF_INSTRUCTION}
         If pOpcode.Type = EnumType.T_ILLEGAL Then oRet.status = EnumStatus.BAD_OPCODE
         oRet.nextPC = pOpcode.Address + iOffset
-        If pOpcode.Type = EnumType.T_RETURN And oRet.nextPC > high_pc Then oRet.status = EnumStatus.END_OF_ROUTINE
+        If (pOpcode.Type = EnumType.T_RETURN Or typeQuitRestart) And oRet.nextPC > high_pc Then oRet.status = EnumStatus.END_OF_ROUTINE
 
         Return oRet
     End Function
