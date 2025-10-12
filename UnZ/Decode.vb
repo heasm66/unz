@@ -1002,292 +1002,296 @@ Public Class Decode
     Private Function DecodeCode(piAtAddress As Integer) As DecodeResult
         Dim iPC As Integer = piAtAddress
 
-        If piAtAddress > byteGame.Length - 10 Then
-            Return New DecodeResult With {.status = EnumStatus.BAD_ENTRY}
-        End If
+        'If piAtAddress > byteGame.Length - 10 Then
+        '    Return New DecodeResult With {.status = EnumStatus.BAD_ENTRY}
+        'End If
 
-        Dim oOpcode As New Opcode With {
+        Try
+            Dim oOpcode As New Opcode With {
             .Address = piAtAddress,
             .Code = byteGame(iPC),
             .OpcodeClass = EnumOpcodeClass.ZERO_OPERAND
         }
 
-        If ZVersion > 4 And oOpcode.Code = 190 Then ' This is the EXTOP opcode
-            oOpcode.OpcodeClass = EnumOpcodeClass.EXTENDED_OPERAND
-            iPC += 1
-            oOpcode.Code = byteGame(iPC)
-            oOpcode.ExtModeByte = byteGame(iPC + 1)
-        Else
-            If oOpcode.Code < 128 Then
-                oOpcode.OpcodeClass = EnumOpcodeClass.TWO_OPERAND
-            ElseIf oOpcode.Code < 176 Then
-                oOpcode.OpcodeClass = EnumOpcodeClass.ONE_OPERAND
-            ElseIf oOpcode.Code < 192 Then
-                oOpcode.OpcodeClass = EnumOpcodeClass.ZERO_OPERAND
+            If ZVersion > 4 And oOpcode.Code = 190 Then ' This is the EXTOP opcode
+                oOpcode.OpcodeClass = EnumOpcodeClass.EXTENDED_OPERAND
+                iPC += 1
+                oOpcode.Code = byteGame(iPC)
+                oOpcode.ExtModeByte = byteGame(iPC + 1)
             Else
-                oOpcode.OpcodeClass = EnumOpcodeClass.VARIABLE_OPERAND
+                If oOpcode.Code < 128 Then
+                    oOpcode.OpcodeClass = EnumOpcodeClass.TWO_OPERAND
+                ElseIf oOpcode.Code < 176 Then
+                    oOpcode.OpcodeClass = EnumOpcodeClass.ONE_OPERAND
+                ElseIf oOpcode.Code < 192 Then
+                    oOpcode.OpcodeClass = EnumOpcodeClass.ZERO_OPERAND
+                Else
+                    oOpcode.OpcodeClass = EnumOpcodeClass.VARIABLE_OPERAND
+                End If
             End If
-        End If
 
-        ' decode instruction
-        Dim iCode As Integer = oOpcode.Code
-        Select Case oOpcode.OpcodeClass
-            Case EnumOpcodeClass.EXTENDED_OPERAND
-                iCode = iCode And &H3F
-                Select Case iCode
-                    Case &H0 : Return DecodeOperands(oOpcode, "SAVE", "SAVE", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H1 : Return DecodeOperands(oOpcode, "RESTORE", "RESTORE", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H2 : Return DecodeOperands(oOpcode, "LOG_SHIFT", "SHIFT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H3 : Return DecodeOperands(oOpcode, "ART_SHIFT", "ASHIFT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H4 : Return DecodeOperands(oOpcode, "SET_FONT", "FONT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H5 : Return DecodeOperands(oOpcode, "DRAW_PICTURE", "DISPLAY", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H6 : Return DecodeOperands(oOpcode, "PICTURE_DATA", "PICINF", EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H7 : Return DecodeOperands(oOpcode, "ERASE_PICTURE", "DCLEAR", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H8 : Return DecodeOperands(oOpcode, "SET_MARGINS", "MARGIN", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H9 : Return DecodeOperands(oOpcode, "SAVE_UNDO", "ISAVE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &HA : Return DecodeOperands(oOpcode, "RESTORE_UNDO", "IRESTORE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H10 : Return DecodeOperands(oOpcode, "MOVE_WINDOW", "WINPOS", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H11 : Return DecodeOperands(oOpcode, "WINDOW_SIZE", "WINSIZE", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H12 : Return DecodeOperands(oOpcode, "WINDOW_STYLE", "WINATTR", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H13 : Return DecodeOperands(oOpcode, "GET_WIND_PROP", "WINGET", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H14 : Return DecodeOperands(oOpcode, "SCROLL_WINDOW", "SCROLL", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H15 : Return DecodeOperands(oOpcode, "POP_STACK", "FSTACK", EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H16 : Return DecodeOperands(oOpcode, "READ_MOUSE", "MOUSE-INFO", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H17 : Return DecodeOperands(oOpcode, "MOUSE_WINDOW", "MOUSE-LIMIT", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H18 : Return DecodeOperands(oOpcode, "PUSH_STACK", "XPUSH", EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H19 : Return DecodeOperands(oOpcode, "PUT_WIND_PROP", "WINPUT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H1A : Return DecodeOperands(oOpcode, "PRINT_FORM", "PRINTF", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H1B : Return DecodeOperands(oOpcode, "MAKE_MENU", "MENU", EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H1C : Return DecodeOperands(oOpcode, "PICTURE_TABLE", "PICSET", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case Else
-                        Select Case ZVersion
-                            Case 5, 7, 8
-                                Select Case iCode
-                                    Case &HB : Return DecodeOperands(oOpcode, "PRINT_UNICODE", "PRINTU", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)       'Added in standard 1.0
-                                    Case &HC : Return DecodeOperands(oOpcode, "CHECK_UNICODE", "CHECKU", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)       'Added in standard 1.0
-                                    Case &HD : Return DecodeOperands(oOpcode, "SET_TRUE_COLOUR", "*SET_TRUE_COLOUR*", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)     'Added in standard 1.1, not available in Zapf
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                            Case 6
-                                Select Case iCode
-                                    Case &HB : Return DecodeOperands(oOpcode, "PRINT_UNICODE", "PRINTU", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)       'Added in standard 1.0
-                                    Case &HC : Return DecodeOperands(oOpcode, "CHECK_UNICODE", "CHECKU", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)       'Added in standard 1.0
-                                    Case &HD : Return DecodeOperands(oOpcode, "SET_TRUE_COLOUR", "*SET_TRUE_COLOUR*", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)     'Added in standard 1.1, not available in Zapf
-                                    Case &H1D : Return DecodeOperands(oOpcode, "BUFFER_SCREEN", "*BUFFER_SCREEN*", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)  'Added in standard 1.1, not available in Zapf
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                        End Select
-                End Select
-            Case EnumOpcodeClass.TWO_OPERAND, EnumOpcodeClass.VARIABLE_OPERAND
-                If oOpcode.OpcodeClass = EnumOpcodeClass.TWO_OPERAND Then iCode = iCode And &H1F Else iCode = iCode And &H3F
-                Select Case iCode
-                    Case &H1 : Return DecodeOperands(oOpcode, "JE", "EQUAL?", EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H2 : Return DecodeOperands(oOpcode, "JL", "LESS?", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H3 : Return DecodeOperands(oOpcode, "JG", "GRTR?", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H4 : Return DecodeOperands(oOpcode, "DEC_CHK", "DLESS?", EnumOperand.P_VAR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H5 : Return DecodeOperands(oOpcode, "INC_CHK", "IGRTR?", EnumOperand.P_VAR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H6 : Return DecodeOperands(oOpcode, "JIN", "IN?", EnumOperand.P_OBJECT, EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H7 : Return DecodeOperands(oOpcode, "TEST", "BTST", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H8 : Return DecodeOperands(oOpcode, "OR", "BOR", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H9 : Return DecodeOperands(oOpcode, "AND", "BAND", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &HA : Return DecodeOperands(oOpcode, "TEST_ATTR", "FSET?", EnumOperand.P_OBJECT, EnumOperand.P_ATTRNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &HB : Return DecodeOperands(oOpcode, "SET_ATTR", "FSET", EnumOperand.P_OBJECT, EnumOperand.P_ATTRNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &HC : Return DecodeOperands(oOpcode, "CLEAR_ATTR", "FCLEAR", EnumOperand.P_OBJECT, EnumOperand.P_ATTRNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &HD : Return DecodeOperands(oOpcode, "STORE", "SET", EnumOperand.P_VAR, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &HE : Return DecodeOperands(oOpcode, "INSERT_OBJ", "MOVE", EnumOperand.P_OBJECT, EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &HF : Return DecodeOperands(oOpcode, "LOADW", "GET", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H10 : Return DecodeOperands(oOpcode, "LOADB", "GETB", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H11 : Return DecodeOperands(oOpcode, "GET_PROP", "GETP", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H12 : Return DecodeOperands(oOpcode, "GET_PROP_ADDR", "GETPT", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H13 : Return DecodeOperands(oOpcode, "GET_NEXT_PROP", "NEXTP", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+            ' decode instruction
+            Dim iCode As Integer = oOpcode.Code
+            Select Case oOpcode.OpcodeClass
+                Case EnumOpcodeClass.EXTENDED_OPERAND
+                    iCode = iCode And &H3F
+                    Select Case iCode
+                        Case &H0 : Return DecodeOperands(oOpcode, "SAVE", "SAVE", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H1 : Return DecodeOperands(oOpcode, "RESTORE", "RESTORE", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H2 : Return DecodeOperands(oOpcode, "LOG_SHIFT", "SHIFT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H3 : Return DecodeOperands(oOpcode, "ART_SHIFT", "ASHIFT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H4 : Return DecodeOperands(oOpcode, "SET_FONT", "FONT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H5 : Return DecodeOperands(oOpcode, "DRAW_PICTURE", "DISPLAY", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H6 : Return DecodeOperands(oOpcode, "PICTURE_DATA", "PICINF", EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H7 : Return DecodeOperands(oOpcode, "ERASE_PICTURE", "DCLEAR", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H8 : Return DecodeOperands(oOpcode, "SET_MARGINS", "MARGIN", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H9 : Return DecodeOperands(oOpcode, "SAVE_UNDO", "ISAVE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &HA : Return DecodeOperands(oOpcode, "RESTORE_UNDO", "IRESTORE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H10 : Return DecodeOperands(oOpcode, "MOVE_WINDOW", "WINPOS", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H11 : Return DecodeOperands(oOpcode, "WINDOW_SIZE", "WINSIZE", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H12 : Return DecodeOperands(oOpcode, "WINDOW_STYLE", "WINATTR", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H13 : Return DecodeOperands(oOpcode, "GET_WIND_PROP", "WINGET", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H14 : Return DecodeOperands(oOpcode, "SCROLL_WINDOW", "SCROLL", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H15 : Return DecodeOperands(oOpcode, "POP_STACK", "FSTACK", EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H16 : Return DecodeOperands(oOpcode, "READ_MOUSE", "MOUSE-INFO", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H17 : Return DecodeOperands(oOpcode, "MOUSE_WINDOW", "MOUSE-LIMIT", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H18 : Return DecodeOperands(oOpcode, "PUSH_STACK", "XPUSH", EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H19 : Return DecodeOperands(oOpcode, "PUT_WIND_PROP", "WINPUT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H1A : Return DecodeOperands(oOpcode, "PRINT_FORM", "PRINTF", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H1B : Return DecodeOperands(oOpcode, "MAKE_MENU", "MENU", EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H1C : Return DecodeOperands(oOpcode, "PICTURE_TABLE", "PICSET", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case Else
+                            Select Case ZVersion
+                                Case 5, 7, 8
+                                    Select Case iCode
+                                        Case &HB : Return DecodeOperands(oOpcode, "PRINT_UNICODE", "PRINTU", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)       'Added in standard 1.0
+                                        Case &HC : Return DecodeOperands(oOpcode, "CHECK_UNICODE", "CHECKU", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)       'Added in standard 1.0
+                                        Case &HD : Return DecodeOperands(oOpcode, "SET_TRUE_COLOUR", "*SET_TRUE_COLOUR*", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)     'Added in standard 1.1, not available in Zapf
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                                Case 6
+                                    Select Case iCode
+                                        Case &HB : Return DecodeOperands(oOpcode, "PRINT_UNICODE", "PRINTU", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)       'Added in standard 1.0
+                                        Case &HC : Return DecodeOperands(oOpcode, "CHECK_UNICODE", "CHECKU", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)       'Added in standard 1.0
+                                        Case &HD : Return DecodeOperands(oOpcode, "SET_TRUE_COLOUR", "*SET_TRUE_COLOUR*", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)     'Added in standard 1.1, not available in Zapf
+                                        Case &H1D : Return DecodeOperands(oOpcode, "BUFFER_SCREEN", "*BUFFER_SCREEN*", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)  'Added in standard 1.1, not available in Zapf
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                            End Select
+                    End Select
+                Case EnumOpcodeClass.TWO_OPERAND, EnumOpcodeClass.VARIABLE_OPERAND
+                    If oOpcode.OpcodeClass = EnumOpcodeClass.TWO_OPERAND Then iCode = iCode And &H1F Else iCode = iCode And &H3F
+                    Select Case iCode
+                        Case &H1 : Return DecodeOperands(oOpcode, "JE", "EQUAL?", EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H2 : Return DecodeOperands(oOpcode, "JL", "LESS?", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H3 : Return DecodeOperands(oOpcode, "JG", "GRTR?", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H4 : Return DecodeOperands(oOpcode, "DEC_CHK", "DLESS?", EnumOperand.P_VAR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H5 : Return DecodeOperands(oOpcode, "INC_CHK", "IGRTR?", EnumOperand.P_VAR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H6 : Return DecodeOperands(oOpcode, "JIN", "IN?", EnumOperand.P_OBJECT, EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H7 : Return DecodeOperands(oOpcode, "TEST", "BTST", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H8 : Return DecodeOperands(oOpcode, "OR", "BOR", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H9 : Return DecodeOperands(oOpcode, "AND", "BAND", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &HA : Return DecodeOperands(oOpcode, "TEST_ATTR", "FSET?", EnumOperand.P_OBJECT, EnumOperand.P_ATTRNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &HB : Return DecodeOperands(oOpcode, "SET_ATTR", "FSET", EnumOperand.P_OBJECT, EnumOperand.P_ATTRNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &HC : Return DecodeOperands(oOpcode, "CLEAR_ATTR", "FCLEAR", EnumOperand.P_OBJECT, EnumOperand.P_ATTRNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &HD : Return DecodeOperands(oOpcode, "STORE", "SET", EnumOperand.P_VAR, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &HE : Return DecodeOperands(oOpcode, "INSERT_OBJ", "MOVE", EnumOperand.P_OBJECT, EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &HF : Return DecodeOperands(oOpcode, "LOADW", "GET", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H10 : Return DecodeOperands(oOpcode, "LOADB", "GETB", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H11 : Return DecodeOperands(oOpcode, "GET_PROP", "GETP", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H12 : Return DecodeOperands(oOpcode, "GET_PROP_ADDR", "GETPT", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H13 : Return DecodeOperands(oOpcode, "GET_NEXT_PROP", "NEXTP", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
                     'TXD have LOW_ADDR for operands, why? 
                     'Case &H14 : Return DecodeOperands(oOpcode, "ADD", "ADD", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H14 : Return DecodeOperands(oOpcode, "ADD", "ADD", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H15 : Return DecodeOperands(oOpcode, "SUB", "SUB", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H16 : Return DecodeOperands(oOpcode, "MUL", "MUL", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H17 : Return DecodeOperands(oOpcode, "DIV", "DIV", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H18 : Return DecodeOperands(oOpcode, "MOD", "MOD", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H21 : Return DecodeOperands(oOpcode, "STOREW", "PUT", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H22 : Return DecodeOperands(oOpcode, "STOREB", "PUTB", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H23 : Return DecodeOperands(oOpcode, "PUT_PROP", "PUTP", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H25 : Return DecodeOperands(oOpcode, "PRINT_CHAR", "PRINTC", EnumOperand.P_PCHAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H26 : Return DecodeOperands(oOpcode, "PRINT_NUM", "PRINTN", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H27 : Return DecodeOperands(oOpcode, "RANDOM", "RANDOM", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H28 : Return DecodeOperands(oOpcode, "PUSH", "PUSH", EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H2A : Return DecodeOperands(oOpcode, "SPLIT_WINDOW", "SPLIT", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H2B : Return DecodeOperands(oOpcode, "SET_WINDOW", "SCREEN", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H33 : Return DecodeOperands(oOpcode, "OUTPUT_STREAM", "DIROUT", EnumOperand.P_PATTR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H34 : Return DecodeOperands(oOpcode, "INPUT_STREAM", "DIRIN", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H35 : Return DecodeOperands(oOpcode, "SOUND_EFFECT", "SOUND", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case Else
-                        Select Case ZVersion
-                            Case 1, 2, 3
-                                Select Case iCode
-                                    Case &H20 : Return DecodeOperands(oOpcode, "CALL", "CALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &H24 : Return DecodeOperands(oOpcode, "READ", "READ", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H29 : Return DecodeOperands(oOpcode, "PULL", "POP", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                            Case 4
-                                Select Case iCode
-                                    Case &H19 : Return DecodeOperands(oOpcode, "CALL_2S", "CALL2", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &H20 : Return DecodeOperands(oOpcode, "CALL_VS", "CALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &H24 : Return DecodeOperands(oOpcode, "READ", "READ", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H29 : Return DecodeOperands(oOpcode, "PULL", "POP", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H2C : Return DecodeOperands(oOpcode, "CALL_VS2", "XCALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &H2D : Return DecodeOperands(oOpcode, "ERASE_WINDOW", "CLEAR", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H2E : Return DecodeOperands(oOpcode, "ERASE_LINE", "ERASE", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H2F : Return DecodeOperands(oOpcode, "SET_CURSOR", "CURSET", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H31 : Return DecodeOperands(oOpcode, "SET_TEXT_STYLE", "HLIGHT", EnumOperand.P_VATTR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H32 : Return DecodeOperands(oOpcode, "BUFFER_MODE", "BUFOUT", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H36 : Return DecodeOperands(oOpcode, "READ_CHAR", "INPUT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &H37 : Return DecodeOperands(oOpcode, "SCAN_TABLE", "INTBL?", EnumOperand.P_ANYTHING, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumExtra.E_BOTH, EnumType.T_PLAIN)
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                            Case 5, 7, 8
-                                Select Case iCode
-                                    Case &H19 : Return DecodeOperands(oOpcode, "CALL_2S", "CALL2", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &H1A : Return DecodeOperands(oOpcode, "CALL_2N", "ICALL2", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_CALL)
-                                    Case &H1B : Return DecodeOperands(oOpcode, "SET_COLOUR", "COLOR", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H1C : Return DecodeOperands(oOpcode, "THROW", "THROW", EnumOperand.P_ANYTHING, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)               ' This is a valid opcode in v 5-
-                                    Case &H20 : Return DecodeOperands(oOpcode, "CALL_VS", "CALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &H24 : Return DecodeOperands(oOpcode, "READ", "READ", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &H29 : Return DecodeOperands(oOpcode, "PULL", "POP", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H2C : Return DecodeOperands(oOpcode, "CALL_VS2", "XCALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &H2D : Return DecodeOperands(oOpcode, "ERASE_WINDOW", "CLEAR", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H2E : Return DecodeOperands(oOpcode, "ERASE_LINE", "ERASE", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H2F : Return DecodeOperands(oOpcode, "SET_CURSOR", "CURSET", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H30 : Return DecodeOperands(oOpcode, "GET_CURSOR", "CURGET", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H31 : Return DecodeOperands(oOpcode, "SET_TEXT_STYLE", "HLIGHT", EnumOperand.P_VATTR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H32 : Return DecodeOperands(oOpcode, "BUFFER_MODE", "BUFOUT", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H36 : Return DecodeOperands(oOpcode, "READ_CHAR", "INPUT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &H37 : Return DecodeOperands(oOpcode, "SCAN_TABLE", "INTBL?", EnumOperand.P_ANYTHING, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumExtra.E_BOTH, EnumType.T_PLAIN)
-                                    Case &H38 : Return DecodeOperands(oOpcode, "NOT", "BCOM", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &H39 : Return DecodeOperands(oOpcode, "CALL_VN", "ICALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_NONE, EnumType.T_CALL)
-                                    Case &H3A : Return DecodeOperands(oOpcode, "CALL_VN2", "IXCALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_NONE, EnumType.T_CALL)
-                                    Case &H3B : Return DecodeOperands(oOpcode, "TOKENISE", "LEX", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H3C : Return DecodeOperands(oOpcode, "ENCODE_TEXT", "ZWSTR", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H3D : Return DecodeOperands(oOpcode, "COPY_TABLE", "COPYT", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H3E : Return DecodeOperands(oOpcode, "PRINT_TABLE", "PRINTT", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H3F : Return DecodeOperands(oOpcode, "CHECK_ARG_COUNT", "ASSIGNED?", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                            Case 6
-                                Select Case iCode
-                                    Case &H19 : Return DecodeOperands(oOpcode, "CALL_2S", "CALL2", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &H1A : Return DecodeOperands(oOpcode, "CALL_2N", "ICALL2", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_CALL)
-                                    Case &H1B : Return DecodeOperands(oOpcode, "SET_COLOUR", "COLOR", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H1C : Return DecodeOperands(oOpcode, "THROW", "THROW", EnumOperand.P_ANYTHING, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H20 : Return DecodeOperands(oOpcode, "CALL_VS", "CALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &H24 : Return DecodeOperands(oOpcode, "READ", "READ", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &H29 : Return DecodeOperands(oOpcode, "PULL", "POP", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &H2C : Return DecodeOperands(oOpcode, "CALL_VS2", "XCALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &H2D : Return DecodeOperands(oOpcode, "ERASE_WINDOW", "CLEAR", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H2E : Return DecodeOperands(oOpcode, "ERASE_LINE", "ERASE", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H2F : Return DecodeOperands(oOpcode, "SET_CURSOR", "CURSET", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H30 : Return DecodeOperands(oOpcode, "GET_CURSOR", "CURGET", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H31 : Return DecodeOperands(oOpcode, "SET_TEXT_STYLE", "HLIGHT", EnumOperand.P_VATTR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H32 : Return DecodeOperands(oOpcode, "BUFFER_MODE", "BUFOUT", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H36 : Return DecodeOperands(oOpcode, "READ_CHAR", "INPUT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &H37 : Return DecodeOperands(oOpcode, "SCAN_TABLE", "INTBL?", EnumOperand.P_ANYTHING, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumExtra.E_BOTH, EnumType.T_PLAIN)
-                                    Case &H38 : Return DecodeOperands(oOpcode, "NOT", "BCOM", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &H39 : Return DecodeOperands(oOpcode, "CALL_VN", "ICALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_NONE, EnumType.T_CALL)
-                                    Case &H3A : Return DecodeOperands(oOpcode, "CALL_VN2", "IXCALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_NONE, EnumType.T_CALL)
-                                    Case &H3B : Return DecodeOperands(oOpcode, "TOKENISE", "LEX", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H3C : Return DecodeOperands(oOpcode, "ENCODE_TEXT", "ZWSTR", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H3D : Return DecodeOperands(oOpcode, "COPY_TABLE", "COPYT", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H3E : Return DecodeOperands(oOpcode, "PRINT_TABLE", "PRINTT", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &H3F : Return DecodeOperands(oOpcode, "CHECK_ARG_COUNT", "ASSIGNED?", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                        End Select
-                End Select
-            Case EnumOpcodeClass.ONE_OPERAND
-                iCode = iCode And &HF
-                Select Case iCode
-                    Case &H0 : Return DecodeOperands(oOpcode, "JZ", "ZERO?", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case &H1 : Return DecodeOperands(oOpcode, "GET_SIBLING", "NEXT?", EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BOTH, EnumType.T_PLAIN)
-                    Case &H2 : Return DecodeOperands(oOpcode, "GET_CHILD", "FIRST?", EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BOTH, EnumType.T_PLAIN)
-                    Case &H3 : Return DecodeOperands(oOpcode, "GET_PARENT", "LOC", EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H4 : Return DecodeOperands(oOpcode, "GET_PROP_LEN", "PTSIZE", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case &H5 : Return DecodeOperands(oOpcode, "INC", "INC", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H6 : Return DecodeOperands(oOpcode, "DEC", "DEC", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H7 : Return DecodeOperands(oOpcode, "PRINT_ADDR", "PRINTB", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H9 : Return DecodeOperands(oOpcode, "REMOVE_OBJ", "REMOVE", EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &HA : Return DecodeOperands(oOpcode, "PRINT_OBJ", "PRINTD", EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &HB : Return DecodeOperands(oOpcode, "RET", "RETURN", EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
-                    Case &HC : Return DecodeOperands(oOpcode, "JUMP", "JUMP", EnumOperand.P_LABEL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
-                    Case &HD : Return DecodeOperands(oOpcode, "PRINT_PADDR", "PRINT", EnumOperand.P_STATIC, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &HE : Return DecodeOperands(oOpcode, "LOAD", "VALUE", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                    Case Else
-                        Select Case ZVersion
-                            Case 1, 2, 3
-                                Select Case iCode
-                                    Case &HF : Return DecodeOperands(oOpcode, "NOT", "BCOM", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                            Case 4
-                                Select Case iCode
-                                    Case &H8 : Return DecodeOperands(oOpcode, "CALL_1S", "CALL1", EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &HF : Return DecodeOperands(oOpcode, "NOT", "BCOM", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                            Case 5, 6, 7, 8
-                                Select Case iCode
-                                    Case &H8 : Return DecodeOperands(oOpcode, "CALL_1S", "CALL1", EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_CALL)
-                                    Case &HF : Return DecodeOperands(oOpcode, "CALL_1N", "ICALL1", EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_CALL)
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                        End Select
-                End Select
-            Case EnumOpcodeClass.ZERO_OPERAND
-                iCode = iCode And &HF
-                Select Case iCode
-                    Case &H0 : Return DecodeOperands(oOpcode, "RTRUE", "RTRUE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
-                    Case &H1 : Return DecodeOperands(oOpcode, "RFALSE", "RFALSE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
-                    Case &H2 : Return DecodeOperands(oOpcode, "PRINT", "PRINTI", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_TEXT, EnumType.T_PLAIN)
-                    Case &H3 : Return DecodeOperands(oOpcode, "PRINT_RET", "PRINTR", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_TEXT, EnumType.T_RETURN)
-                    Case &H4 : Return DecodeOperands(oOpcode, "NOP", "NOOP", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &H7 : Return DecodeOperands(oOpcode, "RESTART", "RESTART", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
-                    Case &H8 : Return DecodeOperands(oOpcode, "RET_POPPED", "RSTACK", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
-                    Case &HA : Return DecodeOperands(oOpcode, "QUIT", "QUIT", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
-                    Case &HB : Return DecodeOperands(oOpcode, "NEW_LINE", "CRLF", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                    Case &HD : Return DecodeOperands(oOpcode, "VERIFY", "VERIFY", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                    Case Else
-                        Select Case ZVersion
-                            Case 1, 2, 3
-                                Select Case iCode
-                                    Case &H5 : Return DecodeOperands(oOpcode, "SAVE", "SAVE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                                    Case &H6 : Return DecodeOperands(oOpcode, "RESTORE", "RESTORE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                                    Case &H9 : Return DecodeOperands(oOpcode, "POP", "FSTACK", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case &HC : Return DecodeOperands(oOpcode, "SHOW_STATUS", "USL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                            Case 4
-                                Select Case iCode
-                                    Case &H5 : Return DecodeOperands(oOpcode, "SAVE", "SAVE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &H6 : Return DecodeOperands(oOpcode, "RESTORE", "RESTORE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &H9 : Return DecodeOperands(oOpcode, "POP", "FSTACK", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                            Case 5, 7, 8
-                                Select Case iCode
-                                    Case &H9 : Return DecodeOperands(oOpcode, "CATCH", "CATCH", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H14 : Return DecodeOperands(oOpcode, "ADD", "ADD", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H15 : Return DecodeOperands(oOpcode, "SUB", "SUB", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H16 : Return DecodeOperands(oOpcode, "MUL", "MUL", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H17 : Return DecodeOperands(oOpcode, "DIV", "DIV", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H18 : Return DecodeOperands(oOpcode, "MOD", "MOD", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H21 : Return DecodeOperands(oOpcode, "STOREW", "PUT", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H22 : Return DecodeOperands(oOpcode, "STOREB", "PUTB", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H23 : Return DecodeOperands(oOpcode, "PUT_PROP", "PUTP", EnumOperand.P_OBJECT, EnumOperand.P_PROPNUM, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H25 : Return DecodeOperands(oOpcode, "PRINT_CHAR", "PRINTC", EnumOperand.P_PCHAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H26 : Return DecodeOperands(oOpcode, "PRINT_NUM", "PRINTN", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H27 : Return DecodeOperands(oOpcode, "RANDOM", "RANDOM", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H28 : Return DecodeOperands(oOpcode, "PUSH", "PUSH", EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H2A : Return DecodeOperands(oOpcode, "SPLIT_WINDOW", "SPLIT", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H2B : Return DecodeOperands(oOpcode, "SET_WINDOW", "SCREEN", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H33 : Return DecodeOperands(oOpcode, "OUTPUT_STREAM", "DIROUT", EnumOperand.P_PATTR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H34 : Return DecodeOperands(oOpcode, "INPUT_STREAM", "DIRIN", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H35 : Return DecodeOperands(oOpcode, "SOUND_EFFECT", "SOUND", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case Else
+                            Select Case ZVersion
+                                Case 1, 2, 3
+                                    Select Case iCode
+                                        Case &H20 : Return DecodeOperands(oOpcode, "CALL", "CALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &H24 : Return DecodeOperands(oOpcode, "READ", "READ", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H29 : Return DecodeOperands(oOpcode, "PULL", "POP", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                                Case 4
+                                    Select Case iCode
+                                        Case &H19 : Return DecodeOperands(oOpcode, "CALL_2S", "CALL2", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &H20 : Return DecodeOperands(oOpcode, "CALL_VS", "CALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &H24 : Return DecodeOperands(oOpcode, "READ", "READ", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H29 : Return DecodeOperands(oOpcode, "PULL", "POP", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H2C : Return DecodeOperands(oOpcode, "CALL_VS2", "XCALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &H2D : Return DecodeOperands(oOpcode, "ERASE_WINDOW", "CLEAR", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H2E : Return DecodeOperands(oOpcode, "ERASE_LINE", "ERASE", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H2F : Return DecodeOperands(oOpcode, "SET_CURSOR", "CURSET", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H31 : Return DecodeOperands(oOpcode, "SET_TEXT_STYLE", "HLIGHT", EnumOperand.P_VATTR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H32 : Return DecodeOperands(oOpcode, "BUFFER_MODE", "BUFOUT", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H36 : Return DecodeOperands(oOpcode, "READ_CHAR", "INPUT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &H37 : Return DecodeOperands(oOpcode, "SCAN_TABLE", "INTBL?", EnumOperand.P_ANYTHING, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumExtra.E_BOTH, EnumType.T_PLAIN)
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                                Case 5, 7, 8
+                                    Select Case iCode
+                                        Case &H19 : Return DecodeOperands(oOpcode, "CALL_2S", "CALL2", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &H1A : Return DecodeOperands(oOpcode, "CALL_2N", "ICALL2", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_CALL)
+                                        Case &H1B : Return DecodeOperands(oOpcode, "SET_COLOUR", "COLOR", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H1C : Return DecodeOperands(oOpcode, "THROW", "THROW", EnumOperand.P_ANYTHING, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)               ' This is a valid opcode in v 5-
+                                        Case &H20 : Return DecodeOperands(oOpcode, "CALL_VS", "CALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &H24 : Return DecodeOperands(oOpcode, "READ", "READ", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &H29 : Return DecodeOperands(oOpcode, "PULL", "POP", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H2C : Return DecodeOperands(oOpcode, "CALL_VS2", "XCALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &H2D : Return DecodeOperands(oOpcode, "ERASE_WINDOW", "CLEAR", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H2E : Return DecodeOperands(oOpcode, "ERASE_LINE", "ERASE", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H2F : Return DecodeOperands(oOpcode, "SET_CURSOR", "CURSET", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H30 : Return DecodeOperands(oOpcode, "GET_CURSOR", "CURGET", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H31 : Return DecodeOperands(oOpcode, "SET_TEXT_STYLE", "HLIGHT", EnumOperand.P_VATTR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H32 : Return DecodeOperands(oOpcode, "BUFFER_MODE", "BUFOUT", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H36 : Return DecodeOperands(oOpcode, "READ_CHAR", "INPUT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &H37 : Return DecodeOperands(oOpcode, "SCAN_TABLE", "INTBL?", EnumOperand.P_ANYTHING, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumExtra.E_BOTH, EnumType.T_PLAIN)
+                                        Case &H38 : Return DecodeOperands(oOpcode, "NOT", "BCOM", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &H39 : Return DecodeOperands(oOpcode, "CALL_VN", "ICALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_NONE, EnumType.T_CALL)
+                                        Case &H3A : Return DecodeOperands(oOpcode, "CALL_VN2", "IXCALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_NONE, EnumType.T_CALL)
+                                        Case &H3B : Return DecodeOperands(oOpcode, "TOKENISE", "LEX", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H3C : Return DecodeOperands(oOpcode, "ENCODE_TEXT", "ZWSTR", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H3D : Return DecodeOperands(oOpcode, "COPY_TABLE", "COPYT", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H3E : Return DecodeOperands(oOpcode, "PRINT_TABLE", "PRINTT", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H3F : Return DecodeOperands(oOpcode, "CHECK_ARG_COUNT", "ASSIGNED?", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                                Case 6
+                                    Select Case iCode
+                                        Case &H19 : Return DecodeOperands(oOpcode, "CALL_2S", "CALL2", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &H1A : Return DecodeOperands(oOpcode, "CALL_2N", "ICALL2", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_CALL)
+                                        Case &H1B : Return DecodeOperands(oOpcode, "SET_COLOUR", "COLOR", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H1C : Return DecodeOperands(oOpcode, "THROW", "THROW", EnumOperand.P_ANYTHING, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H20 : Return DecodeOperands(oOpcode, "CALL_VS", "CALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &H24 : Return DecodeOperands(oOpcode, "READ", "READ", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &H29 : Return DecodeOperands(oOpcode, "PULL", "POP", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &H2C : Return DecodeOperands(oOpcode, "CALL_VS2", "XCALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &H2D : Return DecodeOperands(oOpcode, "ERASE_WINDOW", "CLEAR", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H2E : Return DecodeOperands(oOpcode, "ERASE_LINE", "ERASE", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H2F : Return DecodeOperands(oOpcode, "SET_CURSOR", "CURSET", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H30 : Return DecodeOperands(oOpcode, "GET_CURSOR", "CURGET", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H31 : Return DecodeOperands(oOpcode, "SET_TEXT_STYLE", "HLIGHT", EnumOperand.P_VATTR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H32 : Return DecodeOperands(oOpcode, "BUFFER_MODE", "BUFOUT", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H36 : Return DecodeOperands(oOpcode, "READ_CHAR", "INPUT", EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &H37 : Return DecodeOperands(oOpcode, "SCAN_TABLE", "INTBL?", EnumOperand.P_ANYTHING, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumExtra.E_BOTH, EnumType.T_PLAIN)
+                                        Case &H38 : Return DecodeOperands(oOpcode, "NOT", "BCOM", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &H39 : Return DecodeOperands(oOpcode, "CALL_VN", "ICALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_NONE, EnumType.T_CALL)
+                                        Case &H3A : Return DecodeOperands(oOpcode, "CALL_VN2", "IXCALL", EnumOperand.P_ROUTINE, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumOperand.P_ANYTHING, EnumExtra.E_NONE, EnumType.T_CALL)
+                                        Case &H3B : Return DecodeOperands(oOpcode, "TOKENISE", "LEX", EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H3C : Return DecodeOperands(oOpcode, "ENCODE_TEXT", "ZWSTR", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H3D : Return DecodeOperands(oOpcode, "COPY_TABLE", "COPYT", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H3E : Return DecodeOperands(oOpcode, "PRINT_TABLE", "PRINTT", EnumOperand.P_LOW_ADDR, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumOperand.P_NUMBER, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &H3F : Return DecodeOperands(oOpcode, "CHECK_ARG_COUNT", "ASSIGNED?", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                            End Select
+                    End Select
+                Case EnumOpcodeClass.ONE_OPERAND
+                    iCode = iCode And &HF
+                    Select Case iCode
+                        Case &H0 : Return DecodeOperands(oOpcode, "JZ", "ZERO?", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case &H1 : Return DecodeOperands(oOpcode, "GET_SIBLING", "NEXT?", EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BOTH, EnumType.T_PLAIN)
+                        Case &H2 : Return DecodeOperands(oOpcode, "GET_CHILD", "FIRST?", EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BOTH, EnumType.T_PLAIN)
+                        Case &H3 : Return DecodeOperands(oOpcode, "GET_PARENT", "LOC", EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H4 : Return DecodeOperands(oOpcode, "GET_PROP_LEN", "PTSIZE", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case &H5 : Return DecodeOperands(oOpcode, "INC", "INC", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H6 : Return DecodeOperands(oOpcode, "DEC", "DEC", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H7 : Return DecodeOperands(oOpcode, "PRINT_ADDR", "PRINTB", EnumOperand.P_LOW_ADDR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H9 : Return DecodeOperands(oOpcode, "REMOVE_OBJ", "REMOVE", EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &HA : Return DecodeOperands(oOpcode, "PRINT_OBJ", "PRINTD", EnumOperand.P_OBJECT, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &HB : Return DecodeOperands(oOpcode, "RET", "RETURN", EnumOperand.P_ANYTHING, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
+                        Case &HC : Return DecodeOperands(oOpcode, "JUMP", "JUMP", EnumOperand.P_LABEL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
+                        Case &HD : Return DecodeOperands(oOpcode, "PRINT_PADDR", "PRINT", EnumOperand.P_STATIC, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &HE : Return DecodeOperands(oOpcode, "LOAD", "VALUE", EnumOperand.P_VAR, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                        Case Else
+                            Select Case ZVersion
+                                Case 1, 2, 3
+                                    Select Case iCode
+                                        Case &HF : Return DecodeOperands(oOpcode, "NOT", "BCOM", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                                Case 4
+                                    Select Case iCode
+                                        Case &H8 : Return DecodeOperands(oOpcode, "CALL_1S", "CALL1", EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &HF : Return DecodeOperands(oOpcode, "NOT", "BCOM", EnumOperand.P_NUMBER, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                                Case 5, 6, 7, 8
+                                    Select Case iCode
+                                        Case &H8 : Return DecodeOperands(oOpcode, "CALL_1S", "CALL1", EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_CALL)
+                                        Case &HF : Return DecodeOperands(oOpcode, "CALL_1N", "ICALL1", EnumOperand.P_ROUTINE, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_CALL)
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                            End Select
+                    End Select
+                Case EnumOpcodeClass.ZERO_OPERAND
+                    iCode = iCode And &HF
+                    Select Case iCode
+                        Case &H0 : Return DecodeOperands(oOpcode, "RTRUE", "RTRUE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
+                        Case &H1 : Return DecodeOperands(oOpcode, "RFALSE", "RFALSE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
+                        Case &H2 : Return DecodeOperands(oOpcode, "PRINT", "PRINTI", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_TEXT, EnumType.T_PLAIN)
+                        Case &H3 : Return DecodeOperands(oOpcode, "PRINT_RET", "PRINTR", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_TEXT, EnumType.T_RETURN)
+                        Case &H4 : Return DecodeOperands(oOpcode, "NOP", "NOOP", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &H7 : Return DecodeOperands(oOpcode, "RESTART", "RESTART", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
+                        Case &H8 : Return DecodeOperands(oOpcode, "RET_POPPED", "RSTACK", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
+                        Case &HA : Return DecodeOperands(oOpcode, "QUIT", "QUIT", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_RETURN)
+                        Case &HB : Return DecodeOperands(oOpcode, "NEW_LINE", "CRLF", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                        Case &HD : Return DecodeOperands(oOpcode, "VERIFY", "VERIFY", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                        Case Else
+                            Select Case ZVersion
+                                Case 1, 2, 3
+                                    Select Case iCode
+                                        Case &H5 : Return DecodeOperands(oOpcode, "SAVE", "SAVE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                                        Case &H6 : Return DecodeOperands(oOpcode, "RESTORE", "RESTORE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                                        Case &H9 : Return DecodeOperands(oOpcode, "POP", "FSTACK", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case &HC : Return DecodeOperands(oOpcode, "SHOW_STATUS", "USL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                                Case 4
+                                    Select Case iCode
+                                        Case &H5 : Return DecodeOperands(oOpcode, "SAVE", "SAVE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &H6 : Return DecodeOperands(oOpcode, "RESTORE", "RESTORE", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &H9 : Return DecodeOperands(oOpcode, "POP", "FSTACK", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                                Case 5, 7, 8
+                                    Select Case iCode
+                                        Case &H9 : Return DecodeOperands(oOpcode, "CATCH", "CATCH", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
                                     'From a bug in Wishbringer V23
-                                    Case &HC : Return DecodeOperands(oOpcode, "SHOW_STATUS", "USL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
-                                    Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
-                                End Select
-                            Case 6
-                                Select Case iCode
-                                    Case &H9 : Return DecodeOperands(oOpcode, "CATCH", "CATCH", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
-                                    Case &HF : Return DecodeOperands(oOpcode, "PIRACY", "ORIGINAL?", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
-                                End Select
-                        End Select
-                End Select
-        End Select
+                                        Case &HC : Return DecodeOperands(oOpcode, "SHOW_STATUS", "USL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_PLAIN)
+                                        Case Else : Return DecodeOperands(oOpcode, "ILLEGAL", "ILLEGAL", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_NONE, EnumType.T_ILLEGAL)
+                                    End Select
+                                Case 6
+                                    Select Case iCode
+                                        Case &H9 : Return DecodeOperands(oOpcode, "CATCH", "CATCH", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_STORE, EnumType.T_PLAIN)
+                                        Case &HF : Return DecodeOperands(oOpcode, "PIRACY", "ORIGINAL?", EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumOperand.P_NIL, EnumExtra.E_BRANCH, EnumType.T_PLAIN)
+                                    End Select
+                            End Select
+                    End Select
+            End Select
 
-        Dim oReturn As New DecodeResult With {.status = EnumStatus.BAD_OPCODE}
-        Return oReturn
+            Dim oReturn As New DecodeResult With {.status = EnumStatus.BAD_OPCODE}
+            Return oReturn
+        Catch
+            Return New DecodeResult With {.status = EnumStatus.BAD_ENTRY}
+        End Try
     End Function
 
     Private Function DecodeOperands(pOpcode As Opcode, psOpcodeNameInf As String, psOpcodeNameZil As String, pPar1 As EnumOperand, pPar2 As EnumOperand, pPar3 As EnumOperand, pPar4 As EnumOperand, pExtra As EnumExtra, pType As EnumType) As DecodeResult

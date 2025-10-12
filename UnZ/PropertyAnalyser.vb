@@ -109,6 +109,7 @@ Public Class PropertyAnalyser
 
         ' Loop through all pointers to property data to find lowest (=start of property data tables)
         Dim lowestPropAddress As Integer = Helper.GetAdressFromWord(pStoryData, pAddrObjectTreeStart + objectTreeEntryLength - 2)
+        If lowestPropAddress > Helper.GetAdressFromWord(pStoryData, 14) Then Exit Sub   ' Address MUST be in dynamic memory, There are problably no objects
         Dim i As Integer = 1
         Do
             Dim currentPropAddress As Integer = Helper.GetAdressFromWord(pStoryData, pAddrObjectTreeStart + objectTreeEntryLength * i - 2)

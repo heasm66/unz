@@ -603,7 +603,7 @@ Module Program
                 memoryMap.Add(New MemoryMapEntry("Abbreviation strings", 0, 0, MemoryMapType.MM_ABBREVIATION_STRINGS))
                 For i As Integer = 0 To (maxNumberofAbbrevs - 1)
                     Dim iAddressAbbrev As Integer = 2 * (byteStory(iAddrAbbrevTableStart + i * 2) * 256 + byteStory(iAddrAbbrevTableStart + i * 2 + 1))
-                    If iAddressAbbrev > 0 Then
+                    If iAddressAbbrev > 0 And iAddressAbbrev < byteStory.Length Then
                         sAbbreviations(i) = ExtractZString(iAddressAbbrev, False)          ' Abbreviations can't contain abbreviations 
                         If memoryMap.Last.addressStart = 0 Then memoryMap.Last.addressStart = iAddressAbbrev
                         If iAddressAbbrev < memoryMap.Last.addressStart Then memoryMap.Last.addressStart = iAddressAbbrev
