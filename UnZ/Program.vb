@@ -597,6 +597,10 @@ Module Program
             If iAddrAbbrevTableStart > 0 Then
                 If iZVersion < 3 Then maxNumberofAbbrevs = 32
 
+                ' Adjust for that Zilf 0.9 can under some circumstances only produce less than 96 abbreviations (FTSR?DUMMY)
+                Dim calculatedAbbrevs As Integer = (Helper.GetAdressFromWord(byteStory, 12) - iAddrAbbrevTableStart) \ 2
+                If calculatedAbbrevs < maxNumberofAbbrevs Then maxNumberofAbbrevs = calculatedAbbrevs
+
                 memoryMap.Add(New MemoryMapEntry("Abbreviation table", iAddrAbbrevTableStart, iAddrAbbrevTableStart + 2 * maxNumberofAbbrevs - 1, MemoryMapType.MM_ABBREVIATION_TABLE))   ' 192 bytes long for v3+ (96 abbreviations), v2 only 32 abbreviations
 
                 ' Abbreviation strings

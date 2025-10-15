@@ -11,7 +11,7 @@
 
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
-UnZ 0.17 (12th October 2025, in development) by Henrik Åsman, (c) 2021-2025
+UnZ 0.17 (15th October 2025, in development) by Henrik Åsman, (c) 2021-2025
 Usage: unz [option]... [file]
 Unpack Z-machine file format information.
 
@@ -46,6 +46,8 @@ UnZ homepage: https://github.com/heasm66/unz
 Changelog:
     0.17 2025-xx-xx
     ---------------
+      * Bug: Adjust for that Zilf 0.9 can under some circumstances 
+             produce less than 96 abbreviations (FSTR?DUMMY)
       * Guards for minimal file with no objects and no strings
       * Bug: Identify end of routines correctly, when QUIT
              is last before start of high strings
