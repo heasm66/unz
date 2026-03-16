@@ -11,7 +11,7 @@
 
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
-UnZ 0.17 (15th October 2025, in development) by Henrik Åsman, (c) 2021-2025
+UnZ 0.17 (16th Mars 2026, in development) by Henrik Åsman, (c) 2021-2026
 Usage: unz [option]... [file]
 Unpack Z-machine file format information.
 
@@ -54,6 +54,8 @@ Changelog:
       * Bug: highest global and used globals computed wrong
       * Bug: improve logic dictword/packed address (ambiguity)
              in decoding properties on objects
+      * Bug: Prevent crash when scanning for potential
+             Inform6 grammar table v1
 
     0.16 2025-07-10
     ---------------

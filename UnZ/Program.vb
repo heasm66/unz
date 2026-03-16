@@ -325,7 +325,7 @@ Module Program
                         showGrammar = True
                         allSections = False
                     Case "-h", "--help", "\?"
-                        Console.Error.WriteLine("UnZ 0.17 ({0}) by Henrik Åsman, (c) 2021-2025", buildTimestamp)
+                        Console.Error.WriteLine("UnZ 0.17 ({0}) by Henrik Åsman, (c) 2021-2026", buildTimestamp)
                         Console.Error.WriteLine("Usage: unz [option]... [file]")
                         Console.Error.WriteLine("Unpack Z-machine file format information.")
                         Console.Error.WriteLine()
@@ -597,7 +597,7 @@ Module Program
             If iAddrAbbrevTableStart > 0 Then
                 If iZVersion < 3 Then maxNumberofAbbrevs = 32
 
-                ' Adjust for that Zilf 0.9 can under some circumstances only produce less than 96 abbreviations (FTSR?DUMMY)
+                ' Adjust for that Zilf 0.9 can under some circumstances only produce less than 96 abbreviations (FSTR?DUMMY)
                 Dim calculatedAbbrevs As Integer = (Helper.GetAdressFromWord(byteStory, 12) - iAddrAbbrevTableStart) \ 2
                 If calculatedAbbrevs < maxNumberofAbbrevs Then maxNumberofAbbrevs = calculatedAbbrevs
 
@@ -2884,119 +2884,123 @@ Module Program
     End Function
 
     Private Function ScanForGrammarTableV1(pNumberOfVerbs As Integer) As GrammarScanResult
-        ' V1 grammar tables version 1 (ZILCH, Zapf and Inform v1) have a constant length of 8 bytes for each variant
-        ' of the verb + an extra byte for the number of variants of the verb. i.e. 9, 17, 25, 33 ...
-        Dim potentialStartAddress = 0
-        Dim iGrammarLines(9) As Integer
-        Dim deadlineFix As Boolean
-        Do
-            Dim foundCandidate As Boolean = True
-            Dim compactSyntax As Boolean = False
-            deadlineFix = False
-            ' Do a quick scan to with 10 verbs and see if we find a potential verb table start address
-            For i As Integer = 0 To 9
-                ' Get potential address for a verb table entry
-                iGrammarLines(i) = byteStory(potentialStartAddress + i * 2) * 256 + byteStory(potentialStartAddress + i * 2 + 1)
+        Try
+            ' V1 grammar tables version 1 (ZILCH, Zapf and Inform v1) have a constant length of 8 bytes for each variant
+            ' of the verb + an extra byte for the number of variants of the verb. i.e. 9, 17, 25, 33 ...
+            Dim potentialStartAddress = 0
+            Dim iGrammarLines(9) As Integer
+            Dim deadlineFix As Boolean
+            Do
+                Dim foundCandidate As Boolean = True
+                Dim compactSyntax As Boolean = False
+                deadlineFix = False
+                ' Do a quick scan to with 10 verbs and see if we find a potential verb table start address
+                For i As Integer = 0 To 9
+                    ' Get potential address for a verb table entry
+                    iGrammarLines(i) = byteStory(potentialStartAddress + i * 2) * 256 + byteStory(potentialStartAddress + i * 2 + 1)
 
-                If iGrammarLines(i) < &H40 Or iGrammarLines(i) > byteStory.Length Then
-                    ' Invalid address for verb table entry, current start is invalid, abandon
-                    foundCandidate = False
-                    Exit For
-                End If
-
-                If i > 0 Then
-
-                    ' Current verb entry must be bigger than previous. If not, abandon 
-                    If iGrammarLines(i) < iGrammarLines(i - 1) Then
+                    If iGrammarLines(i) < &H40 Or iGrammarLines(i) > byteStory.Length Then
+                        ' Invalid address for verb table entry, current start is invalid, abandon
                         foundCandidate = False
                         Exit For
                     End If
 
-                    Dim syntaxLineCountForPrevious As Integer = byteStory(iGrammarLines(i - 1))
+                    If i > 0 Then
 
-                    ' If size of syntax line is less than minimum for a COMPACT-SYNTAX then abandon
-                    If (iGrammarLines(i) - iGrammarLines(i - 1) - 1) < 2 Then
-                        foundCandidate = False
-                        Exit For
-                    End If
-
-                    If iGrammarLines(i - 1) + syntaxLineCountForPrevious * 8 + 1 = iGrammarLines(i) Then
-                        ' Addresses are consistent with a grammar table with fixed syntax lines of 8, proceed to next
-                        Continue For
-                    ElseIf iGrammarLines(i - 1) + syntaxLineCountForPrevious * 8 + 2 = iGrammarLines(i) And byteStory(iGrammarLines(i) - 1) = 0 Then
-                        ' Deadline have an extra empty byte between each syntax verb definition
-                        deadlineFix = True
-                        Continue For
-                    Else
-                        ' test for COMPACT-SYNTAX
-                        Dim nextAddress As Integer = iGrammarLines(i - 1) + 1
-                        For j As Integer = 0 To syntaxLineCountForPrevious - 1
-                            Select Case (byteStory(nextAddress) And &HC0)
-                                Case &H0 : nextAddress += 2
-                                Case &H40 : nextAddress += 4
-                                Case &H80 : nextAddress += 7
-                            End Select
-                        Next
-                        If nextAddress = iGrammarLines(i) Then
-                            ' Addresses are consistent with a grammar table with COMPACT-SYNTAX syntax lines, proceed to next
-                            compactSyntax = True
-                            Continue For
-                        Else
+                        ' Current verb entry must be bigger than previous. If not, abandon 
+                        If iGrammarLines(i) < iGrammarLines(i - 1) Then
                             foundCandidate = False
                             Exit For
                         End If
-                    End If
-                End If
-                If Not foundCandidate Then Exit For
-            Next
 
-            ' Found potential grammar table start address, check for validity for full set of verbs by:
-            '   * Check that the next value in the table is the same as the length of the actual grammar lines for that verb
-            If foundCandidate Then
-                Dim iVerbIdx As Integer = 0
-                Dim oRet As New GrammarScanResult
-                Dim iMaxAction As Integer = 0
-                Do
-                    Dim iAddr As Integer = Helper.GetAdressFromWord(byteStory, potentialStartAddress + iVerbIdx * 2)
-                    Dim iAddrNext As Integer = Helper.GetAdressFromWord(byteStory, potentialStartAddress + (iVerbIdx + 1) * 2)
-                    Dim iAddrNextCalc As Integer
-                    If compactSyntax Then
-                        iAddrNextCalc = iAddr + 1
-                        For j As Integer = 0 To byteStory(iAddr) - 1
-                            If byteStory(iAddrNextCalc + 1) > iMaxAction Then iMaxAction = byteStory(iAddrNextCalc + 1)
-                            Select Case (byteStory(iAddrNextCalc) And &HC0)
-                                Case &H0 : iAddrNextCalc += 2
-                                Case &H40 : iAddrNextCalc += 4
-                                Case &H80 : iAddrNextCalc += 7
-                            End Select
-                        Next
-                    Else
-                        iAddrNextCalc = iAddr + byteStory(iAddr) * 8 + 1
-                        If deadlineFix Then iAddrNextCalc += 1
-                        For j As Integer = iAddr + 8 To iAddrNextCalc - 1 Step 8
-                            If byteStory(j) > iMaxAction Then iMaxAction = byteStory(j)
-                        Next
-                    End If
-                    If iVerbIdx < pNumberOfVerbs - 1 And iAddrNext <> iAddrNextCalc Then foundCandidate = False
-                    If oRet.addrGrammarDataStart = 0 Or oRet.addrGrammarDataStart > iAddr Then oRet.addrGrammarDataStart = iAddr
-                    If oRet.addrGrammarDataEnd = 0 Or oRet.addrGrammarDataEnd < iAddrNextCalc Then oRet.addrGrammarDataEnd = iAddrNextCalc - 1
-                    iVerbIdx += 1
-                Loop Until Not foundCandidate Or iVerbIdx = pNumberOfVerbs
+                        Dim syntaxLineCountForPrevious As Integer = byteStory(iGrammarLines(i - 1))
 
+                        ' If size of syntax line is less than minimum for a COMPACT-SYNTAX then abandon
+                        If (iGrammarLines(i) - iGrammarLines(i - 1) - 1) < 2 Then
+                            foundCandidate = False
+                            Exit For
+                        End If
+
+                        If iGrammarLines(i - 1) + syntaxLineCountForPrevious * 8 + 1 = iGrammarLines(i) Then
+                            ' Addresses are consistent with a grammar table with fixed syntax lines of 8, proceed to next
+                            Continue For
+                        ElseIf iGrammarLines(i - 1) + syntaxLineCountForPrevious * 8 + 2 = iGrammarLines(i) And byteStory(iGrammarLines(i) - 1) = 0 Then
+                            ' Deadline have an extra empty byte between each syntax verb definition
+                            deadlineFix = True
+                            Continue For
+                        Else
+                            ' test for COMPACT-SYNTAX
+                            Dim nextAddress As Integer = iGrammarLines(i - 1) + 1
+                            For j As Integer = 0 To syntaxLineCountForPrevious - 1
+                                Select Case (byteStory(nextAddress) And &HC0)
+                                    Case &H0 : nextAddress += 2
+                                    Case &H40 : nextAddress += 4
+                                    Case &H80 : nextAddress += 7
+                                End Select
+                            Next
+                            If nextAddress = iGrammarLines(i) Then
+                                ' Addresses are consistent with a grammar table with COMPACT-SYNTAX syntax lines, proceed to next
+                                compactSyntax = True
+                                Continue For
+                            Else
+                                foundCandidate = False
+                                Exit For
+                            End If
+                        End If
+                    End If
+                    If Not foundCandidate Then Exit For
+                Next
+
+                ' Found potential grammar table start address, check for validity for full set of verbs by:
+                '   * Check that the next value in the table is the same as the length of the actual grammar lines for that verb
                 If foundCandidate Then
-                    oRet.addrGrammarTableStart = potentialStartAddress
-                    oRet.addrGrammarTableEnd = potentialStartAddress + pNumberOfVerbs * 2 - 1
-                    oRet.NumberOfActions = iMaxAction + 1
-                    oRet.grammarVer = EnumGrammarVer.VERSION_1
-                    oRet.CompactSyntaxes = compactSyntax
-                    oRet.NumberOfVerbs = pNumberOfVerbs
-                    Return oRet
-                End If
-            End If
+                    Dim iVerbIdx As Integer = 0
+                    Dim oRet As New GrammarScanResult
+                    Dim iMaxAction As Integer = 0
+                    Do
+                        Dim iAddr As Integer = Helper.GetAdressFromWord(byteStory, potentialStartAddress + iVerbIdx * 2)
+                        Dim iAddrNext As Integer = Helper.GetAdressFromWord(byteStory, potentialStartAddress + (iVerbIdx + 1) * 2)
+                        Dim iAddrNextCalc As Integer
+                        If compactSyntax Then
+                            iAddrNextCalc = iAddr + 1
+                            For j As Integer = 0 To byteStory(iAddr) - 1
+                                If byteStory(iAddrNextCalc + 1) > iMaxAction Then iMaxAction = byteStory(iAddrNextCalc + 1)
+                                Select Case (byteStory(iAddrNextCalc) And &HC0)
+                                    Case &H0 : iAddrNextCalc += 2
+                                    Case &H40 : iAddrNextCalc += 4
+                                    Case &H80 : iAddrNextCalc += 7
+                                End Select
+                            Next
+                        Else
+                            iAddrNextCalc = iAddr + byteStory(iAddr) * 8 + 1
+                            If deadlineFix Then iAddrNextCalc += 1
+                            For j As Integer = iAddr + 8 To iAddrNextCalc - 1 Step 8
+                                If byteStory(j) > iMaxAction Then iMaxAction = byteStory(j)
+                            Next
+                        End If
+                        If iVerbIdx < pNumberOfVerbs - 1 And iAddrNext <> iAddrNextCalc Then foundCandidate = False
+                        If oRet.addrGrammarDataStart = 0 Or oRet.addrGrammarDataStart > iAddr Then oRet.addrGrammarDataStart = iAddr
+                        If oRet.addrGrammarDataEnd = 0 Or oRet.addrGrammarDataEnd < iAddrNextCalc Then oRet.addrGrammarDataEnd = iAddrNextCalc - 1
+                        iVerbIdx += 1
+                    Loop Until Not foundCandidate Or iVerbIdx = pNumberOfVerbs
 
-            potentialStartAddress += 1
-        Loop Until potentialStartAddress > byteStory.Length - 100
-        Return Nothing
+                    If foundCandidate Then
+                        oRet.addrGrammarTableStart = potentialStartAddress
+                        oRet.addrGrammarTableEnd = potentialStartAddress + pNumberOfVerbs * 2 - 1
+                        oRet.NumberOfActions = iMaxAction + 1
+                        oRet.grammarVer = EnumGrammarVer.VERSION_1
+                        oRet.CompactSyntaxes = compactSyntax
+                        oRet.NumberOfVerbs = pNumberOfVerbs
+                        Return oRet
+                    End If
+                End If
+
+                potentialStartAddress += 1
+            Loop Until potentialStartAddress > byteStory.Length - 100
+            Return Nothing
+        Catch
+            Return Nothing
+        End Try
     End Function
 
     Private Function ScanForInformGrammarTableV2(pNumberOfVerbs As Integer) As GrammarScanResult
