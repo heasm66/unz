@@ -1,6 +1,6 @@
 ﻿'MIT License
 
-'Copyright(c) 2021-2025 Henrik Åsman
+'Copyright(c) 2021-2026 Henrik Åsman
 
 'Permission Is hereby granted, free Of charge, to any person obtaining a copy
 'of this software And associated documentation files (the "Software"), to deal
@@ -19,12 +19,6 @@
 'LIABILITY, WHETHER In AN ACTION Of CONTRACT, TORT Or OTHERWISE, ARISING FROM,
 'OUT OF Or IN CONNECTION WITH THE SOFTWARE Or THE USE Or OTHER DEALINGS IN THE
 'SOFTWARE.
-
-Imports System.Drawing
-Imports System.Net
-Imports System.Net.Mime.MediaTypeNames
-Imports System.Runtime.InteropServices
-Imports System.Runtime.Intrinsics.Arm
 
 Public Class Decode
     Public startAddress As Integer = 0

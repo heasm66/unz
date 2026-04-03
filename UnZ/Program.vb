@@ -1,6 +1,6 @@
 'MIT License
 
-'Copyright(c) 2021-2025 Henrik Åsman
+'Copyright(c) 2021-2026 Henrik Åsman
 
 'Permission Is hereby granted, free Of charge, to any person obtaining a copy
 'of this software And associated documentation files (the "Software"), to deal
@@ -20,13 +20,8 @@
 'OUT OF Or IN CONNECTION WITH THE SOFTWARE Or THE USE Or OTHER DEALINGS IN THE
 'SOFTWARE.
 
-Imports System
-Imports System.Globalization
-Imports System.Net
 Imports System.Reflection
-Imports System.Reflection.Metadata
-Imports System.Runtime.InteropServices.JavaScript.JSType
-Imports Microsoft
+Imports System.Text
 
 ' Set this to false before release
 #Const _IN_DEVELOPMENT = True
@@ -80,7 +75,7 @@ Imports Microsoft
 '    Strings Area
 
 Module Program
-    Private byteStory() As Byte
+    Private _memory() As Byte
     Private ReadOnly sAbbreviations(95) As String
     Private iZVersion As Integer
     Private compilerSource As EnumCompilerSource
@@ -139,125 +134,6 @@ Module Program
 
             ' Use UTF8 for output
             Console.OutputEncoding = System.Text.Encoding.UTF8
-
-            'sFilename = "games\AMFV.dat"
-            'sFilename = "games\Infidel.dat"
-            'sFilename = "games\Starcross.dat"
-            'sFilename = "games\Starcross-r15-s820901.z3"
-            'sFilename = "games\Balances.z5"
-            'sFilename = "games\sherbet.z5"
-            'sFilename = "games\minster.z5"
-            'sFilename = "games\Planetfall.dat"
-            'sFilename = "games\nord and bert.dat"
-            'sFilename = "games\Wishbringer.dat"
-            'sFilename = "games\Starcross-r18-s830114.z3"
-            'sFilename = "games\craverlyheights_zil.z5"
-            'sFilename = "games\Enchanter.dat"
-            'sFilename = "games\Trinity.dat"
-            'sFilename = "games\craverlyheights_dg.z5"
-            'sFilename = "games\seastalker.dat"
-            'sFilename = "games\the_job_R5.z5"
-            'sFilename = "games\craverlyheights_zil.z5"
-            'sFilename = "games\Trinity.dat"
-            'sFilename = "games\zilch_ver1\Zork1.dat"
-            'sFilename = "games\Beyond zork.dat"
-            'sFilename = "games\zork_285.z5"
-            'sFilename = "games\Tangle.z5"
-            'sFilename = "games\Inform5_ver1\Jigsaw.z8"
-            'sFilename = "games\zilch_ver2\arthur.zip"
-            'sFilename = "games\zilch_ver2\zork0.zip"
-            'sFilename = "games\zilch_ver2\shogun.zip"
-            'sFilename = "games\zilch_ver2\shogun.z6"
-            'sFilename = "games\zilf_ver1\craverlyheights_zil_ver_0_10.z5"
-            'sFilename = "games\Inform6_ver2\craverlyheights_puny.z5"
-            'sFilename = "games\Inform6_ver2\hibernated1.z5"
-            'sFilename = "games\the_job_R5.z5"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\Inform6\Source\Hibernated1\hibernated1_test.z5"
-            'sFilename = "games\zilf_ver1\craverlyheights_zil.z3"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\Inform6\Source\Galatea\galatea.z8"
-            'sFilename = "games\zilf_ver1\craverlyheights_zil_ver_0_9.z5"
-            'sFilename = "games\zilf_ver1\craverlyheights_zil_ver_0_10.z5"
-            'sFilename = "games\craverlyheights_dg.z5"
-            'sFilename = "games\Dorm Game.z3"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\Craverly Heights\bin\craverlyheights_zil.z5"
-
-            ' ZILF, grammar version 1 with COMPACT-SYNTAXES?
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\minizork2-renovated-rel15\mini2.z3"
-
-            ' ZILF, grammar version 1
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\heart-of-ice-master\src\heartice.z5"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\zork1\zork1.z3"
-            'sFilename = "games\zilf_ver1\craverlyheights_zil_ver_0_10.z5"
-
-            ' ZILCH, grammar version 1
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Wishbringer\wishbringer.dat"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Ballyhoo\Ballyhoo.dat"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\The Witness\Witness.dat"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Suspect\Suspect.dat"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\deadline\deadline.dat"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\suspended\suspended.dat"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Other\Nelson, Graham\Curses!\curses-r7.z3"
-
-            ' ZILCH, grammar version 1 with COMPACT-SYNTAXES?
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Minizork\minizork.z3"
-
-            ' ZILCH, grammar version 1 with COMPACT-SYNTAXES? and COMPACT-VOCABULARY?
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Sherlock\sherlock.dat"
-
-            ' ZILCH, grammar version 2
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\arthur\arthur.zip"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Shogun\shogun.zip"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Zork Zero\Zork0.zip"
-
-            ' ZILF, grammar version 2
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZIL\Source\new_parser\milliways_np\h2.z6"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZIL\Source\new_parser\zork0\zork0.z6"
-
-            ' Inform5, grammar version 1
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\Curses_i6\bin\Curses!_r16.z5"
-
-            ' Inform6, grammar version 2
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\dorm_test\dorm_test.z3"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\tristam-island-main\tristam-en.z3"
-            'sFilename = "C:\Users\heasm\source\repos\UnZ\UnZ\games\Inform6_ver2\gostak.z5"
-            'sFilename = "games\Inform6_ver2\craverlyheights_puny.z5"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\Curses_i6\bin\Curses!_r18_642.z5"
-
-            ' Inform6, grammar version 3
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\ZAbbrevMaker_benchmarks\Curses_i6\bin\Curses!_r18_643b_gv3.z5"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\GV3_Tests\PunyInform-5_3_1\minimal_643_gv3.z5"
-
-            ' Dialog
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\Dialog\games\the-impossible-bottle.z8"
-
-            ' Error
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\amfv-first-r1-s841226.z3"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\leathergoddesses-r59-s000001.z3"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\moonmist-beta-r65-sXXXXXX.z3"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\wishbringer-rX165-s880609.z3"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\zork1-r15-sUG3AU5.z2"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\zork1-r2-sAS000C.z1"
-
-            ' Corrupted files
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\moonmist-beta-r65-sXXXXXX.z3"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\spellbreaker-r63-sXXXXXX.z3"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\wishbringer-rX165-s880609.z3"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\unicode.z5"
-
-            ' Unicode translation table
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Other\Francis, Garry\search-for-the-lost-ark.z5"
-
-            'sFilename = "C:\Users\heasm\Downloads\test.z5"
-
-            'Hints
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Leather Godesses of Phobos\Clues\LGOP_InvisiClues.z5"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Trinity\Clues\Trinity_InvisiClues.z5"
-
-            ' Special
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Source\the_obsessively_complete_infocom_catalog_241210\eblong.com\infocom\gamefiles\zork0-r242-s880901.z6"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Scott Adams\02 Pirate Adventure.z5"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Games\Infocom\Bureaucracy\Bureaucracy.dat"
-            'sFilename = "C:\Users\heasm\OneDrive\Dokument\Interactive Fiction\Projects\zil\Zork_770614\bin\zork_285.z5"
 
             ' ***** Unpack parameters *****
             ' A bit of a poor mans GetOpt. Should probable be replaced by a NuGet-libary...
@@ -455,9 +331,35 @@ Module Program
                 sFile = IO.Path.Combine(IO.Directory.GetCurrentDirectory, sFilename)
             End If
 
-            byteStory = IO.File.ReadAllBytes(sFile)
+            _memory = IO.File.ReadAllBytes(sFile)
 
-            iZVersion = byteStory(0)
+            If _memory.Length > 12 AndAlso Encoding.ASCII.GetString(_memory, 0, 4) = "FORM" AndAlso Encoding.ASCII.GetString(_memory, 8, 4) = "IFRS" Then
+                ' Found valid header for blorb file, test size And skip to start of z-machine file
+                Dim chunkSize As Integer = _memory(4) * &H1000000 + _memory(5) * &H10000 + _memory(6) * &H100 + _memory(7)
+                If _memory.Length >= chunkSize + 8 Then
+                    Dim start As Integer = 12
+                    If Encoding.ASCII.GetString(_memory, start, 4) = "RIdx" Then
+                        ' found resource index
+                        Dim idxSize As Integer = _memory(start + 4) * &H1000000 + _memory(start + 5) * &H10000 + _memory(start + 6) * &H100 + _memory(start + 7)
+                        Dim resourceCount As Integer = _memory(start + 8) * &H1000000 + _memory(start + 9) * &H10000 + _memory(start + 10) * &H100 + _memory(start + 11)
+                        For i As Integer = 0 To resourceCount - 1
+                            start = 24 + i * 12
+                            Dim role As String = Encoding.ASCII.GetString(_memory, start, 4)
+                            Dim offset As Integer = _memory(start + 8) * &H1000000 + _memory(start + 9) * &H10000 + _memory(start + 10) * &H100 + _memory(start + 11)
+                            Dim type As String = Encoding.ASCII.GetString(_memory, offset, 4)
+                            Dim size As Integer = _memory(offset + 4) * &H1000000 + _memory(offset + 5) * &H10000 + _memory(offset + 6) * &H100 + _memory(offset + 7)
+                            Dim zVersion As Integer = _memory(offset + 8)
+                            If role = "Exec" AndAlso type = "ZCOD" AndAlso zVersion > 0 AndAlso zVersion < 9 Then
+                                ' found a z-code chunk
+                                _memory = _memory.Skip(offset + 8).Take(size).ToArray()
+                                Exit For
+                            End If
+                        Next
+                    End If
+                End If
+            End If
+
+            iZVersion = _memory(0)
             If iZVersion > 8 Then
                 Console.Error.WriteLine("Unknown z-machine version, {0}.", iZVersion)
                 Console.Error.WriteLine("Try 'unz -h' for more information.")
@@ -496,25 +398,25 @@ Module Program
             ' ***** Build memory map *****
             ' ****************************
 
-            Dim iLengthFile As Integer = Helper.GetAdressFromWord(byteStory, 26)
+            Dim iLengthFile As Integer = Helper.GetAdressFromWord(_memory, 26)
             iLengthFile *= 2
             If iZVersion > 3 Then iLengthFile *= 2
             If iZVersion > 5 Then iLengthFile *= 2
-            If iLengthFile = 0 Or iLengthFile > byteStory.Length Then iLengthFile = byteStory.Length
+            If iLengthFile = 0 Or iLengthFile > _memory.Length Then iLengthFile = _memory.Length
 
             Dim checksum As Integer = 0
             For i As Integer = 64 To iLengthFile - 1
-                checksum = (checksum + byteStory(i) And &HFFFF)
+                checksum = (checksum + _memory(i) And &HFFFF)
             Next
             If Not createGametext Then
                 Console.Write("Calculated checksum:                       0x{0:X4}, checksum ", checksum)
-                If checksum = Helper.GetAdressFromWord(byteStory, 28) Then Console.WriteLine("ok") Else Console.WriteLine("error")
+                If checksum = Helper.GetAdressFromWord(_memory, 28) Then Console.WriteLine("ok") Else Console.WriteLine("error")
             End If
 
             memoryMap.Add(New MemoryMapEntry("Header table", &H0, &H3F, MemoryMapType.MM_HEADER_TABLE))     ' Header, always in the first 64 bytes
 
             ' Extract possible custom alphabet
-            Dim iAlphabetAddress As Integer = Helper.GetAdressFromWord(byteStory, &H34)
+            Dim iAlphabetAddress As Integer = Helper.GetAdressFromWord(_memory, &H34)
             If iAlphabetAddress > 0 Then
                 ' Always replace " with ~ (for presentation, Inform style)
                 ' alphabet2, position 7 is always new_line, represented by ^ (Inform style)
@@ -535,15 +437,15 @@ Module Program
 
 
             ' Header extension table
-            Dim iAddrHeaderExtStart As Integer = Helper.GetAdressFromWord(byteStory, &H36)
+            Dim iAddrHeaderExtStart As Integer = Helper.GetAdressFromWord(_memory, &H36)
             Dim iHeaderExtLen As Integer = 0
             If iAddrHeaderExtStart > 0 Then
-                iHeaderExtLen = Helper.GetAdressFromWord(byteStory, iAddrHeaderExtStart)     ' Number of further words in table
+                iHeaderExtLen = Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart)     ' Number of further words in table
                 memoryMap.Add(New MemoryMapEntry("Header extension table", iAddrHeaderExtStart, iAddrHeaderExtStart + iHeaderExtLen * 2 + 1, MemoryMapType.MM_HEADER_EXT_TABLE))
                 If iHeaderExtLen >= 3 Then
-                    Dim unicodeAddr As Integer = Helper.GetAdressFromWord(byteStory, iAddrHeaderExtStart + 6)
+                    Dim unicodeAddr As Integer = Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart + 6)
                     If unicodeAddr > 0 Then
-                        Dim unicodeLen As Integer = byteStory(unicodeAddr)
+                        Dim unicodeLen As Integer = _memory(unicodeAddr)
                         Helper.UnicodeTranslationTableAddr = unicodeAddr
                         memoryMap.Add(New MemoryMapEntry("Unicode translation table", unicodeAddr, unicodeAddr + unicodeLen * 2, MemoryMapType.MM_UNICODE_TABLE))
                     End If
@@ -552,13 +454,13 @@ Module Program
             End If
 
             ' Terminating characters table
-            Dim iAddrTCharsStart As Integer = Helper.GetAdressFromWord(byteStory, &H2E)
+            Dim iAddrTCharsStart As Integer = Helper.GetAdressFromWord(_memory, &H2E)
             Dim iTCharsLen As Integer = 0
             If iAddrTCharsStart > 0 Then
-                If byteStory(iAddrTCharsStart + iTCharsLen) > 0 Then
+                If _memory(iAddrTCharsStart + iTCharsLen) > 0 Then
                     Do
                         iTCharsLen += 1
-                    Loop Until byteStory(iAddrTCharsStart + iTCharsLen) = 0
+                    Loop Until _memory(iAddrTCharsStart + iTCharsLen) = 0
                 End If
                 memoryMap.Add(New MemoryMapEntry("Terminating characters table", iAddrTCharsStart, iAddrTCharsStart + iTCharsLen, MemoryMapType.MM_TERMINATING_CHARS_TABLE))
             End If
@@ -568,19 +470,19 @@ Module Program
             Dim foundIFID As Boolean = False
             Dim addressIFID As Integer = 0
             Dim IFID As String = ""
-            For i As Integer = 0 To byteStory.Length - patternIFID.Length - 1
-                If byteStory.Skip(i).Take(patternIFID.Length).SequenceEqual(patternIFID) Then
+            For i As Integer = 0 To _memory.Length - patternIFID.Length - 1
+                If _memory.Skip(i).Take(patternIFID.Length).SequenceEqual(patternIFID) Then
                     foundIFID = True
                     addressIFID = i
                     Exit For
                 End If
             Next
-            If foundIFID AndAlso byteStory(addressIFID + 43) = 47 AndAlso byteStory(addressIFID + 44) = 47 Then   ' An IFID should end with //
+            If foundIFID AndAlso _memory(addressIFID + 43) = 47 AndAlso _memory(addressIFID + 44) = 47 Then   ' An IFID should end with //
                 Dim endAddress As Integer = addressIFID + 44
                 For i = addressIFID To endAddress
-                    IFID = String.Concat(IFID, Chr(byteStory(i)))
+                    IFID = String.Concat(IFID, Chr(_memory(i)))
                 Next
-                If byteStory(addressIFID - 1) = 45 Then addressIFID -= 1   ' Sometimes (Inform) the IFID is constructed as a length byte array with the length of the array in the first byte
+                If _memory(addressIFID - 1) = 45 Then addressIFID -= 1   ' Sometimes (Inform) the IFID is constructed as a length byte array with the length of the array in the first byte
                 If Not createGametext Then
                     Console.WriteLine("IFID:                                      {0}", IFID)
                 End If
@@ -590,7 +492,7 @@ Module Program
             End If
 
             ' Abbreviation table
-            Dim iAddrAbbrevTableStart As Integer = Helper.GetAdressFromWord(byteStory, 24)
+            Dim iAddrAbbrevTableStart As Integer = Helper.GetAdressFromWord(_memory, 24)
             Dim iAddrAbbrevStringsStart As Integer = 0
             Dim iAddrAbbrevStringsEnd As Integer = 0
             Dim maxNumberofAbbrevs As Integer = 96
@@ -598,7 +500,7 @@ Module Program
                 If iZVersion < 3 Then maxNumberofAbbrevs = 32
 
                 ' Adjust for that Zilf 0.9 can under some circumstances only produce less than 96 abbreviations (FSTR?DUMMY)
-                Dim calculatedAbbrevs As Integer = (Helper.GetAdressFromWord(byteStory, 12) - iAddrAbbrevTableStart) \ 2
+                Dim calculatedAbbrevs As Integer = (Helper.GetAdressFromWord(_memory, 12) - iAddrAbbrevTableStart) \ 2
                 If calculatedAbbrevs < maxNumberofAbbrevs Then maxNumberofAbbrevs = calculatedAbbrevs
 
                 memoryMap.Add(New MemoryMapEntry("Abbreviation table", iAddrAbbrevTableStart, iAddrAbbrevTableStart + 2 * maxNumberofAbbrevs - 1, MemoryMapType.MM_ABBREVIATION_TABLE))   ' 192 bytes long for v3+ (96 abbreviations), v2 only 32 abbreviations
@@ -606,8 +508,8 @@ Module Program
                 ' Abbreviation strings
                 memoryMap.Add(New MemoryMapEntry("Abbreviation strings", 0, 0, MemoryMapType.MM_ABBREVIATION_STRINGS))
                 For i As Integer = 0 To (maxNumberofAbbrevs - 1)
-                    Dim iAddressAbbrev As Integer = 2 * (byteStory(iAddrAbbrevTableStart + i * 2) * 256 + byteStory(iAddrAbbrevTableStart + i * 2 + 1))
-                    If iAddressAbbrev > 0 And iAddressAbbrev < byteStory.Length Then
+                    Dim iAddressAbbrev As Integer = 2 * (_memory(iAddrAbbrevTableStart + i * 2) * 256 + _memory(iAddrAbbrevTableStart + i * 2 + 1))
+                    If iAddressAbbrev > 0 And iAddressAbbrev < _memory.Length Then
                         sAbbreviations(i) = ExtractZString(iAddressAbbrev, False)          ' Abbreviations can't contain abbreviations 
                         If memoryMap.Last.addressStart = 0 Then memoryMap.Last.addressStart = iAddressAbbrev
                         If iAddressAbbrev < memoryMap.Last.addressStart Then memoryMap.Last.addressStart = iAddressAbbrev
@@ -616,16 +518,16 @@ Module Program
                         sAbbreviations(i) = ""
                     End If
                 Next
-                If memoryMap.Last.addressStart = &H42 And byteStory(&H40) = &H80 And byteStory(&H41) = 0 Then
+                If memoryMap.Last.addressStart = &H42 And _memory(&H40) = &H80 And _memory(&H41) = 0 Then
                     ' Inform places "   " as a default abbreviation here and if all 96 abbreviations are used, this becomes
                     ' an unused abbreviation string (80 00).
                     memoryMap.Last.addressStart -= 2
                 End If
-                If memoryMap.Last.addressEnd > 0 And (byteStory(memoryMap.Last.addressEnd) And &H80) = 0 Then
+                If memoryMap.Last.addressEnd > 0 And (_memory(memoryMap.Last.addressEnd) And &H80) = 0 Then
                     ' Search for last bytes in last Z-string (last word end with bit 15 set)
                     Do
                         memoryMap.Last.addressEnd += 2
-                    Loop Until (byteStory(memoryMap.Last.addressEnd) And &H80) = &H80
+                    Loop Until (_memory(memoryMap.Last.addressEnd) And &H80) = &H80
                 End If
                 memoryMap.Last.addressEnd += 1
                 iAddrAbbrevStringsStart = memoryMap.Last.addressStart
@@ -633,7 +535,7 @@ Module Program
             End If
 
             ' Object defaults table
-            Dim iAddrObjectDefaultsTableStart As Integer = Helper.GetAdressFromWord(byteStory, 10)
+            Dim iAddrObjectDefaultsTableStart As Integer = Helper.GetAdressFromWord(_memory, 10)
             Dim iPropDefaultCount As Integer = 63
             If iZVersion <= 3 Then iPropDefaultCount = 31
             Dim iAddrObjectTreeStart As Integer = iAddrObjectDefaultsTableStart + iPropDefaultCount * 2
@@ -642,7 +544,7 @@ Module Program
 
             ' Object tree table
             Dim oPropertyAnalyser As New PropertyAnalyser
-            oPropertyAnalyser.Init(byteStory, iAddrObjectTreeStart, iZVersion, compilerSource)
+            oPropertyAnalyser.Init(_memory, iAddrObjectTreeStart, iZVersion, compilerSource)
             Dim iObjectTreeEntryLen As Integer = oPropertyAnalyser.objectTreeEntryLength
             Dim iObjectCount As Integer = oPropertyAnalyser.objectCount
             Dim iAddrObjectTreeEnd As Integer = oPropertyAnalyser.addressObjectTreeEnd
@@ -661,10 +563,10 @@ Module Program
             End If
 
             ' Set up variables for dictionary
-            Dim iAddrDictionary As Integer = Helper.GetAdressFromWord(byteStory, 8)
-            Dim iWordSeparatorsCount As Integer = byteStory(iAddrDictionary)
-            Dim iWordSize As Integer = byteStory(iAddrDictionary + iWordSeparatorsCount + 1)
-            Dim iWordCount As Integer = byteStory(iAddrDictionary + iWordSeparatorsCount + 2) * 256 + byteStory(iAddrDictionary + iWordSeparatorsCount + 3)
+            Dim iAddrDictionary As Integer = Helper.GetAdressFromWord(_memory, 8)
+            Dim iWordSeparatorsCount As Integer = _memory(iAddrDictionary)
+            Dim iWordSize As Integer = _memory(iAddrDictionary + iWordSeparatorsCount + 1)
+            Dim iWordCount As Integer = _memory(iAddrDictionary + iWordSeparatorsCount + 2) * 256 + _memory(iAddrDictionary + iWordSeparatorsCount + 3)
             Dim iAddrDictionaryEnd As Integer = iAddrDictionary + iWordSeparatorsCount + 3 + (iWordCount * iWordSize)
 
             ' Extract dictionary values
@@ -675,12 +577,12 @@ Module Program
                 .dictAddress = iAddrDictionary + iWordSeparatorsCount + 4 + (i * iWordSize),
                 .dictWord = ExtractZString(iAddrDictionary + iWordSeparatorsCount + 4 + (i * iWordSize), False)         ' Dictionary words don't use abbreviations
                 }
-                dictEntry.Byte6ToLast = byteStory(dictEntry.dictAddress + iWordSize - 6)
-                dictEntry.Byte5ToLast = byteStory(dictEntry.dictAddress + iWordSize - 5)
-                dictEntry.Byte4ToLast = byteStory(dictEntry.dictAddress + iWordSize - 4)
-                dictEntry.Byte3ToLast = byteStory(dictEntry.dictAddress + iWordSize - 3)
-                dictEntry.Byte2ToLast = byteStory(dictEntry.dictAddress + iWordSize - 2)
-                dictEntry.Byte1ToLast = byteStory(dictEntry.dictAddress + iWordSize - 1)
+                dictEntry.Byte6ToLast = _memory(dictEntry.dictAddress + iWordSize - 6)
+                dictEntry.Byte5ToLast = _memory(dictEntry.dictAddress + iWordSize - 5)
+                dictEntry.Byte4ToLast = _memory(dictEntry.dictAddress + iWordSize - 4)
+                dictEntry.Byte3ToLast = _memory(dictEntry.dictAddress + iWordSize - 3)
+                dictEntry.Byte2ToLast = _memory(dictEntry.dictAddress + iWordSize - 2)
+                dictEntry.Byte1ToLast = _memory(dictEntry.dictAddress + iWordSize - 1)
                 ' Set Flags, V1 & V2 as if it's grammar version 1 (Inform, Zilf or Zilch)
                 ' Inform6 grammar version 2 don't use V2 and it can be stripped (len = 6 or 8)
                 ' Zilch, Zilf grammar version 1 can strip V2 with COMPACT-VOCABULARY?
@@ -863,8 +765,8 @@ Module Program
             If grammarVer = 1 And Not createGametext Then Console.WriteLine("Unique prepositions count:                 {0}", DictEntriesList.PrepositionCountUnique)
 
             ' Z-code
-            Dim iFOFF As Integer = Helper.GetAdressFromWord(byteStory, &H28) * 8
-            Dim iCodeBase As Integer = Helper.GetNextValidPackedAddress(byteStory, iAddrDictionaryEnd + 1)
+            Dim iFOFF As Integer = Helper.GetAdressFromWord(_memory, &H28) * 8
+            Dim iCodeBase As Integer = Helper.GetNextValidPackedAddress(_memory, iAddrDictionaryEnd + 1)
             If iFOFF > 0 Then iCodeBase = iFOFF
             Dim scaler As Integer = 2
             Select Case iZVersion
@@ -882,14 +784,14 @@ Module Program
             Dim bDataFlag As Boolean = False
             Dim validRoutinesList As New List(Of RoutineData)
             Dim validStringsList As New List(Of StringData)
-            Dim iAddrInitialPC = Helper.GetAdressFromWord(byteStory, 6)
+            Dim iAddrInitialPC = Helper.GetAdressFromWord(_memory, 6)
             Dim totalPadding As Integer = 0
             If iZVersion = 6 Then iAddrInitialPC = iAddrInitialPC * scaler + iFOFF ' In version 6 the address is packed
             Dim oDecode As New Decode
             Dim routineCallsFromTo As New List(Of CallsFromTo)
             Do
                 Dim inlineStringCountBefore = inlineStrings.Count
-                iNext = oDecode.DecodeRoutine(iStart, byteStory, sAbbreviations, True, zcodeSyntax, validStringsList,
+                iNext = oDecode.DecodeRoutine(iStart, _memory, sAbbreviations, True, zcodeSyntax, validStringsList,
                                           validRoutinesList, DictEntriesList, alphabet, iAddrInitialPC,
                                           oPropertyAnalyser.propertyNumberMin, oPropertyAnalyser.propertyNumberMax,
                                           showAbbrevsInsertion, inlineStrings, False)
@@ -907,12 +809,12 @@ Module Program
                         For i = inlineStringCountBefore To inlineStringCountAfter - 1
                             inlineStringSize += inlineStrings(i).size
                         Next
-                        Dim padding As Integer = Helper.GetNextValidPackedAddress(byteStory, iNext) - iNext
+                        Dim padding As Integer = Helper.GetNextValidPackedAddress(_memory, iNext) - iNext
                         totalPadding += padding
                         inlineStrings.Add(New InlineString With {.text = String.Concat("z-routine size: ", iNext - iStart, " bytes, inline strings size: ", inlineStringSize, " bytes, z-routine without inline strings size: ", iNext - iStart - inlineStringSize, " bytes, Padding: ", padding, " byte(s)."),
                                                          .size = 0})
                     End If
-                    iStart = Helper.GetNextValidPackedAddress(byteStory, iNext)
+                    iStart = Helper.GetNextValidPackedAddress(_memory, iNext)
                 Else
                     ' Routines below initial pc are considered false hits if they are small (under 512 bytes) and not continous
                     ' with routines starting at initial pc 
@@ -949,8 +851,8 @@ Module Program
             End If
 
             ' Find start of strings
-            Dim iSOFF As Integer = Helper.GetAdressFromWord(byteStory, &H2A) * 8
-            Dim iAddrStrings As Integer = Helper.GetNextValidPackedAddress(byteStory, validRoutinesList.Last.endPoint + 1)
+            Dim iSOFF As Integer = Helper.GetAdressFromWord(_memory, &H2A) * 8
+            Dim iAddrStrings As Integer = Helper.GetNextValidPackedAddress(_memory, validRoutinesList.Last.endPoint + 1)
             If iSOFF > iAddrStrings Then iAddrStrings = iSOFF
             memoryMap.Add(New MemoryMapEntry("Z-code", validRoutinesList(0).entryPoint, iAddrStrings - 1, MemoryMapType.MM_ZCODE))
             memoryMap.Add(New MemoryMapEntry("Static strings", iAddrStrings, iLengthFile - 1, MemoryMapType.MM_STATIC_STRINGS))
@@ -963,12 +865,12 @@ Module Program
             Dim iNextStringAddress As Integer = iAddrStrings
             Dim iNextValidStringAddress As Integer = 0
             Do
-                iNextValidStringAddress = Helper.GetNextValidPackedAddress(byteStory, iNextStringAddress)
+                iNextValidStringAddress = Helper.GetNextValidPackedAddress(_memory, iNextStringAddress)
                 Dim count As Integer = -2
                 Do
                     count += 2
-                Loop Until iNextValidStringAddress + count >= byteStory.Length OrElse (byteStory(iNextValidStringAddress + count) And 128) = 128
-                If iNextValidStringAddress + count >= byteStory.Length Then Exit Do
+                Loop Until iNextValidStringAddress + count >= _memory.Length OrElse (_memory(iNextValidStringAddress + count) And 128) = 128
+                If iNextValidStringAddress + count >= _memory.Length Then Exit Do
                 stringCount += 1
                 Dim oStringData As New StringData With {
                 .number = stringCount,
@@ -980,17 +882,17 @@ Module Program
             }
                 validStringsList.Add(oStringData)
                 iNextStringAddress = iNextValidStringAddress + count + 2
-            Loop Until Helper.GetNextValidPackedAddress(byteStory, iNextStringAddress) >= iLengthFile - 1
+            Loop Until Helper.GetNextValidPackedAddress(_memory, iNextStringAddress) >= iLengthFile - 1
 
             ' Global variables
-            Dim addressGlobalsTableStart As Integer = Helper.GetAdressFromWord(byteStory, 12)
+            Dim addressGlobalsTableStart As Integer = Helper.GetAdressFromWord(_memory, 12)
             ' Some compilers (Zilf) only reserves space for actual used global variables. Therefore lets search for nearest identified
             ' memory block and asume that that's the required space. The reserved space can never be more than 480 bytes (240 globals).
             If Not createGametext And oDecode.highest_global <> -1 Then
                 Console.WriteLine("Highest used global in z-code:             {0}", oDecode.highest_global + 1)
                 Console.WriteLine("Number of used globals in z-code:          {0}", oDecode.usedGlobals.Count)
             End If
-            Dim addressGlobalsTableEnd As Integer = byteStory.Length
+            Dim addressGlobalsTableEnd As Integer = _memory.Length
             For i = 0 To memoryMap.Count - 1
                 If memoryMap(i).addressStart > addressGlobalsTableStart And memoryMap(i).addressStart < addressGlobalsTableEnd Then addressGlobalsTableEnd = memoryMap(i).addressStart
             Next
@@ -1003,7 +905,7 @@ Module Program
 
             ' Save possible addresses of arrays (loadb, loadw, storeb, storew & globals
             For i As Integer = addressGlobalsTableStart To addressGlobalsTableEnd Step 2
-                oDecode.arraysStart.Add(Helper.GetAdressFromWord(byteStory, i))
+                oDecode.arraysStart.Add(Helper.GetAdressFromWord(_memory, i))
             Next
             Dim possibleStartOfArrays As List(Of Integer) = oDecode.arraysStart.ToList
             possibleStartOfArrays.Sort()
@@ -1035,7 +937,7 @@ Module Program
                     ElseIf grammarVer = 1 Then
                         iAddrAdjectiveTable = ScanForZilV1PrepositionTable(DictEntriesList, DictEntriesList.v1_CompactVocabulary)
                         If iAddrAdjectiveTable > 0 Then
-                            Dim numberOfEntries As Integer = Helper.GetAdressFromWord(byteStory, iAddrAdjectiveTable)
+                            Dim numberOfEntries As Integer = Helper.GetAdressFromWord(_memory, iAddrAdjectiveTable)
                             Dim lengthOfEntries As Integer = 4
                             If DictEntriesList.v1_CompactVocabulary Then lengthOfEntries = 3
                             memoryMap.Add(New MemoryMapEntry("Preposition/Adjective table", iAddrAdjectiveTable, iAddrAdjectiveTable + numberOfEntries * lengthOfEntries + 1, MemoryMapType.MM_PREPOSITION_TABLE))
@@ -1109,17 +1011,17 @@ Module Program
                     If compilerSource = EnumCompilerSource.ZILF Then endAddress = iAddrActionTable
                     Dim startAddress As Integer = endAddress
                     Dim flagCount As Integer = 0
-                    If Helper.GetAdressFromWord(byteStory, endAddress - 2) > 0 Then
+                    If Helper.GetAdressFromWord(_memory, endAddress - 2) > 0 Then
                         Do
                             startAddress -= 4
-                            Dim dictWord As DictionaryEntry = DictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, startAddress))
+                            Dim dictWord As DictionaryEntry = DictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, startAddress))
                             If dictWord IsNot Nothing Then
                                 flagCount += 1
-                                dictWord.v2_WordFlags = Helper.GetAdressFromWord(byteStory, startAddress + 2)
+                                dictWord.v2_WordFlags = Helper.GetAdressFromWord(_memory, startAddress + 2)
                             Else
                                 Exit Do
                             End If
-                        Loop Until Helper.GetAdressFromWord(byteStory, startAddress - 2) = flagCount * 2 And DictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, startAddress - 4)) Is Nothing
+                        Loop Until Helper.GetAdressFromWord(_memory, startAddress - 2) = flagCount * 2 And DictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, startAddress - 4)) Is Nothing
                     End If
                     startAddress -= 2
                     endAddress -= 1
@@ -1132,7 +1034,7 @@ Module Program
                 Dim actionTable As MemoryMapEntry = memoryMap.Find(Function(c) c.type = MemoryMapType.MM_ACTION_TABLE)
                 Dim actionNum As Integer = 0
                 For i As Integer = actionTable.addressStart To actionTable.addressEnd Step 2
-                    Dim address As Integer = Helper.GetAdressFromPacked(byteStory, i, True)
+                    Dim address As Integer = Helper.GetAdressFromPacked(_memory, i, True)
                     Dim oRoutineData As RoutineData = validRoutinesList.Find(Function(c) c.entryPoint = address)
                     If oRoutineData IsNot Nothing Then oRoutineData.callsFrom.Add(String.Concat("Called from action #", actionNum))
                     actionNum += 1
@@ -1142,7 +1044,7 @@ Module Program
                 If preactionTable IsNot Nothing Then
                     Dim preactionNum As Integer = 0
                     For i As Integer = preactionTable.addressStart To preactionTable.addressEnd Step 2
-                        Dim address As Integer = Helper.GetAdressFromPacked(byteStory, i, True)
+                        Dim address As Integer = Helper.GetAdressFromPacked(_memory, i, True)
                         Dim oRoutineData As RoutineData = validRoutinesList.Find(Function(c) c.entryPoint = address)
                         If oRoutineData IsNot Nothing And preactionTable.type = MemoryMapType.MM_PREACTION_TABLE Then oRoutineData.callsFrom.Add(String.Concat("Called from preaction #", preactionNum))
                         If oRoutineData IsNot Nothing And preactionTable.type = MemoryMapType.MM_PREACTION_PARSING_TABLE Then oRoutineData.callsFrom.Add(String.Concat("Called from parsing routine #", preactionNum))
@@ -1155,32 +1057,32 @@ Module Program
                 Dim iAddrProperties As Integer = 0
                 Dim iAddrObjectProperties As Integer = 65536
                 Do
-                    iAddrProperties = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 12) * 256 + byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 13)
-                    If iZVersion <= 3 Then iAddrProperties = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 7) * 256 + byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 8)
+                    iAddrProperties = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 12) * 256 + _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 13)
+                    If iZVersion <= 3 Then iAddrProperties = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 7) * 256 + _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 8)
                     If iAddrProperties < iAddrObjectProperties Then iAddrObjectProperties = iAddrProperties
-                    Dim iPropDescLen As Integer = byteStory(iAddrProperties)
+                    Dim iPropDescLen As Integer = _memory(iAddrProperties)
                     Dim objectName As String = "no-name"
                     If iPropDescLen > 0 Then objectName = ExtractZString(iAddrProperties + 1, False)
                     Dim iTmpProp As Integer = iAddrProperties + 2 * iPropDescLen + 1
-                    Do While byteStory(iTmpProp) <> 0
+                    Do While _memory(iTmpProp) <> 0
                         Dim iPropNum As Integer = 0
                         Dim iPropSize As Integer = 0
                         Dim iPropStart As Integer = iTmpProp + 1
                         Dim sPropData As String = ""
                         If iZVersion <= 3 Then
-                            iPropNum = (byteStory(iTmpProp) And &H1F)
-                            iPropSize = 1 + (byteStory(iTmpProp) And 224) \ 32
+                            iPropNum = (_memory(iTmpProp) And &H1F)
+                            iPropSize = 1 + (_memory(iTmpProp) And 224) \ 32
                         Else
-                            iPropNum = (byteStory(iTmpProp) And &H3F)
-                            If (byteStory(iTmpProp) And &H80) = &H80 Then
-                                iPropSize = (byteStory(iTmpProp + 1) And &H3F)
+                            iPropNum = (_memory(iTmpProp) And &H3F)
+                            If (_memory(iTmpProp) And &H80) = &H80 Then
+                                iPropSize = (_memory(iTmpProp + 1) And &H3F)
                                 If iPropSize = 0 Then iPropSize = &H40
                                 iPropStart += 1
                             Else
-                                If (byteStory(iTmpProp) And 64) = 64 Then iPropSize = 2 Else iPropSize = 1
+                                If (_memory(iTmpProp) And 64) = 64 Then iPropSize = 2 Else iPropSize = 1
                             End If
                         End If
-                        DecodePropertyData(True, byteStory, DictEntriesList, validStringsList, validRoutinesList, iPropNum, iPropSize, iPropStart, sPropData, iObject, objectName, PropertyType.UNINITIATED)
+                        DecodePropertyData(True, _memory, DictEntriesList, validStringsList, validRoutinesList, iPropNum, iPropSize, iPropStart, sPropData, iObject, objectName, PropertyType.UNINITIATED)
                         iTmpProp = iPropStart + iPropSize
                     Loop
                     iObject += 1
@@ -1196,36 +1098,36 @@ Module Program
                 Do
                     Dim objectData As New ObjectData With {.Id = iObject + 1}
                     If iZVersion <= 3 Then
-                        objectData.ParentId = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 4)
-                        objectData.NextId = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 5)
-                        objectData.ChildId = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 6)
-                        iAddrProperties = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 7) * 256 + byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 8)
+                        objectData.ParentId = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 4)
+                        objectData.NextId = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 5)
+                        objectData.ChildId = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 6)
+                        iAddrProperties = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 7) * 256 + _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 8)
                     Else
-                        objectData.ParentId = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 6) * 256 + byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 7)
-                        objectData.NextId = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 8) * 256 + byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 9)
-                        objectData.ChildId = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 10) * 256 + byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 11)
-                        iAddrProperties = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 12) * 256 + byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 13)
+                        objectData.ParentId = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 6) * 256 + _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 7)
+                        objectData.NextId = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 8) * 256 + _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 9)
+                        objectData.ChildId = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 10) * 256 + _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 11)
+                        iAddrProperties = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 12) * 256 + _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 13)
                     End If
                     If iAddrProperties < iAddrObjectProperties Then iAddrObjectProperties = iAddrProperties
-                    Dim iPropDescLen As Integer = byteStory(iAddrProperties)
+                    Dim iPropDescLen As Integer = _memory(iAddrProperties)
                     If iPropDescLen > 0 Then objectData.Description = ExtractZString(iAddrProperties + 1, False)
                     Dim iTmpProp As Integer = iAddrProperties + 2 * iPropDescLen + 1
-                    Do While byteStory(iTmpProp) <> 0
+                    Do While _memory(iTmpProp) <> 0
                         Dim iPropNum As Integer = 0
                         Dim iPropSize As Integer = 0
                         Dim iPropStart As Integer = iTmpProp + 1
                         Dim sPropData As String = ""
                         If iZVersion <= 3 Then
-                            iPropNum = (byteStory(iTmpProp) And &H1F)
-                            iPropSize = 1 + (byteStory(iTmpProp) And 224) \ 32
+                            iPropNum = (_memory(iTmpProp) And &H1F)
+                            iPropSize = 1 + (_memory(iTmpProp) And 224) \ 32
                         Else
-                            iPropNum = (byteStory(iTmpProp) And &H3F)
-                            If (byteStory(iTmpProp) And &H80) = &H80 Then
-                                iPropSize = (byteStory(iTmpProp + 1) And &H3F)
+                            iPropNum = (_memory(iTmpProp) And &H3F)
+                            If (_memory(iTmpProp) And &H80) = &H80 Then
+                                iPropSize = (_memory(iTmpProp + 1) And &H3F)
                                 If iPropSize = 0 Then iPropSize = &H40
                                 iPropStart += 1
                             Else
-                                If (byteStory(iTmpProp) And 64) = 64 Then iPropSize = 2 Else iPropSize = 1
+                                If (_memory(iTmpProp) And 64) = 64 Then iPropSize = 2 Else iPropSize = 1
                             End If
                         End If
 
@@ -1237,7 +1139,7 @@ Module Program
                         If iPropNum = 4 Or iPropNum = 8 Then
                             For i As Integer = 0 To iPropSize - 2 Step 2
                                 Dim position As Integer = i
-                                Dim oStringData As StringData = validStringsList.Find(Function(c) c.entryPointPacked = Helper.GetAdressFromWord(byteStory, iPropStart + position))
+                                Dim oStringData As StringData = validStringsList.Find(Function(c) c.entryPointPacked = Helper.GetAdressFromWord(_memory, iPropStart + position))
                                 If oStringData IsNot Nothing Then
                                     If iPropNum = 4 Then objectData.Property4Strings.Add(oStringData.text)
                                     If iPropNum = 8 Then objectData.Property8Strings.Add(oStringData.text)
@@ -1260,7 +1162,7 @@ Module Program
                 Dim mainHeapEnd As Integer = mainHeapStart + 40
                 Do
                     mainHeapEnd += 1
-                Loop Until byteStory(mainHeapEnd) = &H1F And byteStory(mainHeapEnd + 1) = &H3F
+                Loop Until _memory(mainHeapEnd) = &H1F And _memory(mainHeapEnd + 1) = &H3F
                 memoryMap.Add(New MemoryMapEntry("Main heap", mainHeapStart, mainHeapEnd, MemoryMapType.MM_MAIN_HEAP))
 
                 ' Dialog Aux & Long-Term Heap immediately follows Main Heap but are filled with 0x3F
@@ -1268,7 +1170,7 @@ Module Program
                 Dim auxHeapEnd = auxHeapStart
                 Do
                     auxHeapEnd += 1
-                Loop Until byteStory(auxHeapEnd) = &H3F And byteStory(auxHeapEnd + 1) <> &H3F
+                Loop Until _memory(auxHeapEnd) = &H3F And _memory(auxHeapEnd + 1) <> &H3F
                 memoryMap.Add(New MemoryMapEntry("Aux and long-term heap", auxHeapStart, auxHeapEnd, MemoryMapType.MM_AUX_LT_HEAP))
 
                 ' Before version 0e/01 predicate data is between aux/lt heap and object defaults table
@@ -1303,8 +1205,8 @@ Module Program
             ' tables (arrays) and a large chunk in static memory for pure tables (static arrays).
             ' Note that Infocom often placec their pure tables first in high memory. It doesn't matter much but
             ' in a strict modern way of thinking, the ENDLOD is "wrongly" placed.
-            Dim iAddrStaticMem As Integer = Helper.GetAdressFromWord(byteStory, 14)
-            Dim iAddrHighMem As Integer = Helper.GetAdressFromWord(byteStory, 4)
+            Dim iAddrStaticMem As Integer = Helper.GetAdressFromWord(_memory, 14)
+            Dim iAddrHighMem As Integer = Helper.GetAdressFromWord(_memory, 4)
             memoryMap.Sort(Function(x, y) x.addressStart.CompareTo(y.addressStart))     ' Order memory map by start-address
             For i As Integer = 1 To memoryMap.Count - 1
                 Dim addressStart As Integer = memoryMap(i - 1).addressEnd + 1
@@ -1340,7 +1242,7 @@ Module Program
                         If memoryMap(i).addressEnd - memoryMap(i).addressStart + 1 < maxPaddingSize Then
                             Dim sumBytes As Integer = 0
                             For j = memoryMap(i).addressStart To memoryMap(i).addressEnd
-                                sumBytes += byteStory(j)
+                                sumBytes += _memory(j)
                             Next
                             If sumBytes = 0 Then
                                 memoryMap(i).name = "Padding"
@@ -1443,19 +1345,19 @@ Module Program
                 Dim iVerbNum As Integer = 255
                 Do
                     Dim iAddrSyntax As Integer = iAddrGrammarTableStart + (255 - iVerbNum) * 2
-                    iAddrSyntax = byteStory(iAddrSyntax) * 256 + byteStory(iAddrSyntax + 1)
-                    Dim iSyntaxLines As Integer = byteStory(iAddrSyntax)
+                    iAddrSyntax = _memory(iAddrSyntax) * 256 + _memory(iAddrSyntax + 1)
+                    Dim iSyntaxLines As Integer = _memory(iAddrSyntax)
                     If grammarVer = 1 And iAddrAdjectiveTable > 0 Then
                         Dim iStartAddress As Integer = iAddrSyntax + 1
                         For i As Integer = 1 To iSyntaxLines
                             Dim grammarStrings As List(Of String) = Nothing
                             If compilerSource = EnumCompilerSource.INFORM5 Or compilerSource = EnumCompilerSource.INFORM6 Or compilerSource = EnumCompilerSource.ZILF Or compilerSource = EnumCompilerSource.ZILCH Then
-                                Dim actionNumber As Integer = byteStory(iStartAddress + 7)
+                                Dim actionNumber As Integer = _memory(iStartAddress + 7)
                                 Dim syntaxLineLength As Integer = 8
                                 If compactSyntaxes Then
-                                    actionNumber = byteStory(iStartAddress + 1)
+                                    actionNumber = _memory(iStartAddress + 1)
                                     syntaxLineLength = 2
-                                    Select Case (byteStory(iStartAddress) And &HC0)
+                                    Select Case (_memory(iStartAddress) And &HC0)
                                         Case &H40 : syntaxLineLength = 4
                                         Case &H80 : syntaxLineLength = 7
                                     End Select
@@ -1498,7 +1400,7 @@ Module Program
                                 iCurrentLine += 1
                                 iStartAddress = iCurrentAddress
                                 iCurrentAddress += 2
-                                Dim actionNumber As Integer = (Helper.GetAdressFromWord(byteStory, iStartAddress) And &H3FF)
+                                Dim actionNumber As Integer = (Helper.GetAdressFromWord(_memory, iStartAddress) And &H3FF)
                                 Dim grammarString As String = DecodeGrammarsInformV2(iStartAddress, DictEntriesList, iAddrActionTable)
                                 If Not verbGrammarList.TryGetValue(actionNumber, grammarStrings) Then
                                     grammarStrings = New List(Of String)
@@ -1509,10 +1411,10 @@ Module Program
                                 Catch
                                     grammarStrings.Add(grammarString.Replace("*", "no-verb"))
                                 End Try
-                                If Not byteStory(iCurrentAddress) = &HF Then
+                                If Not _memory(iCurrentAddress) = &HF Then
                                     Do
                                         iCurrentAddress += 3
-                                    Loop Until byteStory(iCurrentAddress) = &HF
+                                    Loop Until _memory(iCurrentAddress) = &HF
                                 End If
                                 iCurrentAddress += 1
                             Loop Until iCurrentLine >= iSyntaxLines
@@ -1529,8 +1431,8 @@ Module Program
                                 iCurrentLine += 1
                                 iStartAddress = iCurrentAddress
                                 iCurrentAddress += 2
-                                Dim actionNumber As Integer = (Helper.GetAdressFromWord(byteStory, iStartAddress) And &H3FF)
-                                Dim tokens As Integer = (Helper.GetAdressFromWord(byteStory, iStartAddress) And &HF800) >> 11
+                                Dim actionNumber As Integer = (Helper.GetAdressFromWord(_memory, iStartAddress) And &H3FF)
+                                Dim tokens As Integer = (Helper.GetAdressFromWord(_memory, iStartAddress) And &HF800) >> 11
                                 Dim grammarString As String = DecodeGrammarsInformV3(iStartAddress, DictEntriesList, iAddrActionTable, iAddrPreActionTable, iAddrAdjectiveTable)
                                 If Not verbGrammarList.TryGetValue(actionNumber, grammarStrings) Then
                                     grammarStrings = New List(Of String)
@@ -1559,10 +1461,10 @@ Module Program
                                 Exit For
                             End If
                         Next
-                        Dim nullObjAction As Integer = Helper.GetAdressFromWord(byteStory, address)
-                        Dim nullObjPrep As Integer = Helper.GetAdressFromWord(byteStory, address + 2)
-                        Dim addressOneObj As Integer = Helper.GetAdressFromWord(byteStory, address + 4)
-                        Dim addressTwoObj As Integer = Helper.GetAdressFromWord(byteStory, address + 6)
+                        Dim nullObjAction As Integer = Helper.GetAdressFromWord(_memory, address)
+                        Dim nullObjPrep As Integer = Helper.GetAdressFromWord(_memory, address + 2)
+                        Dim addressOneObj As Integer = Helper.GetAdressFromWord(_memory, address + 4)
+                        Dim addressTwoObj As Integer = Helper.GetAdressFromWord(_memory, address + 6)
                         If Not nullObjAction = &HFFFF Then
                             Dim syntax As String = DecodeGrammarsZilV2(address, DictEntriesList, iAddrActionTable, iAddrPreActionTable, 0)
                             Dim grammarStrings As List(Of String) = Nothing
@@ -1573,10 +1475,10 @@ Module Program
                             grammarStrings.Add(syntax.Replace("*", verbWord))
                         End If
                         If addressOneObj > 0 Then
-                            Dim numberOfEntries As Integer = Helper.GetAdressFromWord(byteStory, addressOneObj)
+                            Dim numberOfEntries As Integer = Helper.GetAdressFromWord(_memory, addressOneObj)
                             For j As Integer = 0 To numberOfEntries - 1
                                 Dim syntax As String = DecodeGrammarsZilV2(addressOneObj + 2 + j * 6, DictEntriesList, iAddrActionTable, iAddrPreActionTable, 1)
-                                Dim action As Integer = Helper.GetAdressFromWord(byteStory, addressOneObj + 2 + j * 6)
+                                Dim action As Integer = Helper.GetAdressFromWord(_memory, addressOneObj + 2 + j * 6)
                                 Dim grammarStrings As List(Of String) = Nothing
                                 If Not verbGrammarList.TryGetValue(action, grammarStrings) Then
                                     grammarStrings = New List(Of String)
@@ -1586,10 +1488,10 @@ Module Program
                             Next
                         End If
                         If addressTwoObj > 0 Then
-                            Dim numberOfEntries As Integer = Helper.GetAdressFromWord(byteStory, addressTwoObj)
+                            Dim numberOfEntries As Integer = Helper.GetAdressFromWord(_memory, addressTwoObj)
                             For j As Integer = 0 To numberOfEntries - 1
                                 Dim syntax As String = DecodeGrammarsZilV2(addressTwoObj + 2 + j * 10, DictEntriesList, iAddrActionTable, iAddrPreActionTable, 2)
-                                Dim action As Integer = Helper.GetAdressFromWord(byteStory, addressTwoObj + 2 + j * 10)
+                                Dim action As Integer = Helper.GetAdressFromWord(_memory, addressTwoObj + 2 + j * 10)
                                 Dim grammarStrings As List(Of String) = Nothing
                                 If Not verbGrammarList.TryGetValue(action, grammarStrings) Then
                                     grammarStrings = New List(Of String)
@@ -1620,67 +1522,67 @@ Module Program
                     Console.WriteLine("***** HEADER (00000-0003F, {0}) *****", oMemEntry.SizeString)
                     If showHex Then HexDump(0, 63, True)
                     Console.WriteLine()
-                    Console.WriteLine("00000 {0:X2}                      VERSION Z-machine version:         {1}", byteStory(0), iZVersion)
-                    Console.WriteLine("00001 {0:X2}                      MODE    Flags 1:                   0x{1:X2}", byteStory(1), byteStory(1))
-                    Console.WriteLine("00002 {0:X2} {1:X2}                   ZORKID  Release number:            {2}", byteStory(2), byteStory(3), Helper.GetAdressFromWord(byteStory, 2))
-                    Console.WriteLine("00004 {0:X2} {1:X2}                   ENDLOD  Base of high memory:       0x{2:X4}", byteStory(4), byteStory(5), iAddrHighMem)
-                    Console.WriteLine("00006 {0:X2} {1:X2}                   START   Initial value of pc:       0x{2:X4}", byteStory(6), byteStory(7), Helper.GetAdressFromWord(byteStory, 6))
-                    Console.WriteLine("00008 {0:X2} {1:X2}                   VOCAB   Dictionary:                0x{2:X4}", byteStory(8), byteStory(9), iAddrDictionary)
-                    Console.WriteLine("0000A {0:X2} {1:X2}                   OBJECT  Object table:              0x{2:X4}", byteStory(10), byteStory(11), iAddrObjectDefaultsTableStart)
-                    Console.WriteLine("0000C {0:X2} {1:X2}                   GLOBALS Global variables table:    0x{2:X4}", byteStory(12), byteStory(13), addressGlobalsTableStart)
-                    Console.WriteLine("0000E {0:X2} {1:X2}                   PURBOT  Base of static memory:     0x{2:X4}", byteStory(14), byteStory(15), iAddrStaticMem)
-                    Console.WriteLine("00010 {0:X2} {1:X2}                   FLAGS   Flags 2:                   0x{2:X4}", byteStory(16), byteStory(17), Helper.GetAdressFromWord(byteStory, &H10))
-                    Console.WriteLine("00012 {0:X2} {1:X2} {2:X2} {3:X2} {4:X2} {5:X2}       SERIAL  Serial number:             {6}", byteStory(18), byteStory(19), byteStory(20), byteStory(21), byteStory(22), byteStory(23), ExtractASCIIChars(18, 6))
-                    Console.WriteLine("00018 {0:X2} {1:X2}                   FWORDS  Abbreviations table:       0x{2:X4}", byteStory(24), byteStory(25), iAddrAbbrevTableStart)
-                    Console.WriteLine("0001A {0:X2} {1:X2}                   PLENTH  Length of file:            0x{2:X4}", byteStory(26), byteStory(27), iLengthFile)
-                    Console.WriteLine("0001C {0:X2} {1:X2}                   PCHKSM  Checksum of file:          0x{2:X4}", byteStory(28), byteStory(29), Helper.GetAdressFromWord(byteStory, &H1C))
-                    Console.WriteLine("0001E {0:X2}                      INTWRD  Interpreter number:        {1}", byteStory(30), byteStory(&H1E))
-                    Console.WriteLine("0001F {0:X2}                              Interpreter version:       {1}", byteStory(31), byteStory(&H1F))
-                    Console.WriteLine("00020 {0:X2}                      SCRWRD  Screen height (lines):     {1}", byteStory(32), byteStory(&H20))
-                    Console.WriteLine("00021 {0:X2}                              Screen width (chars):      {1}", byteStory(33), byteStory(&H21))
-                    Console.WriteLine("00022 {0:X2} {1:X2}                   HWRD    Screen width in units:     0x{2:X4}", byteStory(34), byteStory(35), Helper.GetAdressFromWord(byteStory, &H22))
-                    Console.WriteLine("00024 {0:X2} {1:X2}                   VWRD    Screen width in units:     0x{2:X4}", byteStory(36), byteStory(37), Helper.GetAdressFromWord(byteStory, &H24))
-                    Console.WriteLine("00026 {0:X2}                      FWRD    Font width/height:         {1}", byteStory(38), byteStory(&H26))
-                    Console.WriteLine("00027 {0:X2}                              Font width/height:         {1}", byteStory(39), byteStory(&H27))
-                    Console.WriteLine("00028 {0:X2} {1:X2}                   FOFF    Routines offset:           0x{2:X4}", byteStory(40), byteStory(41), Helper.GetAdressFromWord(byteStory, &H28) * 8)
-                    Console.WriteLine("0002A {0:X2} {1:X2}                   SOFF    Static strings offset:     0x{2:X4}", byteStory(42), byteStory(43), Helper.GetAdressFromWord(byteStory, &H2A) * 8)
-                    Console.WriteLine("0002C {0:X2}                      CLRWRD  Default backgr. color:     {1}", byteStory(&H2C), byteStory(&H2C))
-                    Console.WriteLine("0002D {0:X2}                              Default foregr. color:     {1}", byteStory(&H2D), byteStory(&H2D))
-                    Console.WriteLine("0002E {0:X2} {1:X2}                   TCHARS  Terminating chars table:   0x{2:X4}", byteStory(46), byteStory(47), iAddrTCharsStart)
-                    Console.WriteLine("00030 {0:X2} {1:X2}                   TWID    Output loc for DIROUT:     0x{2:X4}", byteStory(48), byteStory(49), Helper.GetAdressFromWord(byteStory, &H30))
-                    Console.WriteLine("00032 {0:X2} {1:X2}                           Standard revision number:  0x{2:X4}", byteStory(50), byteStory(51), Helper.GetAdressFromWord(byteStory, &H32))
-                    Console.WriteLine("00034 {0:X2} {1:X2}                   CHRSET  Alphabet table address:    0x{2:X4}", byteStory(52), byteStory(53), Helper.GetAdressFromWord(byteStory, &H34))
-                    Console.WriteLine("00036 {0:X2} {1:X2}                   EXTAB   Header extension address:  0x{2:X4}", byteStory(54), byteStory(55), iAddrHeaderExtStart)
-                    Console.WriteLine("00038 {0:X2} {1:X2} {2:X2} {3:X2} {4:X2} {5:X2} {6:X2} {7:X2} USRNM   Username:                  {8}", byteStory(56), byteStory(57), byteStory(58), byteStory(59), byteStory(60), byteStory(61), byteStory(62), byteStory(63), ExtractASCIIChars(56, 8))
+                    Console.WriteLine("00000 {0:X2}                      VERSION Z-machine version:         {1}", _memory(0), iZVersion)
+                    Console.WriteLine("00001 {0:X2}                      MODE    Flags 1:                   0x{1:X2}", _memory(1), _memory(1))
+                    Console.WriteLine("00002 {0:X2} {1:X2}                   ZORKID  Release number:            {2}", _memory(2), _memory(3), Helper.GetAdressFromWord(_memory, 2))
+                    Console.WriteLine("00004 {0:X2} {1:X2}                   ENDLOD  Base of high memory:       0x{2:X4}", _memory(4), _memory(5), iAddrHighMem)
+                    Console.WriteLine("00006 {0:X2} {1:X2}                   START   Initial value of pc:       0x{2:X4}", _memory(6), _memory(7), Helper.GetAdressFromWord(_memory, 6))
+                    Console.WriteLine("00008 {0:X2} {1:X2}                   VOCAB   Dictionary:                0x{2:X4}", _memory(8), _memory(9), iAddrDictionary)
+                    Console.WriteLine("0000A {0:X2} {1:X2}                   OBJECT  Object table:              0x{2:X4}", _memory(10), _memory(11), iAddrObjectDefaultsTableStart)
+                    Console.WriteLine("0000C {0:X2} {1:X2}                   GLOBALS Global variables table:    0x{2:X4}", _memory(12), _memory(13), addressGlobalsTableStart)
+                    Console.WriteLine("0000E {0:X2} {1:X2}                   PURBOT  Base of static memory:     0x{2:X4}", _memory(14), _memory(15), iAddrStaticMem)
+                    Console.WriteLine("00010 {0:X2} {1:X2}                   FLAGS   Flags 2:                   0x{2:X4}", _memory(16), _memory(17), Helper.GetAdressFromWord(_memory, &H10))
+                    Console.WriteLine("00012 {0:X2} {1:X2} {2:X2} {3:X2} {4:X2} {5:X2}       SERIAL  Serial number:             {6}", _memory(18), _memory(19), _memory(20), _memory(21), _memory(22), _memory(23), ExtractASCIIChars(18, 6))
+                    Console.WriteLine("00018 {0:X2} {1:X2}                   FWORDS  Abbreviations table:       0x{2:X4}", _memory(24), _memory(25), iAddrAbbrevTableStart)
+                    Console.WriteLine("0001A {0:X2} {1:X2}                   PLENTH  Length of file:            0x{2:X4}", _memory(26), _memory(27), iLengthFile)
+                    Console.WriteLine("0001C {0:X2} {1:X2}                   PCHKSM  Checksum of file:          0x{2:X4}", _memory(28), _memory(29), Helper.GetAdressFromWord(_memory, &H1C))
+                    Console.WriteLine("0001E {0:X2}                      INTWRD  Interpreter number:        {1}", _memory(30), _memory(&H1E))
+                    Console.WriteLine("0001F {0:X2}                              Interpreter version:       {1}", _memory(31), _memory(&H1F))
+                    Console.WriteLine("00020 {0:X2}                      SCRWRD  Screen height (lines):     {1}", _memory(32), _memory(&H20))
+                    Console.WriteLine("00021 {0:X2}                              Screen width (chars):      {1}", _memory(33), _memory(&H21))
+                    Console.WriteLine("00022 {0:X2} {1:X2}                   HWRD    Screen width in units:     0x{2:X4}", _memory(34), _memory(35), Helper.GetAdressFromWord(_memory, &H22))
+                    Console.WriteLine("00024 {0:X2} {1:X2}                   VWRD    Screen width in units:     0x{2:X4}", _memory(36), _memory(37), Helper.GetAdressFromWord(_memory, &H24))
+                    Console.WriteLine("00026 {0:X2}                      FWRD    Font width/height:         {1}", _memory(38), _memory(&H26))
+                    Console.WriteLine("00027 {0:X2}                              Font width/height:         {1}", _memory(39), _memory(&H27))
+                    Console.WriteLine("00028 {0:X2} {1:X2}                   FOFF    Routines offset:           0x{2:X4}", _memory(40), _memory(41), Helper.GetAdressFromWord(_memory, &H28) * 8)
+                    Console.WriteLine("0002A {0:X2} {1:X2}                   SOFF    Static strings offset:     0x{2:X4}", _memory(42), _memory(43), Helper.GetAdressFromWord(_memory, &H2A) * 8)
+                    Console.WriteLine("0002C {0:X2}                      CLRWRD  Default backgr. color:     {1}", _memory(&H2C), _memory(&H2C))
+                    Console.WriteLine("0002D {0:X2}                              Default foregr. color:     {1}", _memory(&H2D), _memory(&H2D))
+                    Console.WriteLine("0002E {0:X2} {1:X2}                   TCHARS  Terminating chars table:   0x{2:X4}", _memory(46), _memory(47), iAddrTCharsStart)
+                    Console.WriteLine("00030 {0:X2} {1:X2}                   TWID    Output loc for DIROUT:     0x{2:X4}", _memory(48), _memory(49), Helper.GetAdressFromWord(_memory, &H30))
+                    Console.WriteLine("00032 {0:X2} {1:X2}                           Standard revision number:  0x{2:X4}", _memory(50), _memory(51), Helper.GetAdressFromWord(_memory, &H32))
+                    Console.WriteLine("00034 {0:X2} {1:X2}                   CHRSET  Alphabet table address:    0x{2:X4}", _memory(52), _memory(53), Helper.GetAdressFromWord(_memory, &H34))
+                    Console.WriteLine("00036 {0:X2} {1:X2}                   EXTAB   Header extension address:  0x{2:X4}", _memory(54), _memory(55), iAddrHeaderExtStart)
+                    Console.WriteLine("00038 {0:X2} {1:X2} {2:X2} {3:X2} {4:X2} {5:X2} {6:X2} {7:X2} USRNM   Username:                  {8}", _memory(56), _memory(57), _memory(58), _memory(59), _memory(60), _memory(61), _memory(62), _memory(63), ExtractASCIIChars(56, 8))
                     Console.WriteLine()
                 End If
 
 
                 If oMemEntry.type = MemoryMapType.MM_HEADER_EXT_TABLE And showHeader And Not createGametext Then
                     ' ***** HEADER EXTENSION TABLE *****
-                    If Helper.GetAdressFromWord(byteStory, &H36) > 0 Then
+                    If Helper.GetAdressFromWord(_memory, &H36) > 0 Then
                         oMemEntry.PrintMemoryLabel()
                         Console.WriteLine()
                         Console.WriteLine("***** HEADER EXTENSION TABLE ({0:X5}-{1:X5}, {2}) *****", iAddrHeaderExtStart, iAddrHeaderExtStart + iHeaderExtLen * 2 + 1, oMemEntry.SizeString)
                         If showHex Then HexDump(iAddrHeaderExtStart, iAddrHeaderExtStart + iHeaderExtLen * 2 + 1, True)
                         Console.WriteLine()
-                        Console.WriteLine("{0:X5} {1:X2} {2:X2}                   Number of further words:                  {3}", iAddrHeaderExtStart, byteStory(iAddrHeaderExtStart), byteStory(iAddrHeaderExtStart + 1), iHeaderExtLen)
+                        Console.WriteLine("{0:X5} {1:X2} {2:X2}                   Number of further words:                  {3}", iAddrHeaderExtStart, _memory(iAddrHeaderExtStart), _memory(iAddrHeaderExtStart + 1), iHeaderExtLen)
                         For i As Integer = 1 To iHeaderExtLen
                             Select Case i
                                 Case 1
-                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                   MSLOCX  X-coord of mouse after a click:    0x{3:X4}", iAddrHeaderExtStart + i * 2, byteStory(iAddrHeaderExtStart + i * 2), byteStory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(byteStory, iAddrHeaderExtStart + i * 2))
+                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                   MSLOCX  X-coord of mouse after a click:    0x{3:X4}", iAddrHeaderExtStart + i * 2, _memory(iAddrHeaderExtStart + i * 2), _memory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart + i * 2))
                                 Case 2
-                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                   MSLOCX  Y-coord of mouse after a click:    0x{3:X4}", iAddrHeaderExtStart + i * 2, byteStory(iAddrHeaderExtStart + i * 2), byteStory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(byteStory, iAddrHeaderExtStart + i * 2))
+                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                   MSLOCX  Y-coord of mouse after a click:    0x{3:X4}", iAddrHeaderExtStart + i * 2, _memory(iAddrHeaderExtStart + i * 2), _memory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart + i * 2))
                                 Case 3
-                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                           Unicode translation table address: 0x{3:X4}", iAddrHeaderExtStart + i * 2, byteStory(iAddrHeaderExtStart + i * 2), byteStory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(byteStory, iAddrHeaderExtStart + i * 2))
+                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                           Unicode translation table address: 0x{3:X4}", iAddrHeaderExtStart + i * 2, _memory(iAddrHeaderExtStart + i * 2), _memory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart + i * 2))
                                 Case 4
-                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                           Flags 3:                           0x{3:X4}", iAddrHeaderExtStart + i * 2, byteStory(iAddrHeaderExtStart + i * 2), byteStory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(byteStory, iAddrHeaderExtStart + i * 2))
+                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                           Flags 3:                           0x{3:X4}", iAddrHeaderExtStart + i * 2, _memory(iAddrHeaderExtStart + i * 2), _memory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart + i * 2))
                                 Case 5
-                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                           True default foreground colour:    0x{3:X4}", iAddrHeaderExtStart + i * 2, byteStory(iAddrHeaderExtStart + i * 2), byteStory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(byteStory, iAddrHeaderExtStart + i * 2))
+                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                           True default foreground colour:    0x{3:X4}", iAddrHeaderExtStart + i * 2, _memory(iAddrHeaderExtStart + i * 2), _memory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart + i * 2))
                                 Case 6
-                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                           True default background colour:    0x{3:X4}", iAddrHeaderExtStart + i * 2, byteStory(iAddrHeaderExtStart + i * 2), byteStory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(byteStory, iAddrHeaderExtStart + i * 2))
+                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                           True default background colour:    0x{3:X4}", iAddrHeaderExtStart + i * 2, _memory(iAddrHeaderExtStart + i * 2), _memory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart + i * 2))
                                 Case Else
-                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                                                              0x{3:X2}", iAddrHeaderExtStart + i * 2, byteStory(iAddrHeaderExtStart + i * 2), byteStory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(byteStory, i))
+                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                                                              0x{3:X2}", iAddrHeaderExtStart + i * 2, _memory(iAddrHeaderExtStart + i * 2), _memory(iAddrHeaderExtStart + i * 2 + 1), Helper.GetAdressFromWord(_memory, i))
                             End Select
                         Next
                         Console.WriteLine()
@@ -1696,13 +1598,13 @@ Module Program
                     Console.WriteLine()
                     Dim addressStart As Integer = oMemEntry.addressStart
                     If oMemEntry.addressEnd - addressStart = 45 Then
-                        Console.WriteLine("{0:X5} {1:X2}{2}Length of IFID: {3}", addressStart, byteStory(addressStart), Space(43), byteStory(addressStart))
+                        Console.WriteLine("{0:X5} {1:X2}{2}Length of IFID: {3}", addressStart, _memory(addressStart), Space(43), _memory(addressStart))
                         addressStart += 1
                     End If
                     Dim count As Integer = 0
                     Console.Write("{0:X5} ", addressStart)
                     For i As Integer = addressStart To oMemEntry.addressEnd
-                        Console.Write("{0:X2} ", byteStory(i))
+                        Console.Write("{0:X2} ", _memory(i))
                         count += 1
                         If count = 15 And Not i = oMemEntry.addressEnd Then
                             Console.WriteLine()
@@ -1721,13 +1623,13 @@ Module Program
                     Console.WriteLine("***** UNICODE TRANSLATION TABLE ({0:X5}-{1:X5}, {2}) *****", oMemEntry.addressStart, oMemEntry.addressEnd, oMemEntry.SizeString)
                     If showHex Then HexDump(oMemEntry.addressStart, oMemEntry.addressEnd, True)
                     Console.WriteLine()
-                    Dim unicodeCount As Integer = byteStory(oMemEntry.addressStart)
-                    Console.WriteLine("{0:X5} {1:X2}                       Number of entries: {2}", oMemEntry.addressStart, byteStory(oMemEntry.addressStart), unicodeCount)
+                    Dim unicodeCount As Integer = _memory(oMemEntry.addressStart)
+                    Console.WriteLine("{0:X5} {1:X2}                       Number of entries: {2}", oMemEntry.addressStart, _memory(oMemEntry.addressStart), unicodeCount)
                     If unicodeCount > 0 Then
                         For i As Integer = 0 To unicodeCount - 1
                             Dim currentAddress As Integer = oMemEntry.addressStart + 1 + i * 2
-                            Dim unicodeVal As Integer = Helper.GetAdressFromWord(byteStory, currentAddress)
-                            Console.WriteLine("{0:X5} {1:X2} {2:X2}                    ZSCII #{3} = U+{4:X4} '{5}'", currentAddress, byteStory(currentAddress), byteStory(currentAddress + 1), 155 + i, unicodeVal, Strings.ChrW(unicodeVal))
+                            Dim unicodeVal As Integer = Helper.GetAdressFromWord(_memory, currentAddress)
+                            Console.WriteLine("{0:X5} {1:X2} {2:X2}                    ZSCII #{3} = U+{4:X4} '{5}'", currentAddress, _memory(currentAddress), _memory(currentAddress + 1), 155 + i, unicodeVal, Strings.ChrW(unicodeVal))
                         Next
                     End If
                     Console.WriteLine()
@@ -1770,7 +1672,7 @@ Module Program
                     Dim count As Integer = 0
                     Console.WriteLine()
                     For i As Integer = iAddrAbbrevTableStart To iAddrAbbrevTableStart + 2 * maxNumberofAbbrevs - 1 Step 2
-                        Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Address of abbreviation {3,2}: 0x{4:X4}", i, byteStory(i), byteStory(i + 1), count, Helper.GetAdressFromWord(byteStory, i) * 2)
+                        Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Address of abbreviation {3,2}: 0x{4:X4}", i, _memory(i), _memory(i + 1), count, Helper.GetAdressFromWord(_memory, i) * 2)
                         count += 1
                     Next
                     Console.WriteLine()
@@ -1788,13 +1690,13 @@ Module Program
                     ' sorted, i.e. that A00 is the first, A02 the second and so on...
                     Dim abbreviationList As New List(Of String)
                     For i As Integer = 0 To (maxNumberofAbbrevs - 1)
-                        Dim startAddress As Integer = Helper.GetAdressFromWord(byteStory, iAddrAbbrevTableStart + i * 2) * 2
+                        Dim startAddress As Integer = Helper.GetAdressFromWord(_memory, iAddrAbbrevTableStart + i * 2) * 2
                         abbreviationList.Add(startAddress.ToString("D5") & ";" & i.ToString("D2"))
                     Next
                     abbreviationList.Add((iAddrAbbrevStringsEnd + 1).ToString("D5"))
                     abbreviationList.Sort()
 
-                    If CInt(abbreviationList(0).Substring(0, 5)) = &H42 And iAddrAbbrevStringsStart = &H40 And byteStory(&H40) = &H80 And byteStory(&H41) = 0 Then
+                    If CInt(abbreviationList(0).Substring(0, 5)) = &H42 And iAddrAbbrevStringsStart = &H40 And _memory(&H40) = &H80 And _memory(&H41) = 0 Then
                         Console.WriteLine("00040 80 00                    Unused default string: {0}   {1}", Chr(34), Chr(34))
                     End If
 
@@ -1807,7 +1709,7 @@ Module Program
                         Console.Write("{0:X5} ", startAddress)
                         Dim count As Integer = 0
                         For j = startAddress To endAddress
-                            Console.Write("{0:X2} ", byteStory(j))
+                            Console.Write("{0:X2} ", _memory(j))
                             count += 1
                             If count = 8 And j < endAddress Then
                                 Console.WriteLine()
@@ -1839,7 +1741,7 @@ Module Program
                         If i = 2 Then o = 52
                         Console.Write("{0:X5} ", a + o)
                         For j = 0 To 25
-                            Console.Write("{0:X2} ", byteStory(a + o + j))
+                            Console.Write("{0:X2} ", _memory(a + o + j))
                         Next
                         Console.WriteLine(alphabet(i).Substring(6))
                     Next
@@ -1849,22 +1751,22 @@ Module Program
                 If oMemEntry.type = MemoryMapType.MM_TERMINATING_CHARS_TABLE And showExtra And Not createGametext Then
                     ' ***** TERMINATING CHARACTERS TABLE *****
                     oMemEntry.PrintMemoryLabel()
-                    If Helper.GetAdressFromWord(byteStory, &H36) > 0 Then
+                    If Helper.GetAdressFromWord(_memory, &H36) > 0 Then
                         Console.WriteLine()
                         Console.WriteLine("***** TERMINATING CHARACTERS TABLE ({0:X5}-{1:X5}, {2}) *****", iAddrTCharsStart, iAddrTCharsStart + iTCharsLen, oMemEntry.SizeString)
                         If showHex Then HexDump(iAddrTCharsStart, iAddrTCharsStart + iTCharsLen, True)
                         Console.WriteLine()
                         For i As Integer = iAddrTCharsStart To iAddrTCharsStart + iTCharsLen
-                            Console.Write("{0:X5} {1:X2} ZSCII-char {1,3} ", i, byteStory(i))
-                            Select Case byteStory(i)
+                            Console.Write("{0:X5} {1:X2} ZSCII-char {1,3} ", i, _memory(i))
+                            Select Case _memory(i)
                                 Case 129 : Console.WriteLine("Cursor up")
                                 Case 130 : Console.WriteLine("Cursor down")
                                 Case 131 : Console.WriteLine("Cursor left")
                                 Case 132 : Console.WriteLine("Cursor right")
                                 Case 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144
-                                    Console.WriteLine("F{0}", byteStory(i) - 133)
+                                    Console.WriteLine("F{0}", _memory(i) - 133)
                                 Case 145, 146, 147, 148, 149, 150, 151, 152, 153, 154
-                                    Console.WriteLine("Keypad {0}", byteStory(i) - 145)
+                                    Console.WriteLine("Keypad {0}", _memory(i) - 145)
                                 Case 252 : Console.WriteLine("Menu-click")
                                 Case 253 : Console.WriteLine("Double-click")
                                 Case 254 : Console.WriteLine("Single-click")
@@ -1885,8 +1787,8 @@ Module Program
                     If showHex Then HexDump(iAddrObjectDefaultsTableStart, iAddrObjectDefaultsTableEnd, True)
                     Console.WriteLine()
                     For i As Integer = 0 To iPropDefaultCount - 1
-                        Console.Write("{0:X5} {1:X2} {2:X2}", iAddrObjectDefaultsTableStart + i * 2, byteStory(iAddrObjectDefaultsTableStart + i * 2), byteStory(iAddrObjectDefaultsTableStart + i * 2 + 1))
-                        Console.WriteLine("                   Default value property {0} = {1:X4}", i + 1, byteStory(iAddrObjectDefaultsTableStart + i * 2) * 256 + byteStory(iAddrObjectDefaultsTableStart + i * 2 + 1))
+                        Console.Write("{0:X5} {1:X2} {2:X2}", iAddrObjectDefaultsTableStart + i * 2, _memory(iAddrObjectDefaultsTableStart + i * 2), _memory(iAddrObjectDefaultsTableStart + i * 2 + 1))
+                        Console.WriteLine("                   Default value property {0} = {1:X4}", i + 1, _memory(iAddrObjectDefaultsTableStart + i * 2) * 256 + _memory(iAddrObjectDefaultsTableStart + i * 2 + 1))
                     Next
                     Console.WriteLine()
                 End If
@@ -1933,7 +1835,7 @@ Module Program
                             Console.Write("{0:X5} ", iAddrObjectTreeStart + iObject * iObjectTreeEntryLen)
                             ' print attributes
                             For i As Integer = 0 To iObjectTreeEntryLen - 1
-                                Console.Write("{0:X2} ", byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + i))
+                                Console.Write("{0:X2} ", _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + i))
                             Next
                             Console.WriteLine()
                         End If
@@ -1941,21 +1843,21 @@ Module Program
                         For i As Integer = 0 To 5
                             If i < 4 Or iZVersion >= 3 Then
                                 Dim iByteAddr As Integer = iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + i
-                                If (byteStory(iByteAddr) And 128) = 128 Then sAttributes = sAttributes & CStr(i * 8) & ", "
-                                If (byteStory(iByteAddr) And 64) = 64 Then sAttributes = sAttributes & CStr(i * 8 + 1) & ", "
-                                If (byteStory(iByteAddr) And 32) = 32 Then sAttributes = sAttributes & CStr(i * 8 + 2) & ", "
-                                If (byteStory(iByteAddr) And 16) = 16 Then sAttributes = sAttributes & CStr(i * 8 + 3) & ", "
-                                If (byteStory(iByteAddr) And 8) = 8 Then sAttributes = sAttributes & CStr(i * 8 + 4) & ", "
-                                If (byteStory(iByteAddr) And 4) = 4 Then sAttributes = sAttributes & CStr(i * 8 + 5) & ", "
-                                If (byteStory(iByteAddr) And 2) = 2 Then sAttributes = sAttributes & CStr(i * 8 + 6) & ", "
-                                If (byteStory(iByteAddr) And 1) = 1 Then sAttributes = sAttributes & CStr(i * 8 + 7) & ", "
+                                If (_memory(iByteAddr) And 128) = 128 Then sAttributes = sAttributes & CStr(i * 8) & ", "
+                                If (_memory(iByteAddr) And 64) = 64 Then sAttributes = sAttributes & CStr(i * 8 + 1) & ", "
+                                If (_memory(iByteAddr) And 32) = 32 Then sAttributes = sAttributes & CStr(i * 8 + 2) & ", "
+                                If (_memory(iByteAddr) And 16) = 16 Then sAttributes = sAttributes & CStr(i * 8 + 3) & ", "
+                                If (_memory(iByteAddr) And 8) = 8 Then sAttributes = sAttributes & CStr(i * 8 + 4) & ", "
+                                If (_memory(iByteAddr) And 4) = 4 Then sAttributes = sAttributes & CStr(i * 8 + 5) & ", "
+                                If (_memory(iByteAddr) And 2) = 2 Then sAttributes = sAttributes & CStr(i * 8 + 6) & ", "
+                                If (_memory(iByteAddr) And 1) = 1 Then sAttributes = sAttributes & CStr(i * 8 + 7) & ", "
                             End If
                         Next
                         Dim objectData As ObjectData = objectList(iObject)
                         If iZVersion <= 3 Then
-                            iAddrProperties = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 7) * 256 + byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 8)
+                            iAddrProperties = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 7) * 256 + _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 8)
                         Else
-                            iAddrProperties = byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 12) * 256 + byteStory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 13)
+                            iAddrProperties = _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 12) * 256 + _memory(iAddrObjectTreeStart + iObject * iObjectTreeEntryLen + 13)
                         End If
 
                         If Not createGametext Then
@@ -1968,11 +1870,11 @@ Module Program
                         If Not createGametext Then
                             Console.WriteLine("  Properties address  = {0:X4} ", iAddrProperties)
                         End If
-                        Dim iPropDescLen As Integer = byteStory(iAddrProperties)
+                        Dim iPropDescLen As Integer = _memory(iAddrProperties)
                         If Not createGametext Then
                             Console.Write("    {0:X5} ", iAddrProperties)
                             For i As Integer = 0 To iPropDescLen * 2
-                                Console.Write("{0:X2} ", byteStory(iAddrProperties + i))
+                                Console.Write("{0:X2} ", _memory(iAddrProperties + i))
                             Next
                             Console.WriteLine()
                         End If
@@ -1989,21 +1891,21 @@ Module Program
                         End If
                         Dim iTmpProp As Integer = iAddrProperties + 2 * iPropDescLen + 1
                         If Not createGametext Then
-                            Do While byteStory(iTmpProp) <> 0
+                            Do While _memory(iTmpProp) <> 0
                                 Dim iPropNum As Integer = 0
                                 Dim iPropSize As Integer = 0
                                 Dim iPropStart As Integer = iTmpProp + 1
                                 If iZVersion <= 3 Then
-                                    iPropNum = (byteStory(iTmpProp) And &H1F)
-                                    iPropSize = 1 + (byteStory(iTmpProp) And 224) \ 32
+                                    iPropNum = (_memory(iTmpProp) And &H1F)
+                                    iPropSize = 1 + (_memory(iTmpProp) And 224) \ 32
                                 Else
-                                    iPropNum = (byteStory(iTmpProp) And &H3F)
-                                    If (byteStory(iTmpProp) And &H80) = &H80 Then
-                                        iPropSize = (byteStory(iTmpProp + 1) And &H3F)
+                                    iPropNum = (_memory(iTmpProp) And &H3F)
+                                    If (_memory(iTmpProp) And &H80) = &H80 Then
+                                        iPropSize = (_memory(iTmpProp + 1) And &H3F)
                                         If iPropSize = 0 Then iPropSize = &H40
                                         iPropStart += 1
                                     Else
-                                        If (byteStory(iTmpProp) And 64) = 64 Then iPropSize = 2 Else iPropSize = 1
+                                        If (_memory(iTmpProp) And 64) = 64 Then iPropSize = 2 Else iPropSize = 1
                                     End If
                                 End If
                                 Console.Write("    {0:X5} ", iTmpProp)
@@ -2011,9 +1913,9 @@ Module Program
                                 For i As Integer = 0 To iPropSize + iPropStart - iTmpProp - 1
                                     If i = 1 AndAlso (iPropStart - iTmpProp) = 1 Then Console.Write("   ")
                                     If i >= (iPropStart - iTmpProp) Then
-                                        sPropData = sPropData & byteStory(iTmpProp + i).ToString("X2") & " "
+                                        sPropData = sPropData & _memory(iTmpProp + i).ToString("X2") & " "
                                     Else
-                                        Console.Write("{0:X2} ", byteStory(iTmpProp + i))
+                                        Console.Write("{0:X2} ", _memory(iTmpProp + i))
                                     End If
                                 Next
                                 For i As Integer = 0 To sPropData.Length Step 24
@@ -2031,7 +1933,7 @@ Module Program
                                 Console.Write("{0}/{1}", iPropNum, iPropSize)
                                 If iPropSize < 10 Then Console.Write(" ")
                                 Console.Write(" ")
-                                DecodePropertyData(False, byteStory, DictEntriesList, validStringsList, validRoutinesList, iPropNum, iPropSize, iPropStart, sPropData, iObject, "", oPropertyAnalyser.GetPropertyType(iPropNum))
+                                DecodePropertyData(False, _memory, DictEntriesList, validStringsList, validRoutinesList, iPropNum, iPropSize, iPropStart, sPropData, iObject, "", oPropertyAnalyser.GetPropertyType(iPropNum))
 
                                 iTmpProp = iPropStart + iPropSize
                             Loop
@@ -2053,7 +1955,7 @@ Module Program
                         Dim spaceCount As Integer = 1
                         If globalCount < 9 Then spaceCount += 1
                         If globalCount < 99 Then spaceCount += 1
-                        Console.Write("{0:X5} {1:X2} {2:X2}                    G{3:X2}, Global #{4} ={5}0x{6:X4}", i, byteStory(i), byteStory(i + 1), globalCount, globalCount + 1, Space(spaceCount), Helper.GetAdressFromWord(byteStory, i))
+                        Console.Write("{0:X5} {1:X2} {2:X2}                    G{3:X2}, Global #{4} ={5}0x{6:X4}", i, _memory(i), _memory(i + 1), globalCount, globalCount + 1, Space(spaceCount), Helper.GetAdressFromWord(_memory, i))
                         If Not oDecode.usedGlobals.Contains(globalCount) Then
                             Console.Write(" (This global is not refered to from z-code.)")
                         End If
@@ -2090,38 +1992,38 @@ Module Program
                                 Console.WriteLine("{0}>", sTmp)
                                 Console.Write("{0:X5}", address)
                                 For j As Integer = 0 To 7
-                                    Console.Write(" {0:X2}", byteStory(address + j))
+                                    Console.Write(" {0:X2}", _memory(address + j))
                                 Next
-                                Dim nullObjAction As Integer = Helper.GetAdressFromWord(byteStory, address)
-                                Dim nullObjPrep As Integer = Helper.GetAdressFromWord(byteStory, address + 2)
-                                Dim addressOneObj As Integer = Helper.GetAdressFromWord(byteStory, address + 4)
-                                Dim addressTwoObj As Integer = Helper.GetAdressFromWord(byteStory, address + 6)
+                                Dim nullObjAction As Integer = Helper.GetAdressFromWord(_memory, address)
+                                Dim nullObjPrep As Integer = Helper.GetAdressFromWord(_memory, address + 2)
+                                Dim addressOneObj As Integer = Helper.GetAdressFromWord(_memory, address + 4)
+                                Dim addressTwoObj As Integer = Helper.GetAdressFromWord(_memory, address + 6)
                                 Console.WriteLine("{0}Main data: [{1:X4} {2:X4} {3:X4} {4:X4}]", Space(16), nullObjAction, nullObjPrep, addressOneObj, addressTwoObj)
                                 If Not nullObjAction = &HFFFF Then
                                     Console.WriteLine("  No object entry:")
                                     Dim syntax As String = DecodeGrammarsZilV2(address, DictEntriesList, iAddrActionTable, iAddrPreActionTable, 0)
-                                    Console.Write("   {0:X5} {1:X2} {2:X2} {3:X2} {4:X2}{5}{6}", address, byteStory(address), byteStory(address + 1), byteStory(address + 2), byteStory(address + 3), Space(25), syntax)
+                                    Console.Write("   {0:X5} {1:X2} {2:X2} {3:X2} {4:X2}{5}{6}", address, _memory(address), _memory(address + 1), _memory(address + 2), _memory(address + 3), Space(25), syntax)
                                     Console.WriteLine()
                                 End If
                                 If addressOneObj > 0 Then
-                                    Dim numberOfEntries As Integer = Helper.GetAdressFromWord(byteStory, addressOneObj)
+                                    Dim numberOfEntries As Integer = Helper.GetAdressFromWord(_memory, addressOneObj)
                                     Console.WriteLine("  One object entries:")
-                                    Console.Write("   {0:X5} {1:X2} {2:X2}", addressOneObj, byteStory(addressOneObj), byteStory(addressOneObj + 1))
+                                    Console.Write("   {0:X5} {1:X2} {2:X2}", addressOneObj, _memory(addressOneObj), _memory(addressOneObj + 1))
                                     For j As Integer = 0 To numberOfEntries - 1
                                         For k As Integer = 0 To 5
-                                            Console.Write(" {0:X2}", byteStory(addressOneObj + 2 + j * 6 + k))
+                                            Console.Write(" {0:X2}", _memory(addressOneObj + 2 + j * 6 + k))
                                         Next
                                         Console.WriteLine("{0}{1}", Space(13), DecodeGrammarsZilV2(addressOneObj + 2 + j * 6, DictEntriesList, iAddrActionTable, iAddrPreActionTable, 1))
                                         If j < numberOfEntries - 1 Then Console.Write(Space(14))
                                     Next
                                 End If
                                 If addressTwoObj > 0 Then
-                                    Dim numberOfEntries As Integer = Helper.GetAdressFromWord(byteStory, addressTwoObj)
+                                    Dim numberOfEntries As Integer = Helper.GetAdressFromWord(_memory, addressTwoObj)
                                     Console.WriteLine("  Two object entries:")
-                                    Console.Write("   {0:X5} {1:X2} {2:X2}", addressTwoObj, byteStory(addressTwoObj), byteStory(addressTwoObj + 1))
+                                    Console.Write("   {0:X5} {1:X2} {2:X2}", addressTwoObj, _memory(addressTwoObj), _memory(addressTwoObj + 1))
                                     For j As Integer = 0 To numberOfEntries - 1
                                         For k As Integer = 0 To 9
-                                            Console.Write(" {0:X2}", byteStory(addressTwoObj + 2 + j * 10 + k))
+                                            Console.Write(" {0:X2}", _memory(addressTwoObj + 2 + j * 10 + k))
                                         Next
                                         Console.WriteLine("{0}{1}", Space(1), DecodeGrammarsZilV2(addressTwoObj + 2 + j * 10, DictEntriesList, iAddrActionTable, iAddrPreActionTable, 2))
                                         If j < numberOfEntries - 1 Then Console.Write(Space(14))
@@ -2134,8 +2036,8 @@ Module Program
                             ' Inform5, v1, Inform6, v1 & v2, Zilf & Zilch v1
                             Dim iVerbNum As Integer = 255
                             For i = iAddrGrammarStart To iAddrGrammarEnd Step 2
-                                Console.Write("{0:X5} {1:X2} {2:X2} ", i, byteStory(i), byteStory(i + 1))
-                                Console.Write("                   Address of Verb {0,3}: 0x{1:X4} [", iVerbNum, Helper.GetAdressFromWord(byteStory, i))
+                                Console.Write("{0:X5} {1:X2} {2:X2} ", i, _memory(i), _memory(i + 1))
+                                Console.Write("                   Address of Verb {0,3}: 0x{1:X4} [", iVerbNum, Helper.GetAdressFromWord(_memory, i))
                                 If DictEntriesList.GetVerb(iVerbNum).Count = 0 Then
                                     Console.Write("no-verb)")
                                 Else
@@ -2175,8 +2077,8 @@ Module Program
                     Else
                         Do
                             Dim iAddrSyntax As Integer = iAddrGrammarStart + (255 - iVerbNum) * 2
-                            iAddrSyntax = byteStory(iAddrSyntax) * 256 + byteStory(iAddrSyntax + 1)
-                            Dim iSyntaxLines As Integer = byteStory(iAddrSyntax)
+                            iAddrSyntax = _memory(iAddrSyntax) * 256 + _memory(iAddrSyntax + 1)
+                            Dim iSyntaxLines As Integer = _memory(iAddrSyntax)
                             Console.Write("Verb {0} ", iVerbNum)
                             Dim sTmp As String = ""
                             If {EnumCompilerSource.ZILCH, EnumCompilerSource.ZILF}.Contains(compilerSource) Then sTmp = "<SYNONYM"
@@ -2205,13 +2107,13 @@ Module Program
                                     For i As Integer = 1 To iSyntaxLines
                                         If i > 1 Then Console.Write("         ")
                                         Dim syntaxLineLength As Integer = 2
-                                        Select Case (byteStory(iStartAddress) And &HC0)
+                                        Select Case (_memory(iStartAddress) And &HC0)
                                             Case &H40 : syntaxLineLength = 4
                                             Case &H80 : syntaxLineLength = 7
                                         End Select
-                                        If byteStory(iStartAddress + 1) > iMaxActionNum Then iMaxActionNum = byteStory(iStartAddress + 1)   ' ActionNumber always in the second byte
+                                        If _memory(iStartAddress + 1) > iMaxActionNum Then iMaxActionNum = _memory(iStartAddress + 1)   ' ActionNumber always in the second byte
                                         For j = 0 To syntaxLineLength - 1
-                                            Console.Write("{0:X2} ", byteStory(iStartAddress + j))
+                                            Console.Write("{0:X2} ", _memory(iStartAddress + j))
                                         Next
                                         If syntaxLineLength = 2 Then Console.Write(Space(18))
                                         If syntaxLineLength = 4 Then Console.Write(Space(12))
@@ -2226,7 +2128,7 @@ Module Program
                                         If i > 1 Then Console.Write("         ")
                                         Dim iStartAddress As Integer = iAddrSyntax + 1 + (i - 1) * 8
                                         For j = 0 To 7
-                                            Dim iNum As Integer = byteStory(iAddrSyntax + 1 + (i - 1) * 8 + j)
+                                            Dim iNum As Integer = _memory(iAddrSyntax + 1 + (i - 1) * 8 + j)
                                             Console.Write("{0:X2} ", iNum)
                                             If j = 7 And iNum > iMaxActionNum Then iMaxActionNum = iNum
                                         Next
@@ -2252,9 +2154,9 @@ Module Program
                                     Do
                                         iCurrentLine += 1
                                         iStartAddress = iCurrentAddress
-                                        If (byteStory(iCurrentAddress) * 256 + byteStory(iCurrentAddress + 1) And 1023) > iMaxActionNum Then iMaxActionNum = (byteStory(iCurrentAddress) * 256 + byteStory(iCurrentAddress + 1) And 1023)
-                                        Console.Write("[ {0:X2} ", byteStory(iCurrentAddress))
-                                        Console.Write("{0:X2} ", byteStory(iCurrentAddress + 1))
+                                        If (_memory(iCurrentAddress) * 256 + _memory(iCurrentAddress + 1) And 1023) > iMaxActionNum Then iMaxActionNum = (_memory(iCurrentAddress) * 256 + _memory(iCurrentAddress + 1) And 1023)
+                                        Console.Write("[ {0:X2} ", _memory(iCurrentAddress))
+                                        Console.Write("{0:X2} ", _memory(iCurrentAddress + 1))
                                         iCurrentAddress += 2
                                         Dim newlineCounter As Integer = 2
                                         Do
@@ -2263,10 +2165,10 @@ Module Program
                                                 Console.Write("           ")
                                                 newlineCounter = 0
                                             End If
-                                            Console.Write("{0:X2} ", byteStory(iCurrentAddress))
+                                            Console.Write("{0:X2} ", _memory(iCurrentAddress))
                                             iCurrentAddress += 1
                                             newlineCounter += 1
-                                        Loop Until byteStory(iCurrentAddress - 1) = 15 And (iCurrentAddress - iStartAddress) Mod 3 = 0
+                                        Loop Until _memory(iCurrentAddress - 1) = 15 And (iCurrentAddress - iStartAddress) Mod 3 = 0
                                         Dim grammarString As String = DecodeGrammarsInformV2(iStartAddress, DictEntriesList, iAddrActionTable)
                                         Console.WriteLine(Space(3 * (9 - newlineCounter)) & "] {0}", grammarString)
                                         Console.Write("         ")
@@ -2284,10 +2186,10 @@ Module Program
                                     Do
                                         iCurrentLine += 1
                                         iStartAddress = iCurrentAddress
-                                        If (byteStory(iCurrentAddress) * 256 + byteStory(iCurrentAddress + 1) And 1023) > iMaxActionNum Then iMaxActionNum = (byteStory(iCurrentAddress) * 256 + byteStory(iCurrentAddress + 1) And 1023)
-                                        Console.Write("[ {0:X2} ", byteStory(iCurrentAddress))
-                                        Console.Write("{0:X2} ", byteStory(iCurrentAddress + 1))
-                                        Dim tokens As Integer = (Helper.GetAdressFromWord(byteStory, iCurrentAddress) And &HF800) >> 11
+                                        If (_memory(iCurrentAddress) * 256 + _memory(iCurrentAddress + 1) And 1023) > iMaxActionNum Then iMaxActionNum = (_memory(iCurrentAddress) * 256 + _memory(iCurrentAddress + 1) And 1023)
+                                        Console.Write("[ {0:X2} ", _memory(iCurrentAddress))
+                                        Console.Write("{0:X2} ", _memory(iCurrentAddress + 1))
+                                        Dim tokens As Integer = (Helper.GetAdressFromWord(_memory, iCurrentAddress) And &HF800) >> 11
                                         iCurrentAddress += 2
                                         Dim newlineCounter As Integer = 2
                                         For i As Integer = 0 To tokens * 2 - 1
@@ -2296,7 +2198,7 @@ Module Program
                                                 Console.Write("           ")
                                                 newlineCounter = 0
                                             End If
-                                            Console.Write("{0:X2} ", byteStory(iCurrentAddress))
+                                            Console.Write("{0:X2} ", _memory(iCurrentAddress))
                                             iCurrentAddress += 1
                                             newlineCounter += 1
                                         Next
@@ -2324,7 +2226,7 @@ Module Program
                         Console.WriteLine()
                         If verbGrammarList IsNot Nothing AndAlso verbGrammarList.Count > 0 Then
                             For i As Integer = 0 To verbGrammarList.Keys.Max
-                                Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Action #{3}, packed address for routine at 0x{4:X5}", oMemEntry.addressStart + i * 2, byteStory(oMemEntry.addressStart + i * 2), byteStory(oMemEntry.addressStart + i * 2 + 1), i, Helper.GetAdressFromPacked(byteStory, oMemEntry.addressStart + i * 2, True))
+                                Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Action #{3}, packed address for routine at 0x{4:X5}", oMemEntry.addressStart + i * 2, _memory(oMemEntry.addressStart + i * 2), _memory(oMemEntry.addressStart + i * 2 + 1), i, Helper.GetAdressFromPacked(_memory, oMemEntry.addressStart + i * 2, True))
 
                                 Dim grammarStrings As List(Of String) = Nothing
                                 If verbGrammarList.TryGetValue(i, grammarStrings) Then
@@ -2349,10 +2251,10 @@ Module Program
                         Console.WriteLine()
                         If verbGrammarList IsNot Nothing AndAlso verbGrammarList.Count > 0 Then
                             For i As Integer = 0 To verbGrammarList.Keys.Max
-                                If Helper.GetAdressFromWord(byteStory, oMemEntry.addressStart + i * 2) = 0 Then
-                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Unused", oMemEntry.addressStart + i * 2, byteStory(oMemEntry.addressStart + i * 2), byteStory(oMemEntry.addressStart + i * 2 + 1))
+                                If Helper.GetAdressFromWord(_memory, oMemEntry.addressStart + i * 2) = 0 Then
+                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Unused", oMemEntry.addressStart + i * 2, _memory(oMemEntry.addressStart + i * 2), _memory(oMemEntry.addressStart + i * 2 + 1))
                                 Else
-                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Pre-action #{3}, packed address for routine at 0x{4:X5}", oMemEntry.addressStart + i * 2, byteStory(oMemEntry.addressStart + i * 2), byteStory(oMemEntry.addressStart + i * 2 + 1), i, Helper.GetAdressFromPacked(byteStory, oMemEntry.addressStart + i * 2, True))
+                                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Pre-action #{3}, packed address for routine at 0x{4:X5}", oMemEntry.addressStart + i * 2, _memory(oMemEntry.addressStart + i * 2), _memory(oMemEntry.addressStart + i * 2 + 1), i, Helper.GetAdressFromPacked(_memory, oMemEntry.addressStart + i * 2, True))
                                     Dim grammarStrings As List(Of String) = Nothing
                                     If verbGrammarList.TryGetValue(i, grammarStrings) Then
                                         For Each grammarString As String In grammarStrings
@@ -2379,10 +2281,10 @@ Module Program
                         Console.WriteLine()
                         Dim parsingNumber As Integer = 0
                         For i As Integer = oMemEntry.addressStart To oMemEntry.addressEnd Step 2
-                            If Helper.GetAdressFromWord(byteStory, i) = 0 Then
-                                Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Unused", i, byteStory(i), byteStory(i + 1))
+                            If Helper.GetAdressFromWord(_memory, i) = 0 Then
+                                Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Unused", i, _memory(i), _memory(i + 1))
                             Else
-                                Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Parsing routine #{3}, packed address for routine at 0x{4:X5}", i, byteStory(i), byteStory(i + 1), parsingNumber, Helper.GetAdressFromPacked(byteStory, i, True))
+                                Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Parsing routine #{3}, packed address for routine at 0x{4:X5}", i, _memory(i), _memory(i + 1), parsingNumber, Helper.GetAdressFromPacked(_memory, i, True))
                             End If
                             parsingNumber += 1
                         Next
@@ -2416,25 +2318,25 @@ Module Program
                         ' Zilf/Zilch, ver 2: N/A
                         If showHex Then HexDump(oMemEntry.addressStart, oMemEntry.addressEnd, True)
                         Console.WriteLine()
-                        Dim adjectiveCount As Integer = Helper.GetAdressFromWord(byteStory, oMemEntry.addressStart)
-                        Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Number of entries: {3}", oMemEntry.addressStart, byteStory(oMemEntry.addressStart), byteStory(oMemEntry.addressStart + 1), adjectiveCount)
+                        Dim adjectiveCount As Integer = Helper.GetAdressFromWord(_memory, oMemEntry.addressStart)
+                        Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Number of entries: {3}", oMemEntry.addressStart, _memory(oMemEntry.addressStart), _memory(oMemEntry.addressStart + 1), adjectiveCount)
                         Dim printedPrepsForCompactVocab As New HashSet(Of Integer)
                         For i As Integer = 0 To adjectiveCount - 1
                             If DictEntriesList.v1_CompactVocabulary Then
                                 Dim currentAddress As Integer = oMemEntry.addressStart + 2 + i * 3
-                                Dim prepAddress As Integer = Helper.GetAdressFromWord(byteStory, currentAddress)
-                                Dim prepID As Integer = byteStory(oMemEntry.addressStart + 4 + i * 3)
+                                Dim prepAddress As Integer = Helper.GetAdressFromWord(_memory, currentAddress)
+                                Dim prepID As Integer = _memory(oMemEntry.addressStart + 4 + i * 3)
                                 Dim preposition As String = DictEntriesList.GetEntryAtAddress(prepAddress).dictWord
-                                Console.Write("{0:X5} {1:X2} {2:X2} {3:X2}                 Preposition #{4}: {5}", currentAddress, byteStory(currentAddress), byteStory(currentAddress + 1), byteStory(currentAddress + 2), byteStory(currentAddress + 2), preposition.ToUpper)
+                                Console.Write("{0:X5} {1:X2} {2:X2} {3:X2}                 Preposition #{4}: {5}", currentAddress, _memory(currentAddress), _memory(currentAddress + 1), _memory(currentAddress + 2), _memory(currentAddress + 2), preposition.ToUpper)
                                 If Not printedPrepsForCompactVocab.Contains(prepID) Then
                                     Dim first As Boolean = True
                                     For j As Integer = i + 1 To adjectiveCount - 1
-                                        If prepID = byteStory(oMemEntry.addressStart + 4 + j * 3) Then
+                                        If prepID = _memory(oMemEntry.addressStart + 4 + j * 3) Then
                                             If first Then
                                                 Console.Write(" {0}<SYNONYM {1}", Space(10 - preposition.Length), preposition.ToUpper)
                                                 first = False
                                             End If
-                                            Console.Write(" {0}", DictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, oMemEntry.addressStart + 2 + j * 3)).dictWord.ToUpper)
+                                            Console.Write(" {0}", DictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, oMemEntry.addressStart + 2 + j * 3)).dictWord.ToUpper)
                                         End If
                                     Next
                                     If Not first Then Console.Write(">")
@@ -2442,16 +2344,16 @@ Module Program
                                 End If
                             Else
                                 Dim currentAddress As Integer = oMemEntry.addressStart + 2 + i * 4
-                                Dim prepID As Integer = byteStory(oMemEntry.addressStart + 5 + i * 4)
-                                Dim prepAddress As Integer = Helper.GetAdressFromWord(byteStory, currentAddress)
+                                Dim prepID As Integer = _memory(oMemEntry.addressStart + 5 + i * 4)
+                                Dim prepAddress As Integer = Helper.GetAdressFromWord(_memory, currentAddress)
                                 Dim preposition As String
                                 Dim errMsg As String = ""
                                 If grammarVer = 3 Then
                                     currentAddress = oMemEntry.addressStart + 2 + i * 2
                                     prepID = i
-                                    prepAddress = Helper.GetAdressFromWord(byteStory, currentAddress)
+                                    prepAddress = Helper.GetAdressFromWord(_memory, currentAddress)
                                     preposition = DictEntriesList.GetEntryAtAddress(prepAddress).dictWord
-                                    Console.Write("{0:X5} {1:X2} {2:X2}                    Preposition #{3}: '{4}'{5}", currentAddress, byteStory(currentAddress), byteStory(currentAddress + 1), prepID, preposition, errMsg)
+                                    Console.Write("{0:X5} {1:X2} {2:X2}                    Preposition #{3}: '{4}'{5}", currentAddress, _memory(currentAddress), _memory(currentAddress + 1), prepID, preposition, errMsg)
                                 Else
                                     Try
                                         preposition = DictEntriesList.GetEntryAtAddress(prepAddress).dictWord
@@ -2460,9 +2362,9 @@ Module Program
                                         errMsg = " (Incomplete table entry, word taken from dictionary instead.)"
                                     End Try
                                     If compilerSource = EnumCompilerSource.ZILCH Or compilerSource = EnumCompilerSource.ZILF Then
-                                        Console.Write("{0:X5} {1:X2} {2:X2} {3:X2} {4:X2}              Preposition #{5}: {6}", currentAddress, byteStory(currentAddress), byteStory(currentAddress + 1), byteStory(currentAddress + 2), byteStory(currentAddress + 3), byteStory(currentAddress + 3), preposition.ToUpper)
+                                        Console.Write("{0:X5} {1:X2} {2:X2} {3:X2} {4:X2}              Preposition #{5}: {6}", currentAddress, _memory(currentAddress), _memory(currentAddress + 1), _memory(currentAddress + 2), _memory(currentAddress + 3), _memory(currentAddress + 3), preposition.ToUpper)
                                     Else
-                                        Console.Write("{0:X5} {1:X2} {2:X2} {3:X2} {4:X2}              Preposition #{5}: '{6}'{7}", currentAddress, byteStory(currentAddress), byteStory(currentAddress + 1), byteStory(currentAddress + 2), byteStory(currentAddress + 3), byteStory(currentAddress + 3), preposition, errMsg)
+                                        Console.Write("{0:X5} {1:X2} {2:X2} {3:X2} {4:X2}              Preposition #{5}: '{6}'{7}", currentAddress, _memory(currentAddress), _memory(currentAddress + 1), _memory(currentAddress + 2), _memory(currentAddress + 3), _memory(currentAddress + 3), preposition, errMsg)
                                     End If
                                     If DictEntriesList.GetPreposition(prepID).Count > 1 Then
                                         If compilerSource = EnumCompilerSource.ZILCH Or compilerSource = EnumCompilerSource.ZILF Then
@@ -2497,23 +2399,23 @@ Module Program
                     Console.WriteLine("***** VOCABULARY/DICTIONARY ({0:X5}-{1:X5}, {2}) *****", iAddrDictionary, iAddrDictionaryEnd, oMemEntry.SizeString)
                     If showHex Then HexDump(iAddrDictionary, iAddrDictionaryEnd, True)
                     Console.WriteLine()
-                    Console.WriteLine("{0:X5} {1:X2}                       # of separators: {2}", iAddrDictionary, byteStory(iAddrDictionary), iWordSeparatorsCount)
+                    Console.WriteLine("{0:X5} {1:X2}                       # of separators: {2}", iAddrDictionary, _memory(iAddrDictionary), iWordSeparatorsCount)
                     Console.Write("{0:X5}", iAddrDictionary + 1)
                     For i As Integer = 1 To iWordSeparatorsCount
-                        Console.Write(" {0:X2}", byteStory(iAddrDictionary + i))
+                        Console.Write(" {0:X2}", _memory(iAddrDictionary + i))
                     Next
                     Console.Write("{0}Word separators: ", Space((8 - iWordSeparatorsCount) * 3 + 2))
                     For i As Integer = 1 To iWordSeparatorsCount
-                        Console.Write(System.Text.Encoding.ASCII.GetString(byteStory, i + iAddrDictionary, 1))
+                        Console.Write(System.Text.Encoding.ASCII.GetString(_memory, i + iAddrDictionary, 1))
                     Next
                     Console.WriteLine()
-                    Console.WriteLine("{0:X5} {1:X2}                       Entry length   : {2}", iAddrDictionary + iWordSeparatorsCount + 1, byteStory(iAddrDictionary + iWordSeparatorsCount + 1), iWordSize)
-                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Word count     : {3}", iAddrDictionary + iWordSeparatorsCount + 2, byteStory(iAddrDictionary + iWordSeparatorsCount + 2), byteStory(iAddrDictionary + iWordSeparatorsCount + 3), iWordCount)
+                    Console.WriteLine("{0:X5} {1:X2}                       Entry length   : {2}", iAddrDictionary + iWordSeparatorsCount + 1, _memory(iAddrDictionary + iWordSeparatorsCount + 1), iWordSize)
+                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Word count     : {3}", iAddrDictionary + iWordSeparatorsCount + 2, _memory(iAddrDictionary + iWordSeparatorsCount + 2), _memory(iAddrDictionary + iWordSeparatorsCount + 3), iWordCount)
                     Console.WriteLine()
                     For i As Integer = 0 To iWordCount - 1
                         Console.Write("{0:X5} ", DictEntriesList(i).dictAddress)
                         For j As Integer = 1 To iWordSize
-                            Console.Write("{0:X2} ", byteStory(DictEntriesList(i).dictAddress + j - 1))
+                            Console.Write("{0:X2} ", _memory(DictEntriesList(i).dictAddress + j - 1))
                         Next
                         Console.Write(DictEntriesList(i).dictWord)
                         If 10 - DictEntriesList(i).dictWord.Length > 0 Then
@@ -2622,13 +2524,13 @@ Module Program
                     Dim iNextValidAddress As Integer = 0
                     For i As Integer = 0 To validRoutinesList.Count - 1
                         If showOnlyAddress = 0 Or validRoutinesList(i).entryPoint = showOnlyAddress Then
-                            iNextAddress = oDecode.DecodeRoutine(validRoutinesList(i).entryPoint, byteStory, sAbbreviations, False,
+                            iNextAddress = oDecode.DecodeRoutine(validRoutinesList(i).entryPoint, _memory, sAbbreviations, False,
                                                                  zcodeSyntax, validStringsList, validRoutinesList, DictEntriesList,
                                                                  alphabet, iAddrInitialPC, oPropertyAnalyser.propertyNumberMin,
                                                                  oPropertyAnalyser.propertyNumberMax, showAbbrevsInsertion,
                                                                  inlineStrings, showZCodeVerbose)
                             Console.WriteLine()
-                            iNextValidAddress = Helper.GetNextValidPackedAddress(byteStory, iNextAddress)
+                            iNextValidAddress = Helper.GetNextValidPackedAddress(_memory, iNextAddress)
                             If iNextAddress <> iNextValidAddress Then
                                 Console.Write("Padding:")
                                 HexDump(iNextAddress, iNextValidAddress - 1, False)
@@ -2671,11 +2573,11 @@ Module Program
                     Console.WriteLine("***** WORD FLAGS TABLE ({0:X5}-{1:X5}, {2}) *****", oMemEntry.addressStart, oMemEntry.addressEnd, oMemEntry.SizeString)
                     If showHex Then HexDump(oMemEntry.addressStart, oMemEntry.addressEnd, True)
                     Console.WriteLine()
-                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Length of table: {3}", oMemEntry.addressStart, byteStory(oMemEntry.addressStart), byteStory(oMemEntry.addressStart + 1), Helper.GetAdressFromWord(byteStory, oMemEntry.addressStart))
+                    Console.WriteLine("{0:X5} {1:X2} {2:X2}                    Length of table: {3}", oMemEntry.addressStart, _memory(oMemEntry.addressStart), _memory(oMemEntry.addressStart + 1), Helper.GetAdressFromWord(_memory, oMemEntry.addressStart))
                     For i As Integer = oMemEntry.addressStart + 2 To oMemEntry.addressEnd Step 4
-                        Dim flag As Integer = Helper.GetAdressFromWord(byteStory, i + 2)
-                        Dim word As String = DictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, i)).dictWord
-                        Console.Write("{0:X5} {1:X2} {2:X2} {3:X2} {4:X2}             '{5}',{6}flags={7}{8}", i, byteStory(i), byteStory(i + 1), byteStory(i + 2), byteStory(i + 3), word, Space(11 - word.Length), flag, Space(7 - flag.ToString.Length))
+                        Dim flag As Integer = Helper.GetAdressFromWord(_memory, i + 2)
+                        Dim word As String = DictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, i)).dictWord
+                        Console.Write("{0:X5} {1:X2} {2:X2} {3:X2} {4:X2}             '{5}',{6}flags={7}{8}", i, _memory(i), _memory(i + 1), _memory(i + 2), _memory(i + 3), word, Space(11 - word.Length), flag, Space(7 - flag.ToString.Length))
                         Dim flagString As String = "["
                         If (flag And &H8) = &H8 Then flagString = String.Concat(flagString, "FIRST-PERSON ")
                         If (flag And &H10) = &H10 Then flagString = String.Concat(flagString, "PLURAL-FLAG ")
@@ -2777,18 +2679,18 @@ Module Program
                 If currentObject.NextId > 0 Then PrintObjectTree(objectList, currentObject.NextId, indentation, True)
             Else
                 If currentObject.ChildId > 0 Then PrintObjectTree(objectList, currentObject.ChildId, indentation + 3, True)
-                    If currentObject.NextId > 0 Then PrintObjectTree(objectList, currentObject.NextId, indentation, True)
-                End If
+                If currentObject.NextId > 0 Then PrintObjectTree(objectList, currentObject.NextId, indentation, True)
+            End If
 
-                'Exit Sub
-            Else
-                If currentObject.ChildId > 0 Then PrintObjectTree(objectList, currentObject.ChildId, indentation + 3, True)
+            'Exit Sub
+        Else
+            If currentObject.ChildId > 0 Then PrintObjectTree(objectList, currentObject.ChildId, indentation + 3, True)
             If currentObject.NextId > 0 Then PrintObjectTree(objectList, currentObject.NextId, indentation, True)
         End If
     End Sub
 
     Private Function ExtractZString(piStringAddress As Integer, Optional pbHighlightAbbrevs As Boolean = False) As String
-        Return Helper.ExtractZString(byteStory, piStringAddress, sAbbreviations, alphabet, pbHighlightAbbrevs)
+        Return Helper.ExtractZString(_memory, piStringAddress, sAbbreviations, alphabet, pbHighlightAbbrevs)
     End Function
 
     Private Sub HexDump(iStartAddr As Integer, iEndAddr As Integer, bTabbed As Boolean)
@@ -2815,8 +2717,8 @@ Module Program
                 Console.WriteLine()
                 Console.Write("{0:X5} ", i)
             End If
-            Console.Write("{0:X2} ", byteStory(i))
-            If byteStory(i) > 31 And byteStory(i) < 127 Then sASCII = String.Concat(sASCII, Convert.ToChar(byteStory(i))) Else sASCII = String.Concat(sASCII, ".")
+            Console.Write("{0:X2} ", _memory(i))
+            If _memory(i) > 31 And _memory(i) < 127 Then sASCII = String.Concat(sASCII, Convert.ToChar(_memory(i))) Else sASCII = String.Concat(sASCII, ".")
             iCount += 1
         Next
         If bTabbed Then
@@ -2828,10 +2730,10 @@ Module Program
     Private Function ExtractASCIIChars(piStringAddress As Integer, piLength As Integer) As String
         Dim sRet As String = ""
         For i As Integer = 0 To piLength - 1
-            If byteStory(piStringAddress + i) < 32 Then
+            If _memory(piStringAddress + i) < 32 Then
                 sRet &= "."
             Else
-                sRet &= System.Text.Encoding.ASCII.GetString(byteStory, piStringAddress + i, 1)
+                sRet &= System.Text.Encoding.ASCII.GetString(_memory, piStringAddress + i, 1)
             End If
         Next
 
@@ -2897,9 +2799,9 @@ Module Program
                 ' Do a quick scan to with 10 verbs and see if we find a potential verb table start address
                 For i As Integer = 0 To 9
                     ' Get potential address for a verb table entry
-                    iGrammarLines(i) = byteStory(potentialStartAddress + i * 2) * 256 + byteStory(potentialStartAddress + i * 2 + 1)
+                    iGrammarLines(i) = _memory(potentialStartAddress + i * 2) * 256 + _memory(potentialStartAddress + i * 2 + 1)
 
-                    If iGrammarLines(i) < &H40 Or iGrammarLines(i) > byteStory.Length Then
+                    If iGrammarLines(i) < &H40 Or iGrammarLines(i) > _memory.Length Then
                         ' Invalid address for verb table entry, current start is invalid, abandon
                         foundCandidate = False
                         Exit For
@@ -2913,7 +2815,7 @@ Module Program
                             Exit For
                         End If
 
-                        Dim syntaxLineCountForPrevious As Integer = byteStory(iGrammarLines(i - 1))
+                        Dim syntaxLineCountForPrevious As Integer = _memory(iGrammarLines(i - 1))
 
                         ' If size of syntax line is less than minimum for a COMPACT-SYNTAX then abandon
                         If (iGrammarLines(i) - iGrammarLines(i - 1) - 1) < 2 Then
@@ -2924,7 +2826,7 @@ Module Program
                         If iGrammarLines(i - 1) + syntaxLineCountForPrevious * 8 + 1 = iGrammarLines(i) Then
                             ' Addresses are consistent with a grammar table with fixed syntax lines of 8, proceed to next
                             Continue For
-                        ElseIf iGrammarLines(i - 1) + syntaxLineCountForPrevious * 8 + 2 = iGrammarLines(i) And byteStory(iGrammarLines(i) - 1) = 0 Then
+                        ElseIf iGrammarLines(i - 1) + syntaxLineCountForPrevious * 8 + 2 = iGrammarLines(i) And _memory(iGrammarLines(i) - 1) = 0 Then
                             ' Deadline have an extra empty byte between each syntax verb definition
                             deadlineFix = True
                             Continue For
@@ -2932,7 +2834,7 @@ Module Program
                             ' test for COMPACT-SYNTAX
                             Dim nextAddress As Integer = iGrammarLines(i - 1) + 1
                             For j As Integer = 0 To syntaxLineCountForPrevious - 1
-                                Select Case (byteStory(nextAddress) And &HC0)
+                                Select Case (_memory(nextAddress) And &HC0)
                                     Case &H0 : nextAddress += 2
                                     Case &H40 : nextAddress += 4
                                     Case &H80 : nextAddress += 7
@@ -2958,24 +2860,24 @@ Module Program
                     Dim oRet As New GrammarScanResult
                     Dim iMaxAction As Integer = 0
                     Do
-                        Dim iAddr As Integer = Helper.GetAdressFromWord(byteStory, potentialStartAddress + iVerbIdx * 2)
-                        Dim iAddrNext As Integer = Helper.GetAdressFromWord(byteStory, potentialStartAddress + (iVerbIdx + 1) * 2)
+                        Dim iAddr As Integer = Helper.GetAdressFromWord(_memory, potentialStartAddress + iVerbIdx * 2)
+                        Dim iAddrNext As Integer = Helper.GetAdressFromWord(_memory, potentialStartAddress + (iVerbIdx + 1) * 2)
                         Dim iAddrNextCalc As Integer
                         If compactSyntax Then
                             iAddrNextCalc = iAddr + 1
-                            For j As Integer = 0 To byteStory(iAddr) - 1
-                                If byteStory(iAddrNextCalc + 1) > iMaxAction Then iMaxAction = byteStory(iAddrNextCalc + 1)
-                                Select Case (byteStory(iAddrNextCalc) And &HC0)
+                            For j As Integer = 0 To _memory(iAddr) - 1
+                                If _memory(iAddrNextCalc + 1) > iMaxAction Then iMaxAction = _memory(iAddrNextCalc + 1)
+                                Select Case (_memory(iAddrNextCalc) And &HC0)
                                     Case &H0 : iAddrNextCalc += 2
                                     Case &H40 : iAddrNextCalc += 4
                                     Case &H80 : iAddrNextCalc += 7
                                 End Select
                             Next
                         Else
-                            iAddrNextCalc = iAddr + byteStory(iAddr) * 8 + 1
+                            iAddrNextCalc = iAddr + _memory(iAddr) * 8 + 1
                             If deadlineFix Then iAddrNextCalc += 1
                             For j As Integer = iAddr + 8 To iAddrNextCalc - 1 Step 8
-                                If byteStory(j) > iMaxAction Then iMaxAction = byteStory(j)
+                                If _memory(j) > iMaxAction Then iMaxAction = _memory(j)
                             Next
                         End If
                         If iVerbIdx < pNumberOfVerbs - 1 And iAddrNext <> iAddrNextCalc Then foundCandidate = False
@@ -2996,7 +2898,7 @@ Module Program
                 End If
 
                 potentialStartAddress += 1
-            Loop Until potentialStartAddress > byteStory.Length - 100
+            Loop Until potentialStartAddress > _memory.Length - 100
             Return Nothing
         Catch
             Return Nothing
@@ -3019,17 +2921,17 @@ Module Program
             Dim iFound As Integer = 0
             For i As Integer = 0 To 9
                 Dim iGrammarLines(9) As Integer
-                iGrammarLines(i) = byteStory(iIndex + i * 2) * 256 + byteStory(iIndex + i * 2 + 1)
-                If iGrammarLines(i) = 0 Or iGrammarLines(i) > byteStory.Length Then
+                iGrammarLines(i) = _memory(iIndex + i * 2) * 256 + _memory(iIndex + i * 2 + 1)
+                If iGrammarLines(i) = 0 Or iGrammarLines(i) > _memory.Length Then
                     iFound = -1
                     Exit For
                 End If
                 If i > 0 Then
-                    If byteStory(iGrammarLines(i - 1)) = 0 AndAlso (iGrammarLines(i) - iGrammarLines(i - 1) - 1) = 0 Then
+                    If _memory(iGrammarLines(i - 1)) = 0 AndAlso (iGrammarLines(i) - iGrammarLines(i - 1) - 1) = 0 Then
                         ' no-verb, allowed
                     Else
                         ' If byte before the current pointer points to contains &HF
-                        If byteStory(iGrammarLines(i) - 1) <> &HF Then iFound = -1
+                        If _memory(iGrammarLines(i) - 1) <> &HF Then iFound = -1
                         If (iGrammarLines(i) - iGrammarLines(i - 1) - 1) < 2 Then iFound = -1
                     End If
                 End If
@@ -3042,21 +2944,21 @@ Module Program
                 Dim iMaxAction As Integer = 0
                 Dim oRet As New GrammarScanResult
                 Do
-                    Dim iAddr As Integer = Helper.GetAdressFromWord(byteStory, iIndex + iVerbIdx * 2)
-                    Dim iAddrNext As Integer = Helper.GetAdressFromWord(byteStory, iIndex + (iVerbIdx + 1) * 2)
+                    Dim iAddr As Integer = Helper.GetAdressFromWord(_memory, iIndex + iVerbIdx * 2)
+                    Dim iAddrNext As Integer = Helper.GetAdressFromWord(_memory, iIndex + (iVerbIdx + 1) * 2)
                     Dim iAddrNextCalc As Integer = iAddr
-                    Dim iNum15 As Integer = byteStory(iAddrNextCalc)
+                    Dim iNum15 As Integer = _memory(iAddrNextCalc)
                     If iNum15 = 0 Then
                         iAddrNextCalc += 1 ' Verb with no grammar lines is legal, just ignore
                     Else
-                        Dim iTmpAction1 As Integer = (Helper.GetAdressFromWord(byteStory, iAddrNextCalc + 1) And 1023)
+                        Dim iTmpAction1 As Integer = (Helper.GetAdressFromWord(_memory, iAddrNextCalc + 1) And 1023)
                         If iTmpAction1 > iMaxAction Then iMaxAction = iTmpAction1
                         Do
                             iAddrNextCalc += 3
-                            If byteStory(iAddrNextCalc) = 15 Then
+                            If _memory(iAddrNextCalc) = 15 Then
                                 iNum15 -= 1
                                 If iNum15 > 0 Then
-                                    Dim iTmpAction2 As Integer = (Helper.GetAdressFromWord(byteStory, iAddrNextCalc + 1) And 1023)
+                                    Dim iTmpAction2 As Integer = (Helper.GetAdressFromWord(_memory, iAddrNextCalc + 1) And 1023)
                                     If iTmpAction2 > iMaxAction Then iMaxAction = iTmpAction2
                                 End If
                             End If
@@ -3079,7 +2981,7 @@ Module Program
                 End If
             End If
             iIndex += 1
-        Loop Until iIndex > byteStory.Length - 100
+        Loop Until iIndex > _memory.Length - 100
         Return Nothing
     End Function
 
@@ -3104,8 +3006,8 @@ Module Program
         '                              Adjectives table
 
         ' Init potential start addresses
-        Dim startGrammarTable As Integer = Helper.GetAdressFromWord(byteStory, 14)
-        Dim startZCode As Integer = Helper.GetAdressFromWord(byteStory, 4)
+        Dim startGrammarTable As Integer = Helper.GetAdressFromWord(_memory, 14)
+        Dim startZCode As Integer = Helper.GetAdressFromWord(_memory, 4)
         Dim startGrammarTableData As Integer = startGrammarTable + 2 * pNumberOfVerbs
         Dim endGrammarTableData As Integer = 0
 
@@ -3117,7 +3019,7 @@ Module Program
         ' Check 1: Control that all entries in the grammar table points to an address
         '          between startGrammarTableData and startZCode.
         For verb As Integer = 0 To pNumberOfVerbs - 1
-            Dim grammarTableData As Integer = Helper.GetAdressFromWord(byteStory, startGrammarTable + verb * 2)
+            Dim grammarTableData As Integer = Helper.GetAdressFromWord(_memory, startGrammarTable + verb * 2)
             If grammarTableData < startGrammarTableData Then foundGV3 = False
             If grammarTableData > startZCode Then foundGV3 = False
         Next
@@ -3125,25 +3027,25 @@ Module Program
         ' Check 2: Control structure of the grammar table data and collect max action number
         If foundGV3 Then
             For verb = 0 To pNumberOfVerbs - 1
-                Dim grammarTableData As Integer = Helper.GetAdressFromWord(byteStory, startGrammarTable + verb * 2)
-                Dim nextGrammarTableData As Integer = Helper.GetAdressFromWord(byteStory, startGrammarTable + (verb + 1) * 2)
+                Dim grammarTableData As Integer = Helper.GetAdressFromWord(_memory, startGrammarTable + verb * 2)
+                Dim nextGrammarTableData As Integer = Helper.GetAdressFromWord(_memory, startGrammarTable + (verb + 1) * 2)
                 Dim index As Integer = grammarTableData
-                Dim grammarLines As Integer = byteStory(grammarTableData)
+                Dim grammarLines As Integer = _memory(grammarTableData)
                 index += 1
                 For grammarLine As Integer = 0 To grammarLines - 1
-                    Dim actionNumber As Integer = (Helper.GetAdressFromWord(byteStory, index) And &H3FF)
-                    Dim tokens As Integer = (Helper.GetAdressFromWord(byteStory, index) And &HF800) >> 11
+                    Dim actionNumber As Integer = (Helper.GetAdressFromWord(_memory, index) And &H3FF)
+                    Dim tokens As Integer = (Helper.GetAdressFromWord(_memory, index) And &HF800) >> 11
                     If actionNumber > maxActionNumber Then maxActionNumber = actionNumber
                     index += 2
 
                     ' Scan for adjectives and parsing routines
                     For i As Integer = 0 To tokens - 1
-                        Dim tokenData As Integer = byteStory(index + i * 2 + 1)
-                        If (byteStory(index + i * 2) And &HC0) = &H80 Then
+                        Dim tokenData As Integer = _memory(index + i * 2 + 1)
+                        If (_memory(index + i * 2) And &HC0) = &H80 Then
                             ' Parsing routine
                             If tokenData > maxParsingRoutineNumber Then maxParsingRoutineNumber = tokenData
                         End If
-                        If (byteStory(index + i * 2) And &H40) = &H40 Then
+                        If (_memory(index + i * 2) And &H40) = &H40 Then
                             ' Adjective/preposition
                             If tokenData > maxAdjectiveNumber Then maxAdjectiveNumber = tokenData
                         End If
@@ -3157,7 +3059,7 @@ Module Program
 
         ' Check 3: First word in adjective/preposition table should match number of adjectives
         Dim startAdjectiveTable As Integer = endGrammarTableData + (maxActionNumber + 1) * 2 + (maxParsingRoutineNumber + 1) * 2
-        If Helper.GetAdressFromWord(byteStory, startAdjectiveTable) <> (maxAdjectiveNumber + 1) Then foundGV3 = False
+        If Helper.GetAdressFromWord(_memory, startAdjectiveTable) <> (maxAdjectiveNumber + 1) Then foundGV3 = False
 
         ' Return result
         If foundGV3 Then
@@ -3186,7 +3088,7 @@ Module Program
         ' This function checks if there is a valid grammar table at this position by:
         '   * Check that byte defining number of grammer lines is below 16
         '   * Check that the action numbers (last byte of each grammar line) are contigious         
-        Dim iIndex = Helper.GetAdressFromWord(byteStory, &HE)       ' PURBOT, start of static mem
+        Dim iIndex = Helper.GetAdressFromWord(_memory, &HE)       ' PURBOT, start of static mem
         Dim bActions(255) As Boolean
         Dim bOk As Boolean = True
         Dim oRet As New GrammarScanResult
@@ -3194,14 +3096,14 @@ Module Program
             bActions(i) = False
         Next
         For i As Integer = iIndex To (iIndex + (pNumberOfVerbs - 1) * 2) Step 2
-            Dim iAddr As Integer = Helper.GetAdressFromWord(byteStory, i)
-            Dim iCount As Integer = byteStory(iAddr)
+            Dim iAddr As Integer = Helper.GetAdressFromWord(_memory, i)
+            Dim iCount As Integer = _memory(iAddr)
             If iCount > 15 Then
                 bOk = False
                 Exit For
             End If
             For j As Integer = 0 To iCount - 1
-                bActions(byteStory(iAddr + 8 * j + 8)) = True
+                bActions(_memory(iAddr + 8 * j + 8)) = True
             Next
             If oRet.addrGrammarDataStart = 0 Or oRet.addrGrammarDataStart > iAddr Then oRet.addrGrammarDataStart = iAddr
             If oRet.addrGrammarDataEnd = 0 Or oRet.addrGrammarDataEnd < (iAddr + iCount * 8) Then oRet.addrGrammarDataEnd = iAddr + iCount * 8
@@ -3268,17 +3170,17 @@ Module Program
                 If pDictEntries.v2_OneBytePartsOfSpeech And Not pDictEntries.v2_WordFlagsInTable Then iAddress = oDictEntry.Byte5ToLast * 256 + oDictEntry.Byte4ToLast
                 If Not pDictEntries.v2_OneBytePartsOfSpeech And Not pDictEntries.v2_WordFlagsInTable Then iAddress = oDictEntry.Byte6ToLast * 256 + oDictEntry.Byte5ToLast
 
-                If iAddress >= byteStory.Length Then Return Nothing
+                If iAddress >= _memory.Length Then Return Nothing
 
                 If iAddress > 0 And pDictEntries.GetEntryAtAddress(iAddress) Is Nothing Then
 
                     ' Check that word 2 is a valid number
-                    Dim iPrep As Integer = Helper.GetAdressFromWord(byteStory, iAddress + 2)
+                    Dim iPrep As Integer = Helper.GetAdressFromWord(_memory, iAddress + 2)
                     If Not iPrep = 0 And pDictEntries.GetEntryAtAddress(iPrep) Is Nothing Then Return Nothing
 
                     ' Check that distance between two-obj-table and one-obj-table is valid
-                    Dim iOneObject As Integer = Helper.GetAdressFromWord(byteStory, iAddress + 4)
-                    Dim iTwoObject As Integer = Helper.GetAdressFromWord(byteStory, iAddress + 6)
+                    Dim iOneObject As Integer = Helper.GetAdressFromWord(_memory, iAddress + 4)
+                    Dim iTwoObject As Integer = Helper.GetAdressFromWord(_memory, iAddress + 6)
                     If iOneObject > 0 And iTwoObject > 0 And Not ((iTwoObject - iOneObject - 2) Mod 6) = 0 Then Return Nothing
 
                     ' Count unique verbs
@@ -3289,10 +3191,10 @@ Module Program
 
                     ' Inspect one-object-table
                     If iOneObject > 0 Then
-                        Dim iCount As Integer = Helper.GetAdressFromWord(byteStory, iOneObject)
+                        Dim iCount As Integer = Helper.GetAdressFromWord(_memory, iOneObject)
                         For i As Integer = 0 To iCount - 1
-                            Dim iAction1 As Integer = Helper.GetAdressFromWord(byteStory, iOneObject + 2 + i * 6)
-                            Dim iPrep1 As Integer = Helper.GetAdressFromWord(byteStory, iOneObject + 2 + i * 6 + 2)
+                            Dim iAction1 As Integer = Helper.GetAdressFromWord(_memory, iOneObject + 2 + i * 6)
+                            Dim iPrep1 As Integer = Helper.GetAdressFromWord(_memory, iOneObject + 2 + i * 6 + 2)
                             If Not iPrep1 = 0 And pDictEntries.GetEntryAtAddress(iPrep1) Is Nothing Then Return Nothing
                             If iAction1 > iActionCount Then iActionCount = iAction1
                         Next
@@ -3302,11 +3204,11 @@ Module Program
 
                     ' Inspect two-object-table
                     If iTwoObject > 0 Then
-                        Dim iCount As Integer = Helper.GetAdressFromWord(byteStory, iTwoObject)
+                        Dim iCount As Integer = Helper.GetAdressFromWord(_memory, iTwoObject)
                         For i As Integer = 0 To iCount - 1
-                            Dim iAction2 As Integer = Helper.GetAdressFromWord(byteStory, iTwoObject + 2 + i * 10)
-                            Dim iPrep1 As Integer = Helper.GetAdressFromWord(byteStory, iTwoObject + 2 + i * 10 + 2)
-                            Dim iPrep2 As Integer = Helper.GetAdressFromWord(byteStory, iTwoObject + 2 + i * 10 + 6)
+                            Dim iAction2 As Integer = Helper.GetAdressFromWord(_memory, iTwoObject + 2 + i * 10)
+                            Dim iPrep1 As Integer = Helper.GetAdressFromWord(_memory, iTwoObject + 2 + i * 10 + 2)
+                            Dim iPrep2 As Integer = Helper.GetAdressFromWord(_memory, iTwoObject + 2 + i * 10 + 6)
                             If Not iPrep1 = 0 And pDictEntries.GetEntryAtAddress(iPrep1) Is Nothing Then Return Nothing
                             If Not iPrep2 = 0 And pDictEntries.GetEntryAtAddress(iPrep2) Is Nothing Then Return Nothing
                             If iAction2 > iActionCount Then iActionCount = iAction2
@@ -3318,7 +3220,7 @@ Module Program
                     If iAddress < iAddressLow0 Then iAddressLow0 = iAddress
                     If iAddress + 8 > iAddressHigh0 Then iAddressHigh0 = iAddress + 8
 
-                    Dim iAction As Integer = Helper.GetAdressFromWord(byteStory, iAddress)
+                    Dim iAction As Integer = Helper.GetAdressFromWord(_memory, iAddress)
                     If iAction < 65535 And iAction > iActionCount Then iActionCount = iAction
                 End If
             End If
@@ -3353,14 +3255,14 @@ Module Program
             Dim bFound As Boolean = True
             For i As Integer = 0 To 2 * (pNumberOfActions - 1) Step 2
                 Dim iAddr As Integer = iIndex + i
-                If pValidRoutines.Find(Function(x) x.entryPointPacked = Helper.GetAdressFromWord(byteStory, iAddr)) Is Nothing Then
+                If pValidRoutines.Find(Function(x) x.entryPointPacked = Helper.GetAdressFromWord(_memory, iAddr)) Is Nothing Then
                     bFound = False
                     Exit For
                 End If
             Next
             If bFound Then Return iIndex
             iIndex += 1
-        Loop Until iIndex > byteStory.Length - 100
+        Loop Until iIndex > _memory.Length - 100
         Return 0
     End Function
 
@@ -3376,7 +3278,7 @@ Module Program
         '   Only contains all prepositions including synonyms, there are no prep numbers in the dictionary
         '      2 bytes with the length of the table
         '      4 bytes with dictionary address in 2 bytes and preposition number in 1 byte
-        Dim potentialAddress As Integer = Helper.GetAdressFromWord(byteStory, &HE) - 1 ' Start search in Static memory
+        Dim potentialAddress As Integer = Helper.GetAdressFromWord(_memory, &HE) - 1 ' Start search in Static memory
         Dim foundTable As Boolean = False
         Dim prepositionAddresses As New HashSet(Of Integer)
         Dim allDictAddresses As New HashSet(Of Integer)
@@ -3393,11 +3295,11 @@ Module Program
             potentialAddress += 1
 
             ' Search for a potential start of a preposition table
-            If prepositionAddresses.Contains(Helper.GetAdressFromWord(byteStory, potentialAddress)) OrElse allDictAddresses.Contains(Helper.GetAdressFromWord(byteStory, potentialAddress)) Then
+            If prepositionAddresses.Contains(Helper.GetAdressFromWord(_memory, potentialAddress)) OrElse allDictAddresses.Contains(Helper.GetAdressFromWord(_memory, potentialAddress)) Then
                 ' Points to a preposition word (or any dictword, really)
 
                 ' position before should contain number of entries in table, each entry should point to a preposition
-                Dim count As Integer = Helper.GetAdressFromWord(byteStory, potentialAddress - 2)
+                Dim count As Integer = Helper.GetAdressFromWord(_memory, potentialAddress - 2)
 
                 If count = 0 Then Continue Do  ' can't be an empty table
 
@@ -3405,20 +3307,20 @@ Module Program
                     If compactVocablulary Then
                         ' First two bytes should point to a preposition, now that's not always true but at least it should be a dictionary word
                         ' prep number must be a legal one
-                        If Not prepositionAddresses.Contains(Helper.GetAdressFromWord(byteStory, potentialAddress + i * 3)) AndAlso Not allDictAddresses.Contains(Helper.GetAdressFromWord(byteStory, potentialAddress + i * 3)) Then Continue Do
-                        If Not byteStory(potentialAddress + i * 3 + 2) > 255 - totalPrepositionsInDictionary Then Continue Do
+                        If Not prepositionAddresses.Contains(Helper.GetAdressFromWord(_memory, potentialAddress + i * 3)) AndAlso Not allDictAddresses.Contains(Helper.GetAdressFromWord(_memory, potentialAddress + i * 3)) Then Continue Do
+                        If Not _memory(potentialAddress + i * 3 + 2) > 255 - totalPrepositionsInDictionary Then Continue Do
                     Else
                         ' First two bytes should point to a preposition, now that's not always true but at least it should be a dictionary word
                         ' Third byte should always be 0
                         ' prep number must be a legal one
-                        If Not prepositionAddresses.Contains(Helper.GetAdressFromWord(byteStory, potentialAddress + i * 4)) AndAlso Not allDictAddresses.Contains(Helper.GetAdressFromWord(byteStory, potentialAddress + i * 4)) Then Continue Do
-                        If Not byteStory(potentialAddress + i * 4 + 2) = 0 Then Continue Do
-                        If Not byteStory(potentialAddress + i * 4 + 3) > 255 - UniquePrepositionsInDictionary - 10 Then Continue Do    ' Add some buffer for example Ballyhoo
+                        If Not prepositionAddresses.Contains(Helper.GetAdressFromWord(_memory, potentialAddress + i * 4)) AndAlso Not allDictAddresses.Contains(Helper.GetAdressFromWord(_memory, potentialAddress + i * 4)) Then Continue Do
+                        If Not _memory(potentialAddress + i * 4 + 2) = 0 Then Continue Do
+                        If Not _memory(potentialAddress + i * 4 + 3) > 255 - UniquePrepositionsInDictionary - 10 Then Continue Do    ' Add some buffer for example Ballyhoo
                     End If
                 Next
                 foundTable = True
             End If
-        Loop Until foundTable Or potentialAddress > byteStory.Length - 1000
+        Loop Until foundTable Or potentialAddress > _memory.Length - 1000
 
         If foundTable Then Return potentialAddress - 2 Else Return 0
     End Function
@@ -3450,7 +3352,7 @@ Module Program
         Do
             bFound = True
             For i = 0 To footprintList.Count - 1
-                If byteStory(iAddr + i) <> footprintList(i) Then
+                If _memory(iAddr + i) <> footprintList(i) Then
                     bFound = False
                     If i > maxMatch Then
                         maxMatch = i
@@ -3461,7 +3363,7 @@ Module Program
             Next
             If bFound Then Return iAddr - 2         ' Found perfect match
             iAddr += 1
-        Loop Until iAddr > byteStory.Length - 100
+        Loop Until iAddr > _memory.Length - 100
         Return maxMatchAddress - 2          ' No perfect match, return best match. Curses_r7 have misformed table here
     End Function
 
@@ -3568,7 +3470,7 @@ Module Program
                 If (pPropSize Mod 2) = 0 Then
                     Dim bValidWords As Boolean = True
                     For i As Integer = 0 To pPropSize - 2 Step 2
-                        If pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, pPropStart + i)) Is Nothing Then
+                        If pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, pPropStart + i)) Is Nothing Then
                             bValidWords = False
                             Exit For
                         End If
@@ -3577,7 +3479,7 @@ Module Program
                         If Not silent Then
                             Console.Write("(PROP#{0}", pPropNum)
                             For i As Integer = 0 To pPropSize - 2 Step 2
-                                Console.Write(" {0}", pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, pPropStart + i)).dictWord.ToUpper)
+                                Console.Write(" {0}", pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, pPropStart + i)).dictWord.ToUpper)
                             Next
                             Console.WriteLine(")")
                         End If
@@ -3589,8 +3491,8 @@ Module Program
                     Dim bValidPseudo As Boolean = True
                     For i As Integer = 0 To pPropSize - 4 Step 4
                         Dim iIdx As Integer = pPropStart + i + 2
-                        If pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, pPropStart + i)) Is Nothing Or
-                           pRoutineList.Find(Function(c) c.entryPointPacked = Helper.GetAdressFromWord(byteStory, iIdx)) Is Nothing Then
+                        If pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, pPropStart + i)) Is Nothing Or
+                           pRoutineList.Find(Function(c) c.entryPointPacked = Helper.GetAdressFromWord(_memory, iIdx)) Is Nothing Then
                             bValidPseudo = False
                             Exit For
                         End If
@@ -3600,8 +3502,8 @@ Module Program
                             Console.Write("(PSEUDO")
                             For i As Integer = 0 To pPropSize - 4 Step 4
                                 Dim iIdx As Integer = pPropStart + i + 2
-                                Dim oRoutineData As RoutineData = pRoutineList.Find(Function(c) c.entryPointPacked = Helper.GetAdressFromWord(byteStory, iIdx))
-                                If Not silent Then Console.Write(" {0}{1}{2}", Convert.ToChar(34), pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, pPropStart + i)).dictWord.ToUpper, Convert.ToChar(34))
+                                Dim oRoutineData As RoutineData = pRoutineList.Find(Function(c) c.entryPointPacked = Helper.GetAdressFromWord(_memory, iIdx))
+                                If Not silent Then Console.Write(" {0}{1}{2}", Convert.ToChar(34), pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, pPropStart + i)).dictWord.ToUpper, Convert.ToChar(34))
                                 If Not silent Then Console.Write(" Routine at 0x{0:X5}", oRoutineData.entryPoint)
                                 If oRoutineData IsNot Nothing And silent Then oRoutineData.callsFrom.Add(String.Concat("Called from property #", pPropNum.ToString, " at object #", objectName))
                             Next
@@ -3631,7 +3533,7 @@ Module Program
             If (pPropSize Mod 2) = 0 Then
                 Dim bValidWords As Boolean = True
                 For i As Integer = 0 To pPropSize - 2 Step 2
-                    If pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, pPropStart + i)) Is Nothing Then
+                    If pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, pPropStart + i)) Is Nothing Then
                         bValidWords = False
                         Exit For
                     End If
@@ -3640,7 +3542,7 @@ Module Program
                     If Not silent Then
                         Console.Write("prop#{0}", pPropNum)
                         For i As Integer = 0 To pPropSize - 2 Step 2
-                            Console.Write(" '{0}'", pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, pPropStart + i)).dictWord)
+                            Console.Write(" '{0}'", pDictEntries.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, pPropStart + i)).dictWord)
                         Next
                         Console.WriteLine()
                     End If
@@ -3686,44 +3588,44 @@ Module Program
         '   byte 7          : OPTS2  2nd objects search options
 
         ' Asume normal syntax 
-        Dim nobj As Integer = byteStory(syntaxStartAddress)
+        Dim nobj As Integer = _memory(syntaxStartAddress)
         Dim prep(2) As Integer
-        prep(1) = byteStory(syntaxStartAddress + 1)
-        prep(2) = byteStory(syntaxStartAddress + 2)
+        prep(1) = _memory(syntaxStartAddress + 1)
+        prep(2) = _memory(syntaxStartAddress + 2)
         Dim find(2) As Integer
-        find(1) = byteStory(syntaxStartAddress + 3)
-        find(2) = byteStory(syntaxStartAddress + 4)
+        find(1) = _memory(syntaxStartAddress + 3)
+        find(2) = _memory(syntaxStartAddress + 4)
         Dim opts(2) As Integer
-        opts(1) = byteStory(syntaxStartAddress + 5)
-        opts(2) = byteStory(syntaxStartAddress + 6)
-        Dim action As Integer = byteStory(syntaxStartAddress + 7)
+        opts(1) = _memory(syntaxStartAddress + 5)
+        opts(2) = _memory(syntaxStartAddress + 6)
+        Dim action As Integer = _memory(syntaxStartAddress + 7)
         Dim prepositionOffset As Integer = 4
         If dictEntriesList.WordSize = 6 Or dictEntriesList.WordSize = 8 Then prepositionOffset = 3     ' COMPACT-VOCABULARY?
 
         If compactSyntax Then
-            nobj = (byteStory(syntaxStartAddress) And &HC0) >> 6
-            prep(1) = (byteStory(syntaxStartAddress) And &H3F) Or &HC0
-            prep(2) = byteStory(syntaxStartAddress + 4) Or &HC0
-            find(1) = byteStory(syntaxStartAddress + 2)
-            find(2) = byteStory(syntaxStartAddress + 5)
-            opts(1) = byteStory(syntaxStartAddress + 3)
-            opts(2) = byteStory(syntaxStartAddress + 6)
-            action = byteStory(syntaxStartAddress + 1)
+            nobj = (_memory(syntaxStartAddress) And &HC0) >> 6
+            prep(1) = (_memory(syntaxStartAddress) And &H3F) Or &HC0
+            prep(2) = _memory(syntaxStartAddress + 4) Or &HC0
+            find(1) = _memory(syntaxStartAddress + 2)
+            find(2) = _memory(syntaxStartAddress + 5)
+            opts(1) = _memory(syntaxStartAddress + 3)
+            opts(2) = _memory(syntaxStartAddress + 6)
+            action = _memory(syntaxStartAddress + 1)
             If prep(1) = &HC0 Then prep(1) = 0
             If prep(2) = &HC0 Then prep(2) = 0
         End If
 
-        Dim actionAddress As Integer = Helper.GetAdressFromWord(byteStory, actionTableStartAddress + action * 2)
-        actionAddress = Helper.UnpackAddress(actionAddress, byteStory, True)
-        Dim preActionAddress As Integer = Helper.GetAdressFromWord(byteStory, preActionTableStartAddress + action * 2)
-        preActionAddress = Helper.UnpackAddress(preActionAddress, byteStory, True)
+        Dim actionAddress As Integer = Helper.GetAdressFromWord(_memory, actionTableStartAddress + action * 2)
+        actionAddress = Helper.UnpackAddress(actionAddress, _memory, True)
+        Dim preActionAddress As Integer = Helper.GetAdressFromWord(_memory, preActionTableStartAddress + action * 2)
+        preActionAddress = Helper.UnpackAddress(preActionAddress, _memory, True)
         Dim sRet As String = "<SYNTAX * "
         For i As Integer = 1 To nobj
             If prep(i) > 0 Then
-                Dim prepositionCount As Integer = Helper.GetAdressFromWord(byteStory, prepositionTableStartAddress)
+                Dim prepositionCount As Integer = Helper.GetAdressFromWord(_memory, prepositionTableStartAddress)
                 For prepIdx As Integer = 0 To prepositionCount - 1
-                    If byteStory(prepositionTableStartAddress + prepositionOffset + 1 + prepIdx * prepositionOffset) = prep(i) Then
-                        sRet = String.Concat(sRet, dictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, prepositionTableStartAddress + 2 + prepIdx * prepositionOffset)).dictWord.ToUpper, " ")
+                    If _memory(prepositionTableStartAddress + prepositionOffset + 1 + prepIdx * prepositionOffset) = prep(i) Then
+                        sRet = String.Concat(sRet, dictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, prepositionTableStartAddress + 2 + prepIdx * prepositionOffset)).dictWord.ToUpper, " ")
                         Exit For
                     End If
                 Next
@@ -3754,20 +3656,20 @@ Module Program
     Private Function DecodeGrammarsZilV2(syntaxStartAddress As Integer, dictEntriesList As DictionaryEntries, actionTableStartAddress As Integer, preActionTableStartAddress As Integer, numberOfObjects As Integer) As String
         Dim nobj As Integer = numberOfObjects
         Dim prep(2) As Integer
-        prep(1) = Helper.GetAdressFromWord(byteStory, syntaxStartAddress + 2)
-        prep(2) = Helper.GetAdressFromWord(byteStory, syntaxStartAddress + 6)
+        prep(1) = Helper.GetAdressFromWord(_memory, syntaxStartAddress + 2)
+        prep(2) = Helper.GetAdressFromWord(_memory, syntaxStartAddress + 6)
         Dim find(2) As Integer
-        find(1) = byteStory(syntaxStartAddress + 4)
-        find(2) = byteStory(syntaxStartAddress + 8)
+        find(1) = _memory(syntaxStartAddress + 4)
+        find(2) = _memory(syntaxStartAddress + 8)
         Dim opts(2) As Integer
-        opts(1) = byteStory(syntaxStartAddress + 5)
-        opts(2) = byteStory(syntaxStartAddress + 9)
-        Dim action As Integer = Helper.GetAdressFromWord(byteStory, syntaxStartAddress)
+        opts(1) = _memory(syntaxStartAddress + 5)
+        opts(2) = _memory(syntaxStartAddress + 9)
+        Dim action As Integer = Helper.GetAdressFromWord(_memory, syntaxStartAddress)
 
-        Dim actionAddress As Integer = Helper.GetAdressFromWord(byteStory, actionTableStartAddress + action * 2)
-        actionAddress = Helper.UnpackAddress(actionAddress, byteStory, True)
-        Dim preActionAddress As Integer = Helper.GetAdressFromWord(byteStory, preActionTableStartAddress + action * 2)
-        preActionAddress = Helper.UnpackAddress(preActionAddress, byteStory, True)
+        Dim actionAddress As Integer = Helper.GetAdressFromWord(_memory, actionTableStartAddress + action * 2)
+        actionAddress = Helper.UnpackAddress(actionAddress, _memory, True)
+        Dim preActionAddress As Integer = Helper.GetAdressFromWord(_memory, preActionTableStartAddress + action * 2)
+        preActionAddress = Helper.UnpackAddress(preActionAddress, _memory, True)
         Dim sRet As String = "<SYNTAX * "
         For i As Integer = 1 To nobj
             If prep(i) > 0 Then sRet = String.Concat(sRet, dictEntriesList.GetEntryAtAddress(prep(i)).dictWord.ToUpper, " ")
@@ -3820,17 +3722,17 @@ Module Program
         'The parameter count Is the number of tokens which are Not prepositions.
         'This Is needed because the run of tokens Is terminated by null bytes (00),
         'which Is ambiguous: "noun" tokens are also encoded as 00.
-        Dim parameterCount As Integer = byteStory(grammarStartAddress)
-        Dim actionTableIndex As Integer = byteStory(grammarStartAddress + 7)
-        Dim actionAddress As Integer = Helper.GetAdressFromWord(byteStory, actionTableStartAddress + actionTableIndex * 2)
-        actionAddress = Helper.UnpackAddress(actionAddress, byteStory, True)
+        Dim parameterCount As Integer = _memory(grammarStartAddress)
+        Dim actionTableIndex As Integer = _memory(grammarStartAddress + 7)
+        Dim actionAddress As Integer = Helper.GetAdressFromWord(_memory, actionTableStartAddress + actionTableIndex * 2)
+        actionAddress = Helper.UnpackAddress(actionAddress, _memory, True)
         Dim sRet As String = "*"
         For i As Integer = grammarStartAddress + 1 To grammarStartAddress + 6
             ' prepositions/adjectives don't count as parameters in the parameter count
-            If byteStory(i) > 192 Then parameterCount += 1
+            If _memory(i) > 192 Then parameterCount += 1
         Next
         For i As Integer = grammarStartAddress + 1 To grammarStartAddress + parameterCount
-            Select Case byteStory(i)
+            Select Case _memory(i)
                 Case 0 : sRet = String.Concat(sRet, " noun")
                 Case 1 : sRet = String.Concat(sRet, " held")
                 Case 2 : sRet = String.Concat(sRet, " multi")
@@ -3841,18 +3743,18 @@ Module Program
                 Case 7 : sRet = String.Concat(sRet, " special")
                 Case 8 : sRet = String.Concat(sRet, " number")
                 Case 9 To 15 : sRet = String.Concat(sRet, " illegal token")
-                Case 16 To 47 : sRet = String.Concat(sRet, " noun=0x", Helper.UnpackAddress(Helper.GetAdressFromWord(byteStory, parsingRoutinesStart + byteStory(i) - 16), byteStory, True).ToString("X5"), " [parse #", byteStory(i) - 16, "]")
-                Case 48 To 79 : sRet = String.Concat(sRet, " 0x", Helper.UnpackAddress(Helper.GetAdressFromWord(byteStory, parsingRoutinesStart + byteStory(i) - 48), byteStory, True).ToString("X5"), " [parse #", byteStory(i) - 48, "]")
-                Case 80 To 111 : sRet = String.Concat(sRet, " scope=0x", Helper.UnpackAddress(Helper.GetAdressFromWord(byteStory, parsingRoutinesStart + byteStory(i) - 80), byteStory, True).ToString("X5"), " [parse #", byteStory(i) - 80, "]")
+                Case 16 To 47 : sRet = String.Concat(sRet, " noun=0x", Helper.UnpackAddress(Helper.GetAdressFromWord(_memory, parsingRoutinesStart + _memory(i) - 16), _memory, True).ToString("X5"), " [parse #", _memory(i) - 16, "]")
+                Case 48 To 79 : sRet = String.Concat(sRet, " 0x", Helper.UnpackAddress(Helper.GetAdressFromWord(_memory, parsingRoutinesStart + _memory(i) - 48), _memory, True).ToString("X5"), " [parse #", _memory(i) - 48, "]")
+                Case 80 To 111 : sRet = String.Concat(sRet, " scope=0x", Helper.UnpackAddress(Helper.GetAdressFromWord(_memory, parsingRoutinesStart + _memory(i) - 80), _memory, True).ToString("X5"), " [parse #", _memory(i) - 80, "]")
                 Case 112 To 127 : sRet = String.Concat(sRet, " illegal token")
-                Case 128 To 179 : sRet = String.Concat(sRet, " attribute", byteStory(i) - 128)
+                Case 128 To 179 : sRet = String.Concat(sRet, " attribute", _memory(i) - 128)
                 Case 180 To 255
-                    Dim adjectiveCount As Integer = Helper.GetAdressFromWord(byteStory, adjectiveTableStart)
+                    Dim adjectiveCount As Integer = Helper.GetAdressFromWord(_memory, adjectiveTableStart)
                     For adjIdx As Integer = 0 To adjectiveCount - 1
-                        If byteStory(adjectiveTableStart + 5 + adjIdx * 4) = byteStory(i) Then
-                            Dim dictEntry As DictionaryEntry = dictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, adjectiveTableStart + 2 + adjIdx * 4))
+                        If _memory(adjectiveTableStart + 5 + adjIdx * 4) = _memory(i) Then
+                            Dim dictEntry As DictionaryEntry = dictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, adjectiveTableStart + 2 + adjIdx * 4))
                             Dim prep As String
-                            If dictEntry IsNot Nothing Then prep = dictEntry.dictWord Else prep = dictEntriesList.GetPreposition(byteStory(i))(0).dictWord
+                            If dictEntry IsNot Nothing Then prep = dictEntry.dictWord Else prep = dictEntriesList.GetPreposition(_memory(i))(0).dictWord
                             sRet = String.Concat(sRet, " '", prep, "'")
                             Exit For
                         End If
@@ -3880,17 +3782,17 @@ Module Program
         '                               bit 6-7: Top bits, redundant
         '         byte 2-3, token data 
         ' <ENDIT>: 0xF
-        Dim actionTableIndex As Integer = (Helper.GetAdressFromWord(byteStory, grammarStartAddress) And &H3FF)
-        Dim actionAddress As Integer = Helper.GetAdressFromWord(byteStory, actionTableStartAddress + actionTableIndex * 2)
-        actionAddress = Helper.UnpackAddress(actionAddress, byteStory, True)
+        Dim actionTableIndex As Integer = (Helper.GetAdressFromWord(_memory, grammarStartAddress) And &H3FF)
+        Dim actionAddress As Integer = Helper.GetAdressFromWord(_memory, actionTableStartAddress + actionTableIndex * 2)
+        actionAddress = Helper.UnpackAddress(actionAddress, _memory, True)
         Dim reverse As Boolean = False
-        If (Helper.GetAdressFromWord(byteStory, grammarStartAddress) And &H400) = &H400 Then reverse = True
+        If (Helper.GetAdressFromWord(_memory, grammarStartAddress) And &H400) = &H400 Then reverse = True
         Dim index As Integer = 2
         Dim sRet As String = "*"
-        If Not byteStory(grammarStartAddress + index) = &HF Then
+        If Not _memory(grammarStartAddress + index) = &HF Then
             Do
-                Dim tokenType As Integer = byteStory(grammarStartAddress + index)
-                Dim tokenData As Integer = Helper.GetAdressFromWord(byteStory, grammarStartAddress + index + 1)
+                Dim tokenType As Integer = _memory(grammarStartAddress + index)
+                Dim tokenData As Integer = Helper.GetAdressFromWord(_memory, grammarStartAddress + index + 1)
                 If (tokenType And &HF) = &H1 Then
                     ' Elementary type
                     Select Case tokenData
@@ -3915,16 +3817,16 @@ Module Program
                     End Select
                     sRet = String.Concat(sRet, dictEntriesList.GetEntryAtAddress(tokenData).dictWord, "'")
                 ElseIf (tokenType And &HF) = &H3 Then
-                    sRet = String.Concat(sRet, " noun=0x", Helper.UnpackAddress(tokenData, byteStory, True).ToString("X5"))
+                    sRet = String.Concat(sRet, " noun=0x", Helper.UnpackAddress(tokenData, _memory, True).ToString("X5"))
                 ElseIf (tokenType And &HF) = &H4 Then
                     sRet = String.Concat(sRet, " attribute", tokenData.ToString())
                 ElseIf (tokenType And &HF) = &H5 Then
-                    sRet = String.Concat(sRet, " scope=0x", Helper.UnpackAddress(tokenData, byteStory, True).ToString("X5"))
+                    sRet = String.Concat(sRet, " scope=0x", Helper.UnpackAddress(tokenData, _memory, True).ToString("X5"))
                 ElseIf (tokenType And &HF) = &H6 Then
-                    sRet = String.Concat(sRet, " 0x", Helper.UnpackAddress(tokenData, byteStory, True).ToString("X5"))
+                    sRet = String.Concat(sRet, " 0x", Helper.UnpackAddress(tokenData, _memory, True).ToString("X5"))
                 End If
                 index += 3
-            Loop Until byteStory(grammarStartAddress + index) = &HF
+            Loop Until _memory(grammarStartAddress + index) = &HF
         End If
         sRet = String.Concat(sRet, " -> 0x", actionAddress.ToString("X5"), " [Action #", actionTableIndex.ToString(), "]")
         If reverse Then sRet = String.Concat(sRet, " reverse")
@@ -3946,17 +3848,17 @@ Module Program
         '                                          01 = last alternative
         '                               bit 6-7: Top bits, redundant
         '         byte 2,   token data 
-        Dim actionTableIndex As Integer = (Helper.GetAdressFromWord(byteStory, grammarStartAddress) And &H3FF)
-        Dim tokens As Integer = (Helper.GetAdressFromWord(byteStory, grammarStartAddress) And &HF800) >> 11
-        Dim actionAddress As Integer = Helper.GetAdressFromWord(byteStory, actionTableStartAddress + actionTableIndex * 2)
-        actionAddress = Helper.UnpackAddress(actionAddress, byteStory, True)
+        Dim actionTableIndex As Integer = (Helper.GetAdressFromWord(_memory, grammarStartAddress) And &H3FF)
+        Dim tokens As Integer = (Helper.GetAdressFromWord(_memory, grammarStartAddress) And &HF800) >> 11
+        Dim actionAddress As Integer = Helper.GetAdressFromWord(_memory, actionTableStartAddress + actionTableIndex * 2)
+        actionAddress = Helper.UnpackAddress(actionAddress, _memory, True)
         Dim reverse As Boolean = False
-        If (Helper.GetAdressFromWord(byteStory, grammarStartAddress) And &H400) = &H400 Then reverse = True
+        If (Helper.GetAdressFromWord(_memory, grammarStartAddress) And &H400) = &H400 Then reverse = True
         Dim index As Integer = 2
         Dim sRet As String = "*"
         For i As Integer = 0 To tokens - 1
-            Dim tokenType As Integer = byteStory(grammarStartAddress + index)
-            Dim tokenData As Integer = byteStory(grammarStartAddress + index + 1)
+            Dim tokenType As Integer = _memory(grammarStartAddress + index)
+            Dim tokenData As Integer = _memory(grammarStartAddress + index + 1)
             If (tokenType And &HF) = &H1 Then
                 ' Elementary type
                 Select Case tokenData
@@ -3979,15 +3881,15 @@ Module Program
                     Case &H20 : sRet = String.Concat(sRet, " '")
                     Case &H30 : sRet = String.Concat(sRet, "/'")        ' Undocumented? But only lowest bit seems significant for alternatives 
                 End Select
-                sRet = String.Concat(sRet, dictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(byteStory, adjectiveTableStart + tokenData * 2 + 2)).dictWord, "'")
+                sRet = String.Concat(sRet, dictEntriesList.GetEntryAtAddress(Helper.GetAdressFromWord(_memory, adjectiveTableStart + tokenData * 2 + 2)).dictWord, "'")
             ElseIf (tokenType And &HF) = &H3 Then
-                sRet = String.Concat(sRet, " noun=0x", String.Concat(sRet, " noun=0x", Helper.UnpackAddress(Helper.GetAdressFromWord(byteStory, parsingRoutinesStart + tokenData * 2), byteStory, True).ToString("X5"), " [parse #", tokenData, "]"))
+                sRet = String.Concat(sRet, " noun=0x", String.Concat(sRet, " noun=0x", Helper.UnpackAddress(Helper.GetAdressFromWord(_memory, parsingRoutinesStart + tokenData * 2), _memory, True).ToString("X5"), " [parse #", tokenData, "]"))
             ElseIf (tokenType And &HF) = &H4 Then
                 sRet = String.Concat(sRet, " attribute", tokenData.ToString())
             ElseIf (tokenType And &HF) = &H5 Then
-                sRet = String.Concat(sRet, " scope=0x", String.Concat(sRet, " noun=0x", Helper.UnpackAddress(Helper.GetAdressFromWord(byteStory, parsingRoutinesStart + tokenData * 2), byteStory, True).ToString("X5"), " [parse #", tokenData, "]"))
+                sRet = String.Concat(sRet, " scope=0x", String.Concat(sRet, " noun=0x", Helper.UnpackAddress(Helper.GetAdressFromWord(_memory, parsingRoutinesStart + tokenData * 2), _memory, True).ToString("X5"), " [parse #", tokenData, "]"))
             ElseIf (tokenType And &HF) = &H6 Then
-                sRet = String.Concat(sRet, " 0x", String.Concat(sRet, " noun=0x", Helper.UnpackAddress(Helper.GetAdressFromWord(byteStory, parsingRoutinesStart + tokenData * 2), byteStory, True).ToString("X5"), " [parse #", tokenData, "]"))
+                sRet = String.Concat(sRet, " 0x", String.Concat(sRet, " noun=0x", Helper.UnpackAddress(Helper.GetAdressFromWord(_memory, parsingRoutinesStart + tokenData * 2), _memory, True).ToString("X5"), " [parse #", tokenData, "]"))
             End If
             index += 2
         Next
