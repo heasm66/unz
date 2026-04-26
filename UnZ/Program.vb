@@ -98,7 +98,8 @@ Module Program
     Private createGametext As Boolean = False
     Private showExtra As Boolean = False
     Private showVariables As Boolean = False
-    Private showAbbrevsInsertion As Boolean = True
+    Private showAbbrevsInsertion As Boolean = False
+    Private forceUTF8 As Boolean = False
     Private ReadOnly objectNames As New List(Of String)
     Private ReadOnly inlineStrings As New List(Of InlineString)
     Private buildDateTimeLocal As Date
@@ -131,9 +132,6 @@ Module Program
 
             ' Get date of build
             buildDateTimeLocal = Helper.GetBuildDateUtc(Assembly.GetExecutingAssembly()).ToLocalTime()
-
-            ' Use UTF8 for output
-            Console.OutputEncoding = System.Text.Encoding.UTF8
 
             ' ***** Unpack parameters *****
             ' A bit of a poor mans GetOpt. Should probable be replaced by a NuGet-libary...
@@ -206,13 +204,13 @@ Module Program
                         Console.Error.WriteLine("Unpack Z-machine file format information.")
                         Console.Error.WriteLine()
                         Console.Error.WriteLine(" -a                 Show the abbreviation sections.")
+                        Console.Error.WriteLine(" --abbrevs          Show the abbreviation insertion points in the strings.")
                         Console.Error.WriteLine(" -d                 Show the dictionary section.")
                         Console.Error.WriteLine(" -f                 Show all sections (default).")
                         Console.Error.WriteLine(" -g                 Show the grammar section.")
                         Console.Error.WriteLine(" --gametext         Output only a 'gametext.txt' format of all text in the file.")
                         Console.Error.WriteLine(" -h, --help, /?     Show this help.")
                         Console.Error.WriteLine(" --hexdump          Show raw hexdump before each section.")
-                        Console.Error.WriteLine(" --hide             Don't show the abbreviation insertion points in the strings.")
                         Console.Error.WriteLine(" -i                 Show the header section.")
                         Console.Error.WriteLine(" --invisiclues      Show Object Tree in InvisiClues format.")
                         Console.Error.WriteLine(" -m                 Show the memory map.")
@@ -223,6 +221,7 @@ Module Program
                         Console.Error.WriteLine("          2/ZAP     Use ZAP syntax for the z-code decompilation.")
                         Console.Error.WriteLine("          3/pseudo  Use pseudo-code (Informish) syntax for the z-code decompilation.")
                         Console.Error.WriteLine(" -u                 Show the unidentified sections.")
+                        Console.Error.WriteLine(" --utf8             Force output to UTF8 encoding (default is the console's encoding)")
                         Console.Error.WriteLine(" -v                 Show the variable section.")
                         Console.Error.WriteLine(" -x                 Show miscellaneous other sections.")
                         Console.Error.WriteLine(" -z                 Show the z-code section.")
@@ -232,8 +231,8 @@ Module Program
                         Console.Error.WriteLine("Report bugs/suggestions to: heasm66@gmail.com")
                         Console.Error.WriteLine("UnZ homepage: https://github.com/heasm66/unz")
                         Exit Sub
-                    Case "--hide"
-                        showAbbrevsInsertion = False
+                    Case "--abbrevs"
+                        showAbbrevsInsertion = True
                     Case "-i"
                         showHeader = True
                         allSections = False
@@ -291,6 +290,8 @@ Module Program
                     Case "--invisiclues"
                         showInvisiClues = True
                         showObjects = True
+                    Case "--utf8"
+                        forceUTF8 = True
                     Case Else
                         If unpackedArgs(i).StartsWith("-"c) Then
                             Console.Error.WriteLine("Unknown option, '" & unpackedArgs(i) & "'.")
@@ -306,6 +307,7 @@ Module Program
                         End If
                 End Select
             Next
+
             If allSections Then
                 showHeader = True
                 showAbbreviations = True
@@ -318,6 +320,12 @@ Module Program
                 showMemoryMap = True
                 showExtra = True
                 showVariables = True
+            End If
+
+            ' Use UTF8 for output
+            If forceUTF8 Then
+                Console.InputEncoding = System.Text.Encoding.UTF8
+                Console.OutputEncoding = System.Text.Encoding.UTF8
             End If
 
             If sFilename.Trim = "" Then
@@ -415,6 +423,23 @@ Module Program
 
             memoryMap.Add(New MemoryMapEntry("Header table", &H0, &H3F, MemoryMapType.MM_HEADER_TABLE))     ' Header, always in the first 64 bytes
 
+            ' Header extension table
+            Dim iAddrHeaderExtStart As Integer = Helper.GetAdressFromWord(_memory, &H36)
+            Dim iHeaderExtLen As Integer = 0
+            If iAddrHeaderExtStart > 0 Then
+                iHeaderExtLen = Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart)     ' Number of further words in table
+                memoryMap.Add(New MemoryMapEntry("Header extension table", iAddrHeaderExtStart, iAddrHeaderExtStart + iHeaderExtLen * 2 + 1, MemoryMapType.MM_HEADER_EXT_TABLE))
+                If iHeaderExtLen >= 3 Then
+                    Dim unicodeAddr As Integer = Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart + 6)
+                    If unicodeAddr > 0 Then
+                        Dim unicodeLen As Integer = _memory(unicodeAddr)
+                        Helper.UnicodeTranslationTableAddr = unicodeAddr
+                        memoryMap.Add(New MemoryMapEntry("Unicode translation table", unicodeAddr, unicodeAddr + unicodeLen * 2, MemoryMapType.MM_UNICODE_TABLE))
+                    End If
+
+                End If
+            End If
+
             ' Extract possible custom alphabet
             Dim iAlphabetAddress As Integer = Helper.GetAdressFromWord(_memory, &H34)
             If iAlphabetAddress > 0 Then
@@ -432,24 +457,6 @@ Module Program
                     alphabet(2) = "       0123456789.,!?_#'~/\<-:()"
                 Else
                     alphabet(2) = "       ^0123456789.,!?_#'~/\-:()"
-                End If
-            End If
-
-
-            ' Header extension table
-            Dim iAddrHeaderExtStart As Integer = Helper.GetAdressFromWord(_memory, &H36)
-            Dim iHeaderExtLen As Integer = 0
-            If iAddrHeaderExtStart > 0 Then
-                iHeaderExtLen = Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart)     ' Number of further words in table
-                memoryMap.Add(New MemoryMapEntry("Header extension table", iAddrHeaderExtStart, iAddrHeaderExtStart + iHeaderExtLen * 2 + 1, MemoryMapType.MM_HEADER_EXT_TABLE))
-                If iHeaderExtLen >= 3 Then
-                    Dim unicodeAddr As Integer = Helper.GetAdressFromWord(_memory, iAddrHeaderExtStart + 6)
-                    If unicodeAddr > 0 Then
-                        Dim unicodeLen As Integer = _memory(unicodeAddr)
-                        Helper.UnicodeTranslationTableAddr = unicodeAddr
-                        memoryMap.Add(New MemoryMapEntry("Unicode translation table", unicodeAddr, unicodeAddr + unicodeLen * 2, MemoryMapType.MM_UNICODE_TABLE))
-                    End If
-
                 End If
             End If
 
@@ -1295,10 +1302,10 @@ Module Program
                         If oMemEntry.addressEnd < iAddrStaticMem Then
                             Console.WriteLine("   {0:X5}-{1:X5} {2}", oMemEntry.addressStart, oMemEntry.addressEnd, oMemEntry.name & ", " & oMemEntry.SizeString & ".")
                         ElseIf oMemEntry.addressStart < iAddrStaticMem And oMemEntry.addressEnd > iAddrStaticMem Then
-                            Console.WriteLine("   {0:X5}-{1:X5} {2}", oMemEntry.addressStart, iAddrStaticMem - 1, oMemEntry.name & ", " & (iAddrStaticMem - oMemEntry.addressStart).ToString("#,##0") & ".")
+                            Console.WriteLine("   {0:X5}-{1:X5} {2}", oMemEntry.addressStart, iAddrStaticMem - 1, oMemEntry.name & ", " & (iAddrStaticMem - oMemEntry.addressStart).ToString("#,##0").Replace(ChrW(&HA0), Chr(&H20)) & ".")
                             Console.WriteLine()
                             Console.WriteLine("{0:X5}-{1:X5} STATIC MEMORY", iAddrStaticMem, iStaticMemEnd)
-                            Console.WriteLine("   {0:X5}-{1:X5} {2}", iAddrStaticMem, oMemEntry.addressEnd, oMemEntry.name & ", " & (oMemEntry.addressEnd - iAddrStaticMem + 1).ToString("#,##0") & ".")
+                            Console.WriteLine("   {0:X5}-{1:X5} {2}", iAddrStaticMem, oMemEntry.addressEnd, oMemEntry.name & ", " & (oMemEntry.addressEnd - iAddrStaticMem + 1).ToString("#,##0").Replace(ChrW(&HA0), Chr(&H20)) & ".")
                             bPrinted = True
                             iPhase += 1
                         ElseIf oMemEntry.addressStart >= iAddrStaticMem Then
@@ -1624,7 +1631,7 @@ Module Program
                     If showHex Then HexDump(oMemEntry.addressStart, oMemEntry.addressEnd, True)
                     Console.WriteLine()
                     Dim unicodeCount As Integer = _memory(oMemEntry.addressStart)
-                    Console.WriteLine("{0:X5} {1:X2}                       Number of entries: {2}", oMemEntry.addressStart, _memory(oMemEntry.addressStart), unicodeCount)
+                    Console.WriteLine("{0:X5} {1:X2}                       Number of entries:  {2}", oMemEntry.addressStart, _memory(oMemEntry.addressStart), unicodeCount)
                     If unicodeCount > 0 Then
                         For i As Integer = 0 To unicodeCount - 1
                             Dim currentAddress As Integer = oMemEntry.addressStart + 1 + i * 2
@@ -2732,8 +2739,23 @@ Module Program
         For i As Integer = 0 To piLength - 1
             If _memory(piStringAddress + i) < 32 Then
                 sRet &= "."
-            Else
+            ElseIf _memory(piStringAddress + i) < 155 Then
                 sRet &= System.Text.Encoding.ASCII.GetString(_memory, piStringAddress + i, 1)
+            Else
+                ' Extra chars, unicode
+                If Helper.UnicodeTranslationTableAddr = 0 Then
+                    ' Standard table
+                    sRet &= "äöüÄÖÜß»«ëïÿËÏáéíóúýÁÉÍÓÚÝàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛåÅøØãñõÃÑÕæÆçÇþðÞÐ£œŒ¡¿????????????????????????????".Substring(_memory(piStringAddress + i) - 155, 1)
+                Else
+                    ' Use unicode translation table
+                    Dim unicodeTableLen As Integer = _memory(Helper.UnicodeTranslationTableAddr)
+                    If ((_memory(piStringAddress + i) - 155) + 1) > unicodeTableLen Then
+                        sRet &= "?"
+                    Else
+                        Dim unicodeVal As Integer = Helper.GetAdressFromWord(_memory, Helper.UnicodeTranslationTableAddr + (_memory(piStringAddress + i) - 155) * 2 + 1)
+                        sRet &= Strings.ChrW(unicodeVal)
+                    End If
+                End If
             End If
         Next
 

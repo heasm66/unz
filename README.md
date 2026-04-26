@@ -11,18 +11,18 @@
 
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
-UnZ 0.17 (3rd April 2026, in development) by Henrik Åsman, (c) 2021-2026
+UnZ 0.17 (26th April 2026, in development) by Henrik Åsman, (c) 2021-2026
 Usage: unz [option]... [file]
 Unpack Z-machine file format information.
 
  -a                 Show the abbreviation sections.
+ --abbrevs          Show the abbreviation insertion points in the strings.
  -d                 Show the dictionary section.
  -f                 Show all sections (default).
  -g                 Show the grammar section.
  --gametext         Output only a 'gametext.txt' format of all text in the file.
  -h, --help, /?     Show this help.
  --hexdump          Show raw hexdump before each section.
- --hide             Don't show the abbreviation insertion points in the strings.
  -i                 Show the header section.
  --invisiclues      Show Object Tree in InvisiClues format.
  -m                 Show the memory map.
@@ -33,6 +33,7 @@ Unpack Z-machine file format information.
           2/ZAP     Use ZAP syntax for the z-code decompilation.
           3/pseudo  Use pseudo-code (Informish) syntax for the z-code decompilation.
  -u                 Show the unidentified sections.
+ --utf8             Force output to UTF8 encoding (default is the console's encoding)
  -v                 Show the variable section.
  -x                 Show miscellaneous other sections.
  -z                 Show the z-code section.
@@ -56,7 +57,11 @@ Changelog:
              in decoding properties on objects
       * Bug: Prevent crash when scanning for potential
              Inform6 grammar table v1
-      * Accept blorb-file (zblorb) as input 
+      * Accept blorb-file (zblorb) as input
+      * Abbreviation insert points don't show on default.
+          --hide decrepated, replaced by --abbrevs
+      * Bug: Fixed error when Zscii chars 155+ are in alphabet
+      * Improved support for utf8
 
     0.16 2025-07-10
     ---------------

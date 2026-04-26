@@ -73,7 +73,7 @@ Public Class MemoryMapEntry
         Get
             Dim size As Integer = addressEnd - addressStart + 1
             If size = 1 Then Return "1 byte"
-            Return size.ToString("#,##0 bytes")
+            Return size.ToString("#,##0 bytes").Replace(ChrW(&HA0), Chr(&H20))  'Replace NBSP with ordinary space
         End Get
     End Property
 

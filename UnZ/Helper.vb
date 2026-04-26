@@ -130,7 +130,7 @@ Public Class Helper
                         ElseIf iZSCIIEscape = 13 Then
                             sRet &= "^"
                         ElseIf iZSCIIEscape >= 32 And iZSCIIEscape <= 126 Then
-                            ' Standard ASCII, double-quote conerts to tilde
+                            ' Standard ASCII, double-quote converts to tilde
                             sRet &= " !~#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~".Substring(iZSCIIEscape - 32, 1)
                         ElseIf iZSCIIEscape >= 155 And iZSCIIEscape <= 251 Then
                             ' Extra chars, unicode
