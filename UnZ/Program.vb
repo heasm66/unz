@@ -414,7 +414,7 @@ Module Program
 
             Dim checksum As Integer = 0
             For i As Integer = 64 To iLengthFile - 1
-                checksum = (checksum + _memory(i) And &HFFFF)
+                checksum = (checksum + _memory(i)) And &HFFFF
             Next
             If Not createGametext Then
                 Console.Write("Calculated checksum:                       0x{0:X4}, checksum ", checksum)
@@ -1573,7 +1573,7 @@ Module Program
                         Console.WriteLine("***** HEADER EXTENSION TABLE ({0:X5}-{1:X5}, {2}) *****", iAddrHeaderExtStart, iAddrHeaderExtStart + iHeaderExtLen * 2 + 1, oMemEntry.SizeString)
                         If showHex Then HexDump(iAddrHeaderExtStart, iAddrHeaderExtStart + iHeaderExtLen * 2 + 1, True)
                         Console.WriteLine()
-                        Console.WriteLine("{0:X5} {1:X2} {2:X2}                   Number of further words:                  {3}", iAddrHeaderExtStart, _memory(iAddrHeaderExtStart), _memory(iAddrHeaderExtStart + 1), iHeaderExtLen)
+                        Console.WriteLine("{0:X5} {1:X2} {2:X2}                   Number of further words: {3}", iAddrHeaderExtStart, _memory(iAddrHeaderExtStart), _memory(iAddrHeaderExtStart + 1), iHeaderExtLen)
                         For i As Integer = 1 To iHeaderExtLen
                             Select Case i
                                 Case 1
@@ -1631,7 +1631,7 @@ Module Program
                     If showHex Then HexDump(oMemEntry.addressStart, oMemEntry.addressEnd, True)
                     Console.WriteLine()
                     Dim unicodeCount As Integer = _memory(oMemEntry.addressStart)
-                    Console.WriteLine("{0:X5} {1:X2}                       Number of entries:  {2}", oMemEntry.addressStart, _memory(oMemEntry.addressStart), unicodeCount)
+                    Console.WriteLine("{0:X5} {1:X2}                       Number of entries: {2}", oMemEntry.addressStart, _memory(oMemEntry.addressStart), unicodeCount)
                     If unicodeCount > 0 Then
                         For i As Integer = 0 To unicodeCount - 1
                             Dim currentAddress As Integer = oMemEntry.addressStart + 1 + i * 2
@@ -2703,9 +2703,13 @@ Module Program
     Private Sub HexDump(iStartAddr As Integer, iEndAddr As Integer, bTabbed As Boolean)
         Dim sASCII As String = ""
         Dim iCount As Integer = 0
+        Dim sHeader As String = "ADDR. 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F" & vbCrLf & "-----------------------------------------------------"
+
+        If bTabbed Then Console.WriteLine() Else sHeader = ""
 
         If (iStartAddr Mod 16) > 0 Then
-            Console.WriteLine()
+            Console.WriteLine(sHeader)
+            sHeader = ""
             If bTabbed Then
                 Console.Write("{0:X5} ", iStartAddr - (iStartAddr Mod 16))
                 For i As Integer = 0 To (iStartAddr Mod 16) - 1
@@ -2721,7 +2725,8 @@ Module Program
                 If bTabbed Then Console.Write(" {0}", sASCII)
                 sASCII = ""
                 iCount = 0
-                Console.WriteLine()
+                Console.WriteLine(sHeader)
+                sHeader = ""
                 Console.Write("{0:X5} ", i)
             End If
             Console.Write("{0:X2} ", _memory(i))
