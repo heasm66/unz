@@ -11,7 +11,7 @@
 
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
-UnZ 0.17 (26th April 2026, in development) by Henrik Åsman, (c) 2021-2026
+UnZ 0.17 (16th August 2026, in development) by Henrik Åsman, (c) 2021-2026, made the hard way
 Usage: unz [option]... [file]
 Unpack Z-machine file format information.
 
@@ -45,7 +45,7 @@ UnZ homepage: https://github.com/heasm66/unz
 
 
 Changelog:
-    0.17 2025-xx-xx
+    0.17 2026-xx-xx
     ---------------
       * Bug: Adjust for that Zilf 0.9 can under some circumstances 
              produce less than 96 abbreviations (FSTR?DUMMY)
@@ -62,6 +62,8 @@ Changelog:
           --hide decrepated, replaced by --abbrevs
       * Bug: Fixed error when Zscii chars 155+ are in alphabet
       * Improved support for utf8
+      * Bug: Fixed error when calculating routine and strings
+             addresses when FOFF <> SOFF for version 6 and 7
 
     0.16 2025-07-10
     ---------------

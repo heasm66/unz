@@ -55,15 +55,19 @@ Public Class Helper
 
     Public Shared Function UnpackAddress(packedAddress As Integer, byteGame() As Byte, isRoutine As Boolean) As Integer
         Dim zVersion As Integer = byteGame(0)
-        Dim offset As Integer = GetAdressFromWord(byteGame, &H28)
-        If Not isRoutine Then offset = GetAdressFromWord(byteGame, &H2A)
+        Dim foff As Integer = GetAdressFromWord(byteGame, &H28)
+        Dim soff As Integer = GetAdressFromWord(byteGame, &H2A)
         Select Case zVersion
             Case 1, 2, 3
                 Return 2 * packedAddress
             Case 4, 5
                 Return 4 * packedAddress
             Case 6, 7
-                Return 4 * packedAddress + 8 * offset
+                If isRoutine Then
+                    Return 4 * packedAddress + 8 * foff
+                Else
+                    Return 4 * packedAddress + 8 * soff
+                End If
             Case 8
                 Return 8 * packedAddress
             Case Else
@@ -71,19 +75,25 @@ Public Class Helper
         End Select
     End Function
 
-    Public Shared Function GetNextValidPackedAddress(byteGame() As Byte, address As Integer) As Integer
-        Dim Zversion As Integer = byteGame(0)
+    Public Shared Function GetNextValidPackedAddress(byteGame() As Byte, address As Integer, forRoutine As Boolean, odd_even_packing As Boolean) As Integer
+        Dim zVersion As Integer = byteGame(0)
+        Dim foff As Integer = GetAdressFromWord(byteGame, &H28)
+        Dim soff As Integer = GetAdressFromWord(byteGame, &H2A)
         Dim scaler As Integer = 2
-        Select Case Zversion
+        Select Case zVersion
             Case 4, 5, 6, 7
                 scaler = 4
             Case 8
                 scaler = 8
         End Select
-        'Dim offset As Integer = GetAdressFromWord(byteGame, &H28)
-        'If Not IsRoutine Then offset = GetAdressFromWord(byteGame, &H2A)
-        'offset = offset * 8
-        Return CInt(Math.Truncate((address + scaler - 1) / scaler) * scaler) ' - offset
+        Dim nextAddress As Integer = CInt(Math.Truncate((address + scaler - 1) / scaler) * scaler)
+
+        If odd_even_packing Then
+            If forRoutine And ((nextAddress - foff * 8) / 4) Mod 2 = 1 Then nextAddress += 4        ' packed address for routine need to be even
+            If Not forRoutine And ((nextAddress - soff * 8) / 4) Mod 2 = 0 Then nextAddress += 4    ' packed address for string need to be odd
+        End If
+
+        Return nextAddress
     End Function
 
     Public Shared Function ExtractZString(byteGame() As Byte, piStringAddress As Integer, sAbbreviations() As String, pAlphabet() As String, Optional pbHighlightAbbrevs As Boolean = False) As String

@@ -199,7 +199,7 @@ Module Program
                         showGrammar = True
                         allSections = False
                     Case "-h", "--help", "\?"
-                        Console.Error.WriteLine("UnZ 0.17 ({0}) by Henrik Åsman, (c) 2021-2026", buildTimestamp)
+                        Console.Error.WriteLine("UnZ 0.17 ({0}) by Henrik Åsman, (c) 2021-2026, made the hard way", buildTimestamp)
                         Console.Error.WriteLine("Usage: unz [option]... [file]")
                         Console.Error.WriteLine("Unpack Z-machine file format information.")
                         Console.Error.WriteLine()
@@ -773,7 +773,20 @@ Module Program
 
             ' Z-code
             Dim iFOFF As Integer = Helper.GetAdressFromWord(_memory, &H28) * 8
-            Dim iCodeBase As Integer = Helper.GetNextValidPackedAddress(_memory, iAddrDictionaryEnd + 1)
+            Dim iSOFF As Integer = Helper.GetAdressFromWord(_memory, &H2A) * 8
+            Dim odd_even_packing As Boolean = False
+            If iFOFF <> iSOFF And {EnumCompilerSource.INFORM5, EnumCompilerSource.INFORM6}.Contains(compilerSource) Then
+                ' Version 6 and 7 of Inform use even packed addresses for routines and odd packed addresses for strings
+                ' when compiled with -B (big memory model). This means that an even packed address should use FOFF and
+                ' an odd packed address should use SOFF when calculating addresses.
+                ' This is how Inform6 compiles it, but this usually waste 8 bytes because often next valid string
+                ' address could be next valid routine address - 4. This is a rarely used feature
+                odd_even_packing = True
+                Console.WriteLine("Mode for packed addresses:                 Odd/Even (even = routine, odd = string)")
+            Else
+                Console.WriteLine("Mode for packed addresses:                 Normal")
+            End If
+            Dim iCodeBase As Integer = Helper.GetNextValidPackedAddress(_memory, iAddrDictionaryEnd + 1, True, odd_even_packing)
             If iFOFF > 0 Then iCodeBase = iFOFF
             Dim scaler As Integer = 2
             Select Case iZVersion
@@ -801,7 +814,7 @@ Module Program
                 iNext = oDecode.DecodeRoutine(iStart, _memory, sAbbreviations, True, zcodeSyntax, validStringsList,
                                           validRoutinesList, DictEntriesList, alphabet, iAddrInitialPC,
                                           oPropertyAnalyser.propertyNumberMin, oPropertyAnalyser.propertyNumberMax,
-                                          showAbbrevsInsertion, inlineStrings, False)
+                                          showAbbrevsInsertion, inlineStrings, False, odd_even_packing)
                 If iNext > 0 Then
                     Dim oRoutineData As New RoutineData With {
                     .entryPoint = iStart,
@@ -816,12 +829,12 @@ Module Program
                         For i = inlineStringCountBefore To inlineStringCountAfter - 1
                             inlineStringSize += inlineStrings(i).size
                         Next
-                        Dim padding As Integer = Helper.GetNextValidPackedAddress(_memory, iNext) - iNext
+                        Dim padding As Integer = Helper.GetNextValidPackedAddress(_memory, iNext, True, odd_even_packing) - iNext
                         totalPadding += padding
                         inlineStrings.Add(New InlineString With {.text = String.Concat("z-routine size: ", iNext - iStart, " bytes, inline strings size: ", inlineStringSize, " bytes, z-routine without inline strings size: ", iNext - iStart - inlineStringSize, " bytes, Padding: ", padding, " byte(s)."),
                                                          .size = 0})
                     End If
-                    iStart = Helper.GetNextValidPackedAddress(_memory, iNext)
+                    iStart = Helper.GetNextValidPackedAddress(_memory, iNext, True, odd_even_packing)
                 Else
                     ' Routines below initial pc are considered false hits if they are small (under 512 bytes) and not continous
                     ' with routines starting at initial pc 
@@ -858,9 +871,18 @@ Module Program
             End If
 
             ' Find start of strings
-            Dim iSOFF As Integer = Helper.GetAdressFromWord(_memory, &H2A) * 8
-            Dim iAddrStrings As Integer = Helper.GetNextValidPackedAddress(_memory, validRoutinesList.Last.endPoint + 1)
-            If iSOFF > iAddrStrings Then iAddrStrings = iSOFF
+            ' Get next valid routine address and use it as start of strings.
+            Dim iAddrStrings As Integer = Helper.GetNextValidPackedAddress(_memory, validRoutinesList.Last.endPoint + 1, True, odd_even_packing)
+            If odd_even_packing Then iAddrStrings = Helper.GetNextValidPackedAddress(_memory, iAddrStrings, False, odd_even_packing)
+            If iFOFF <> iSOFF Then
+                ' We can, for version 6 and 7, calculate the start of string by substracting start of first routine with FOFF and divide by 4.
+                ' This multiplier seems to be a constant of 64 for Infocom but can vary in Inform6.
+                ' If we then add multiplier * 4 to SOFF we get the start of strings. 
+                Dim multiplier As Integer = (validRoutinesList(0).entryPoint - iFOFF) \ 4
+                If odd_even_packing Then multiplier += 1    ' multiplier is always even here, so if we are using odd/even packing, we need to add 1 to get the next odd multiplier 
+                iAddrStrings = iSOFF + multiplier * 4
+            End If
+
             memoryMap.Add(New MemoryMapEntry("Z-code", validRoutinesList(0).entryPoint, iAddrStrings - 1, MemoryMapType.MM_ZCODE))
             memoryMap.Add(New MemoryMapEntry("Static strings", iAddrStrings, iLengthFile - 1, MemoryMapType.MM_STATIC_STRINGS))
             If Not createGametext Then
@@ -872,7 +894,7 @@ Module Program
             Dim iNextStringAddress As Integer = iAddrStrings
             Dim iNextValidStringAddress As Integer = 0
             Do
-                iNextValidStringAddress = Helper.GetNextValidPackedAddress(_memory, iNextStringAddress)
+                iNextValidStringAddress = Helper.GetNextValidPackedAddress(_memory, iNextStringAddress, False, odd_even_packing)
                 Dim count As Integer = -2
                 Do
                     count += 2
@@ -889,7 +911,7 @@ Module Program
             }
                 validStringsList.Add(oStringData)
                 iNextStringAddress = iNextValidStringAddress + count + 2
-            Loop Until Helper.GetNextValidPackedAddress(_memory, iNextStringAddress) >= iLengthFile - 1
+            Loop Until Helper.GetNextValidPackedAddress(_memory, iNextStringAddress, False, odd_even_packing) >= iLengthFile - 1
 
             ' Global variables
             Dim addressGlobalsTableStart As Integer = Helper.GetAdressFromWord(_memory, 12)
@@ -2535,9 +2557,9 @@ Module Program
                                                                  zcodeSyntax, validStringsList, validRoutinesList, DictEntriesList,
                                                                  alphabet, iAddrInitialPC, oPropertyAnalyser.propertyNumberMin,
                                                                  oPropertyAnalyser.propertyNumberMax, showAbbrevsInsertion,
-                                                                 inlineStrings, showZCodeVerbose)
+                                                                 inlineStrings, showZCodeVerbose, odd_even_packing)
                             Console.WriteLine()
-                            iNextValidAddress = Helper.GetNextValidPackedAddress(_memory, iNextAddress)
+                            iNextValidAddress = Helper.GetNextValidPackedAddress(_memory, iNextAddress, True, odd_even_packing)
                             If iNextAddress <> iNextValidAddress Then
                                 Console.Write("Padding:")
                                 HexDump(iNextAddress, iNextValidAddress - 1, False)

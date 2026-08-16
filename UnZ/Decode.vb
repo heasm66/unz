@@ -47,6 +47,7 @@ Public Class Decode
     Private inlineStrings As List(Of InlineString)
     Public arraysStart As New HashSet(Of Integer)
     Public usedGlobals As New HashSet(Of Integer)
+    Private odd_even_packing As Boolean = False
 
     Public Enum EnumOpcodeClass
         EXTENDED_OPERAND
@@ -861,7 +862,8 @@ Public Class Decode
     Public Function DecodeRoutine(piAtAddress As Integer, gameData() As Byte, psAbbreviations() As String, silent As Boolean, zcodeSyntax As Integer,
                                   pValidStringList As List(Of StringData), pValidRoutineList As List(Of RoutineData), pDictEntriesList As DictionaryEntries,
                                   pAlpabet() As String, initialPC As Integer, propertyNumberMin As Integer, propertyNumberMax As Integer,
-                                  showAbbrevsInsertionPoints As Boolean, inlineStringsList As List(Of InlineString), showZCodeVerbose As Boolean) As Integer
+                                  showAbbrevsInsertionPoints As Boolean, inlineStringsList As List(Of InlineString), showZCodeVerbose As Boolean,
+                                  pOdd_Even_Packing As Boolean) As Integer
         startAddress = piAtAddress
         byteGame = gameData
         PC = piAtAddress
@@ -877,6 +879,7 @@ Public Class Decode
         propertyMin = propertyNumberMin
         propertyMax = propertyNumberMax
         showAbbrevsInsertion = showAbbrevsInsertionPoints
+        odd_even_packing = pOdd_Even_Packing
         inlineStrings = inlineStringsList
         bShowZCodeVerbose = showZCodeVerbose
 
@@ -1334,7 +1337,7 @@ Public Class Decode
             ' These are considered as RETURN-type if the next opcode is illegal, otherwise they are PLAIN.
             ' If the next address is a valid routine startIndex, it is also considered as RETURN.
             typeQuitRestart = True
-            If Not (byteGame(pOpcode.Address + 1) < 16 And Helper.GetNextValidPackedAddress(byteGame, pOpcode.Address + 1) = pOpcode.Address + 1) Then
+            If Not (byteGame(pOpcode.Address + 1) < 16 And Helper.GetNextValidPackedAddress(byteGame, pOpcode.Address + 1, True, odd_even_packing) = pOpcode.Address + 1) Then
                 Dim bOldSilent As Boolean = bSilent
                 bSilent = True
                 If DecodeCode(pOpcode.Address + 1).status = EnumStatus.BAD_OPCODE Then
