@@ -1354,7 +1354,7 @@ Public Class Decode
         If syntax = 1 Then sText = sText.ToLower
         If syntax = 2 Then sText = psOpcodeNameZil
         sText &= pOpcode.OperandText
-        If pOpcode.Text.Trim <> "" Then
+        If pOpcode.Text <> "" Then
             sText = sText & " " & Convert.ToChar(34) & pOpcode.Text & Convert.ToChar(34)
         End If
         If Not bSilent Then

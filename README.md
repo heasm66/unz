@@ -11,7 +11,7 @@
 
 Precompiled binariers at: https://drive.google.com/drive/folders/1jl8Ym-6GzLiJgfdY8QORERw9Krvdk_-k
 ```
-UnZ 0.17 (16th August 2026, in development) by Henrik Åsman, (c) 2021-2026, made the hard way
+UnZ 0.17 (23rd August 2026, in development) by Henrik Åsman, (c) 2021-2026, made the hard way
 Usage: unz [option]... [file]
 Unpack Z-machine file format information.
 
@@ -64,6 +64,7 @@ Changelog:
       * Improved support for utf8
       * Bug: Fixed error when calculating routine and strings
              addresses when FOFF <> SOFF for version 6 and 7
+      * Bug: Empty strings printed without enclosing ".
 
     0.16 2025-07-10
     ---------------
